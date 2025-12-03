@@ -5,6 +5,7 @@ import type { RoomDetails } from '../entities/room/types';
 import type { UserProfile } from '../entities/user/types';
 import { debugLog } from '../shared/lib/debug';
 import type { Message } from '../entities/message/types';
+import type { OnlineUser } from '../shared/api/users';
 
 type Props = {
   user: UserProfile | null;
@@ -16,7 +17,9 @@ export function HomePage({ user, onNavigate }: Props) {
   const [publicRoom, setPublicRoom] = useState<RoomDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [liveMessages, setLiveMessages] = useState<Message[]>([]);
+  const [online, setOnline] = useState<OnlineUser[]>([]);
   const socketRef = useRef<WebSocket | null>(null);
+  const presenceRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => setLoading(true));
@@ -110,6 +113,49 @@ export function HomePage({ user, onNavigate }: Props) {
     };
   }, [user, visiblePublicRoom]);
 
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      queueMicrotask(() => setOnline([]));
+      if (presenceRef.current) {
+        presenceRef.current.close();
+        presenceRef.current = null;
+      }
+      return () => {
+        active = false;
+      };
+    }
+
+    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socket = new WebSocket(`${scheme}://${window.location.host}/ws/presence/`);
+    presenceRef.current = socket;
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (active && data.online) {
+          setOnline(data.online);
+        }
+      } catch (err) {
+        debugLog('Presence WS parse failed', err);
+      }
+    };
+    socket.onerror = (err) => debugLog('Presence WS error', err);
+    socket.onclose = () => {
+      if (presenceRef.current === socket) {
+        presenceRef.current = null;
+      }
+    };
+
+    return () => {
+      active = false;
+      socket.close();
+      if (presenceRef.current === socket) {
+        presenceRef.current = null;
+      }
+    };
+  }, [user]);
+
   const onJoinRoom = (event: FormEvent) => {
     event.preventDefault();
     if (!roomName.trim()) return;
@@ -121,7 +167,7 @@ export function HomePage({ user, onNavigate }: Props) {
       <section className="hero">
         <div>
           <p className="eyebrow">Django Channels + React</p>
-          <h1>Чат в реальном времени без лишней суеты</h1>
+          <h1>Чат в реальном времени.</h1>
           <p className="lead"></p>
           <div className="actions">
             <button
@@ -222,6 +268,33 @@ export function HomePage({ user, onNavigate }: Props) {
             </button>
             {!user && <p className="note">Сначала войдите в аккаунт.</p>}
           </form>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <p className="eyebrow">Кто онлайн</p>
+            </div>
+            <span className="pill">{online.length}</span>
+          </div>
+          {online.length ? (
+            <div className="online-list">
+              {online.map((u) => (
+                <div className="online-item" key={u.username}>
+                  <div className="avatar tiny">
+                    {u.profileImage ? (
+                      <img src={u.profileImage} alt={u.username} />
+                    ) : (
+                      <span>{u.username[0]?.toUpperCase() || '?'}</span>
+                    )}
+                  </div>
+                  <span>{u.username}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="muted">Пока никого нет в сети.</p>
+          )}
         </div>
 
         {!user && (

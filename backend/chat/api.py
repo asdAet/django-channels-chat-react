@@ -43,7 +43,7 @@ def public_room(request):
 @require_http_methods(["GET"])
 def room_details(request, room_slug):
     if not request.user.is_authenticated and room_slug != PUBLIC_ROOM_SLUG:
-        return JsonResponse({"error": "Authentication required"}, status=401)
+        return JsonResponse({"error": "Требуется авторизация"}, status=401)
     display_name = (
         Room.objects.filter(slug=room_slug)
         .values_list("name", flat=True)
@@ -55,7 +55,7 @@ def room_details(request, room_slug):
 @require_http_methods(["GET"])
 def room_messages(request, room_slug):
     if not request.user.is_authenticated and room_slug != PUBLIC_ROOM_SLUG:
-        return JsonResponse({"error": "Authentication required"}, status=401)
+        return JsonResponse({"error": "Требуется авторизация"}, status=401)
     messages = Message.objects.filter(room=room_slug).order_by("date_added")
     serialized = [
         {

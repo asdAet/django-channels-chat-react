@@ -1,13 +1,17 @@
 import json
+from datetime import timedelta
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
+from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.db import OperationalError, ProgrammingError
 
 from .forms import ProfileUpdateForm, UserRegisterForm, UserUpdateForm
+from .models import Profile
 
 
 def _serialize_user(request, user):
@@ -17,7 +21,6 @@ def _serialize_user(request, user):
         try:
             profile_image = request.build_absolute_uri(profile.image.url)
         except ValueError:
-            # In case media is misconfigured, avoid breaking the response.
             profile_image = None
 
     return {
@@ -30,13 +33,11 @@ def _serialize_user(request, user):
 
 
 def _parse_body(request):
-    # Try JSON body first
     if request.body:
         try:
             return json.loads(request.body)
         except json.JSONDecodeError:
             pass
-    # Fallback to form-encoded data (e.g., sent from Postman/HTML form)
     if request.POST:
         return request.POST
     return {}
@@ -53,18 +54,12 @@ def _collect_errors(*errors):
 @ensure_csrf_cookie
 @require_http_methods(["GET"])
 def csrf_token(request):
-    """
-    Exposes a CSRF cookie for the SPA without rendering templates.
-    """
     return JsonResponse({"csrfToken": get_token(request)})
 
 
 @ensure_csrf_cookie
 @require_http_methods(["GET"])
 def session_view(request):
-    """
-    Returns the authenticated user for bootstrapping the React app.
-    """
     if request.user.is_authenticated:
         return JsonResponse(
             {"authenticated": True, "user": _serialize_user(request, request.user)}
@@ -77,15 +72,18 @@ def session_view(request):
 def login_view(request):
     payload = _parse_body(request)
     if payload is None or payload == {}:
-        return JsonResponse({"error": "Invalid body", "errors": {"body": ["Empty body"]}}, status=400)
+        return JsonResponse(
+            {"error": "Неверное тело запроса", "errors": {"body": ["Пустое тело запроса"]}},
+            status=400,
+        )
 
     username = payload.get("username")
     password = payload.get("password")
     if not username or not password:
         return JsonResponse(
             {
-                "error": "Username and password are required",
-                "errors": {"credentials": ["Username and password are required"]},
+                "error": "Требуются логин и пароль",
+                "errors": {"credentials": ["Укажите логин и пароль"]},
             },
             status=400,
         )
@@ -93,7 +91,10 @@ def login_view(request):
     user = authenticate(request, username=username, password=password)
     if user is None:
         return JsonResponse(
-            {"error": "Wrong credentials", "errors": {"credentials": ["Wrong credentials"]}},
+            {
+                "error": "Неверный логин или пароль",
+                "errors": {"credentials": ["Неверный логин или пароль"]},
+            },
             status=400,
         )
 
@@ -104,6 +105,15 @@ def login_view(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 def logout_view(request):
+    user = getattr(request, "user", None)
+    if user and user.is_authenticated:
+        try:
+            profile = getattr(user, "profile", None)
+            if profile:
+                profile.last_seen = timezone.now() - timedelta(minutes=5)
+                profile.save(update_fields=["last_seen"])
+        except (OperationalError, ProgrammingError):
+            pass
     logout(request)
     return JsonResponse({"ok": True})
 
@@ -112,39 +122,46 @@ def logout_view(request):
 @csrf_exempt
 def register_view(request):
     if request.method == "GET":
-        return JsonResponse({"detail": "Use POST with username, password1, password2"}, status=200)
+        return JsonResponse(
+            {"detail": "Используйте POST c полями username, password1, password2"},
+            status=200,
+        )
 
     payload = _parse_body(request)
     if not payload:
-        return JsonResponse({"error": "Invalid body", "errors": {"body": ["Empty body"]}}, status=400)
+        return JsonResponse(
+            {"error": "Неверное тело запроса", "errors": {"body": ["Пустое тело запроса"]}},
+            status=400,
+        )
 
     username = payload.get("username")
     password1 = payload.get("password1")
     password2 = payload.get("password2")
 
-    # Pre-flight validations for clearer messages
     if not username:
-        return JsonResponse({"error": "Username required", "errors": {"username": ["Username required"]}}, status=400)
+        return JsonResponse(
+            {"error": "Требуется имя пользователя", "errors": {"username": ["Укажите имя пользователя"]}},
+            status=400,
+        )
     if User.objects.filter(username=username).exists():
         return JsonResponse(
-            {"error": "Username already exists", "errors": {"username": ["Username already exists"]}},
+            {"error": "Имя пользователя уже занято", "errors": {"username": ["Это имя уже используется"]}},
             status=400,
         )
     if not password1 or not password2:
         return JsonResponse(
-            {"error": "Password required", "errors": {"password": ["Password required"]}}, status=400
+            {"error": "Требуется пароль", "errors": {"password": ["Укажите пароль"]}},
+            status=400,
         )
     if password1 != password2:
         return JsonResponse(
-            {"error": "Passwords do not match", "errors": {"password": ["Passwords do not match"]}},
+            {"error": "Пароли не совпадают", "errors": {"password": ["Пароли не совпадают"]}},
             status=400,
         )
 
-    form = UserRegisterForm({
-        "username": username,
-        "password1": password1,
-        "password2": password2,
-    })
+    form = UserRegisterForm(
+        {"username": username, "password1": password1, "password2": password2}
+    )
     if form.is_valid():
         form.save()
         user = authenticate(
@@ -160,14 +177,14 @@ def register_view(request):
         return JsonResponse({"ok": True}, status=201)
 
     errors = _collect_errors(form.errors)
-    summary = " ".join(["; ".join(v) for v in errors.values()]) if errors else "Validation error"
+    summary = " ".join(["; ".join(v) for v in errors.values()]) if errors else "Ошибка валидации"
     return JsonResponse({"error": summary, "errors": errors}, status=400)
 
 
 @require_http_methods(["GET", "POST"])
 def profile_view(request):
     if not request.user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=401)
+        return JsonResponse({"error": "Требуется авторизация"}, status=401)
 
     if request.method == "GET":
         return JsonResponse({"user": _serialize_user(request, request.user)})
