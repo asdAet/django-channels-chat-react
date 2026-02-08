@@ -1,87 +1,63 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { apiService } from '../adapters/ApiService';
-import type { RoomDetails } from '../entities/room/types';
-import type { UserProfile } from '../entities/user/types';
-import { debugLog } from '../shared/lib/debug';
-import type { Message } from '../entities/message/types';
-import type { OnlineUser } from '../shared/api/users';
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
+import type { UserProfile } from '../entities/user/types'
+import { debugLog } from '../shared/lib/debug'
+import type { Message } from '../entities/message/types'
+import type { OnlineUser } from '../shared/api/users'
+import { usePublicRoom } from '../hooks/usePublicRoom'
+import { useChatActions } from '../hooks/useChatActions'
 
 type Props = {
-  user: UserProfile | null;
-  onNavigate: (path: string) => void;
-};
+  user: UserProfile | null
+  onNavigate: (path: string) => void
+}
 
 export function HomePage({ user, onNavigate }: Props) {
-  const [publicRoom, setPublicRoom] = useState<RoomDetails | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [liveMessages, setLiveMessages] = useState<Message[]>([]);
-  const [online, setOnline] = useState<OnlineUser[]>([]);
-  const [creatingRoom, setCreatingRoom] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const socketRef = useRef<WebSocket | null>(null);
-  const presenceRef = useRef<WebSocket | null>(null);
+  const { publicRoom, loading } = usePublicRoom(user)
+  const { getRoomDetails, getRoomMessages } = useChatActions()
+  const [liveMessages, setLiveMessages] = useState<Message[]>([])
+  const [online, setOnline] = useState<OnlineUser[]>([])
+  const [creatingRoom, setCreatingRoom] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const socketRef = useRef<WebSocket | null>(null)
+  const presenceRef = useRef<WebSocket | null>(null)
+
+  const visiblePublicRoom = useMemo(() => publicRoom, [publicRoom])
+  const isLoading = useMemo(() => loading, [loading])
 
   useEffect(() => {
-    queueMicrotask(() => setLoading(true));
-    let active = true;
-    apiService
-      .getPublicRoom()
-      .then((room) => {
-        if (active) setPublicRoom(room);
-      })
-      .catch(() => {
-        debugLog('Public room fetch failed');
-        if (active) setPublicRoom(null);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [user]);
-
-  const visiblePublicRoom = useMemo(() => publicRoom, [publicRoom]);
-  const isLoading = useMemo(() => loading, [loading]);
-
-  useEffect(() => {
-    let active = true;
+    let active = true
 
     if (!visiblePublicRoom) {
       queueMicrotask(() => {
-        if (active) setLiveMessages([]);
-      });
+        if (active) setLiveMessages([])
+      })
       if (socketRef.current) {
-        socketRef.current.close();
-        socketRef.current = null;
+        socketRef.current.close()
+        socketRef.current = null
       }
       return () => {
-        active = false;
-      };
+        active = false
+      }
     }
 
-    const roomSlug = visiblePublicRoom.slug;
-    apiService
-      .getRoomMessages(roomSlug)
+    const roomSlug = visiblePublicRoom.slug
+    getRoomMessages(roomSlug)
       .then((payload) => {
-        if (!active) return;
+        if (!active) return
         // показываем последние 4 сообщения
-        setLiveMessages(payload.messages.slice(-4));
+        setLiveMessages(payload.messages.slice(-4))
       })
-      .catch((err) => debugLog('Live feed history failed', err));
+      .catch((err) => debugLog('Live feed history failed', err))
 
-    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
     const socket = new WebSocket(
-      `${scheme}://${window.location.host}/ws/chat/${encodeURIComponent(
-        roomSlug
-      )}/`
-    );
-    socketRef.current = socket;
+      `${scheme}://${window.location.host}/ws/chat/${encodeURIComponent(roomSlug)}/`,
+    )
+    socketRef.current = socket
 
     socket.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data)
         if (data.message && active) {
           setLiveMessages((prev) => {
             const next = [
@@ -93,115 +69,113 @@ export function HomePage({ user, onNavigate }: Props) {
                 profilePic: data.profile_pic || null,
                 createdAt: new Date().toISOString(),
               },
-            ];
-            return next.slice(-4);
-          });
+            ]
+            return next.slice(-4)
+          })
         }
       } catch (error) {
-        debugLog('Live feed WS parse failed', error);
+        debugLog('Live feed WS parse failed', error)
       }
-    };
-    socket.onerror = (err) => debugLog('Live feed WS error', err);
+    }
+    socket.onerror = (err) => debugLog('Live feed WS error', err)
     socket.onclose = () => {
-      if (socketRef.current === socket) socketRef.current = null;
-    };
-
-    return () => {
-      active = false;
-      socket.close();
-      if (socketRef.current === socket) {
-        socketRef.current = null;
-      }
-    };
-  }, [user, visiblePublicRoom]);
-
-  useEffect(() => {
-    let active = true;
-    if (!user) {
-      queueMicrotask(() => setOnline([]));
-      if (presenceRef.current) {
-        presenceRef.current.close();
-        presenceRef.current = null;
-      }
-      return () => {
-        active = false;
-      };
+      if (socketRef.current === socket) socketRef.current = null
     }
 
-    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const socket = new WebSocket(
-      `${scheme}://${window.location.host}/ws/presence/`
-    );
-    presenceRef.current = socket;
+    return () => {
+      active = false
+      socket.close()
+      if (socketRef.current === socket) {
+        socketRef.current = null
+      }
+    }
+  }, [user, visiblePublicRoom, getRoomMessages])
+
+  useEffect(() => {
+    let active = true
+    if (!user) {
+      queueMicrotask(() => setOnline([]))
+      if (presenceRef.current) {
+        presenceRef.current.close()
+        presenceRef.current = null
+      }
+      return () => {
+        active = false
+      }
+    }
+
+    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
+    const socket = new WebSocket(`${scheme}://${window.location.host}/ws/presence/`)
+    presenceRef.current = socket
 
     socket.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data)
         if (active && data.online) {
-          setOnline(data.online);
+          setOnline(data.online)
         }
       } catch (err) {
-        debugLog('Presence WS parse failed', err);
+        debugLog('Presence WS parse failed', err)
       }
-    };
-    socket.onerror = (err) => debugLog('Presence WS error', err);
+    }
+    socket.onerror = (err) => debugLog('Presence WS error', err)
     socket.onclose = () => {
       if (presenceRef.current === socket) {
-        presenceRef.current = null;
+        presenceRef.current = null
       }
-    };
+    }
 
     return () => {
-      active = false;
-      socket.close();
+      active = false
+      socket.close()
       if (presenceRef.current === socket) {
-        presenceRef.current = null;
+        presenceRef.current = null
       }
-    };
-  }, [user]);
+    }
+  }, [user])
 
   const createRoomSlug = (length = 8) => {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const values = new Uint8Array(length);
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    const values = new Uint8Array(length)
     if (globalThis.crypto?.getRandomValues) {
-      globalThis.crypto.getRandomValues(values);
-      return Array.from(values, (value) => alphabet[value % alphabet.length]).join('');
+      globalThis.crypto.getRandomValues(values)
+      return Array.from(values, (value) => alphabet[value % alphabet.length]).join('')
     }
-    let fallback = '';
+    let fallback = ''
     for (let i = 0; i < length; i += 1) {
-      fallback += alphabet[Math.floor(Math.random() * alphabet.length)];
+      fallback += alphabet[Math.floor(Math.random() * alphabet.length)]
     }
-    return fallback;
-  };
+    return fallback
+  }
 
   const onCreateRoom = async () => {
-    if (!user || creatingRoom) return;
-    setCreateError(null);
-    setCreatingRoom(true);
-    let navigated = false;
+    if (!user || creatingRoom) return
+    setCreateError(null)
+    setCreatingRoom(true)
+    let navigated = false
 
     try {
-      const maxAttempts = 5;
+      const maxAttempts = 5
       for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-        const slug = createRoomSlug();
-        const details = await apiService.getRoomDetails(slug);
+        const slug = createRoomSlug()
+        const details = await getRoomDetails(slug)
         if (details.created === false) {
-          continue;
+          continue
         }
-        navigated = true;
-        onNavigate(`/rooms/${encodeURIComponent(slug)}`);
-        return;
+        navigated = true
+        onNavigate(`/rooms/${encodeURIComponent(slug)}`)
+        return
       }
-      setCreateError('Не удалось создать уникальную комнату. Попробуйте еще раз.');
+      setCreateError('Не удалось создать уникальную комнату. Попробуйте еще раз.')
     } catch (err) {
-      debugLog('Room create failed', err);
-      setCreateError('Не удалось создать комнату. Попробуйте еще раз.');
+      debugLog('Room create failed', err)
+      setCreateError('Не удалось создать комнату. Попробуйте еще раз.')
     } finally {
       if (!navigated) {
-        setCreatingRoom(false);
+        setCreatingRoom(false)
       }
     }
-  };
+  }
 
   return (
     <div className="stack">
@@ -211,17 +185,11 @@ export function HomePage({ user, onNavigate }: Props) {
           <h1>Чат в реальном времени.</h1>
           <p className="lead"></p>
           <div className="actions">
-            <button
-              className="btn primary"
-              onClick={() => onNavigate('/rooms/public')}
-            >
+            <button className="btn primary" onClick={() => onNavigate('/rooms/public')}>
               Открыть публичный чат
             </button>
             {!user && (
-              <button
-                className="btn ghost"
-                onClick={() => onNavigate('/register')}
-              >
+              <button className="btn ghost" onClick={() => onNavigate('/register')}>
                 Создать аккаунт
               </button>
             )}
@@ -264,18 +232,12 @@ export function HomePage({ user, onNavigate }: Props) {
             className="btn primary"
             disabled={!user || !visiblePublicRoom}
             onClick={() =>
-              onNavigate(
-                `/rooms/${encodeURIComponent(
-                  visiblePublicRoom?.slug || 'public'
-                )}`
-              )
+              onNavigate(`/rooms/${encodeURIComponent(visiblePublicRoom?.slug || 'public')}`)
             }
           >
             Войти в комнату
           </button>
-          {!user && (
-            <p className="note">Нужно войти, чтобы подключиться к чату.</p>
-          )}
+          {!user && <p className="note">Нужно войти, чтобы подключиться к чату.</p>}
         </div>
 
         <div className="card">
@@ -344,18 +306,10 @@ export function HomePage({ user, onNavigate }: Props) {
               логину и паролю без email-подтверждения.
             </p>
             <div className="actions">
-              <button
-                className="btn primary"
-                type="button"
-                onClick={() => onNavigate('/login')}
-              >
+              <button className="btn primary" type="button" onClick={() => onNavigate('/login')}>
                 Войти
               </button>
-              <button
-                className="btn ghost"
-                type="button"
-                onClick={() => onNavigate('/register')}
-              >
+              <button className="btn ghost" type="button" onClick={() => onNavigate('/register')}>
                 Зарегистрироваться
               </button>
             </div>
@@ -363,5 +317,8 @@ export function HomePage({ user, onNavigate }: Props) {
         )}
       </section>
     </div>
-  );
+  )
 }
+
+
+

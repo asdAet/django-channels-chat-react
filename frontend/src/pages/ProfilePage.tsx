@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { avatarFallback } from '../shared/lib/format';
 import type { UserProfile } from '../entities/user/types';
 
@@ -26,7 +26,7 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout}: Props) {
   );
 
   useEffect(() => {
-    // чистим blob-URL, когда компонент размонтируется или меняется превью
+    // Чистим blob-URL, когда компонент размонтируется или меняется превью
     return () => {
       if (previewUrl && previewUrl.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrl);
@@ -130,3 +130,4 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout}: Props) {
     </div>
   );
 }
+

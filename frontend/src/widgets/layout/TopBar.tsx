@@ -1,4 +1,4 @@
-import { avatarFallback } from '../../shared/lib/format';
+﻿import { avatarFallback } from '../../shared/lib/format';
 import type { UserProfile } from '../../entities/user/types';
 
 type Props = {
@@ -58,3 +58,4 @@ export function TopBar({ user, onNavigate }: Props) {
     </header>
   );
 }
+

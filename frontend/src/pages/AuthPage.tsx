@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+﻿import type { FormEvent } from 'react'
 import { useState } from 'react'
 
 type Props = {
@@ -86,3 +86,4 @@ export function AuthPage({
     </div>
   )
 }
+

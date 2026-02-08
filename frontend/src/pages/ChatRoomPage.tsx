@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import { apiService } from '../adapters/ApiService'
-import type { Message } from '../entities/message/types'
-import type { RoomDetails } from '../entities/room/types'
+﻿import { useEffect, useRef, useState } from 'react'
 import type { UserProfile } from '../entities/user/types'
 import { avatarFallback, formatTimestamp } from '../shared/lib/format'
 import { debugLog } from '../shared/lib/debug'
+import { useChatRoom } from '../hooks/useChatRoom'
 
 type Props = {
   slug: string
@@ -13,40 +11,12 @@ type Props = {
 }
 
 export function ChatRoomPage({ slug, user, onNavigate }: Props) {
-  const [details, setDetails] = useState<RoomDetails | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
+  const { details, messages, loading, error, setMessages } = useChatRoom(slug, user)
   const [draft, setDraft] = useState('')
   const [status, setStatus] = useState<'idle' | 'connecting' | 'online' | 'closed'>('idle')
-  const [loading, setLoading] = useState(true)
   const [roomError, setRoomError] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement | null>(null)
   const socketRef = useRef<WebSocket | null>(null)
-
-  useEffect(() => {
-    if (!user) return
-    let active = true
-    queueMicrotask(() => setLoading(true))
-    queueMicrotask(() => setStatus('connecting'))
-    Promise.all([apiService.getRoomDetails(slug), apiService.getRoomMessages(slug)])
-      .then(([info, payload]) => {
-        if (!active) return
-        setDetails(info)
-        setMessages(payload.messages)
-        setRoomError(null)
-      })
-      .catch((err) => {
-        if (!active) return
-        debugLog('Room load failed', err)
-        setRoomError('Не удалось загрузить комнату')
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-
-    return () => {
-      active = false
-    }
-  }, [slug, user])
 
   useEffect(() => {
     if (!user) return
@@ -79,7 +49,7 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
       socket.close()
       socketRef.current = null
     }
-  }, [slug, user?.username])
+  }, [slug, user, setMessages])
 
   useEffect(() => {
     if (listRef.current) {
@@ -122,6 +92,9 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
     )
   }
 
+  const loadError = error ? 'Не удалось загрузить комнату' : null
+  const visibleError = roomError || loadError
+
   return (
     <div className="chat">
       <div className="chat-header">
@@ -135,7 +108,7 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
         </span>
       </div>
 
-      {roomError && <div className="toast danger">{roomError}</div>}
+      {visibleError && <div className="toast danger">{visibleError}</div>}
       {loading ? (
         <div className="panel muted">Загружаем историю...</div>
       ) : (
@@ -182,3 +155,5 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
     </div>
   )
 }
+
+

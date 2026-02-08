@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import '../App.css'
 import { navigate, parseRoute, type Route } from './router'
 import { AuthPage } from '../pages/AuthPage'
@@ -6,38 +6,15 @@ import { HomePage } from '../pages/HomePage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { ChatRoomPage } from '../pages/ChatRoomPage'
 import { TopBar } from '../widgets/layout/TopBar'
-import { apiService } from '../adapters/ApiService'
+import { useAuth } from '../hooks/useAuth'
 import type { ApiError } from '../shared/api/types'
-import type { UserProfile } from '../entities/user/types'
 import { debugLog } from '../shared/lib/debug'
-
-type AuthState = {
-  user: UserProfile | null
-  loading: boolean
-}
 
 export function App() {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.pathname))
-  const [auth, setAuth] = useState<AuthState>({ user: null, loading: true })
+  const { auth, login, register, logout, updateProfile } = useAuth()
   const [banner, setBanner] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    apiService
-      .ensureCsrf()
-      .catch((err) => debugLog('CSRF fetch failed', err))
-      .finally(() => {
-        apiService
-          .getSession()
-          .then((session) => {
-            setAuth({ user: session.user, loading: false })
-          })
-          .catch((err) => {
-            debugLog('Session fetch failed', err)
-            setAuth({ user: null, loading: false })
-          })
-      })
-  }, [])
 
   useEffect(() => {
     const onPop = () => setRoute(parseRoute(window.location.pathname))
@@ -62,7 +39,7 @@ export function App() {
       }
       return apiErr.message
     }
-    return 'Не удалось выполнить запрос. Попробуйте ещё раз.'
+    return 'Не удалось выполнить запрос. Попробуйте еще раз.'
   }
 
   const handleNavigate = (path: string) => navigate(path, setRoute)
@@ -70,9 +47,7 @@ export function App() {
   const handleLogin = async (username: string, password: string) => {
     setError(null)
     try {
-      await apiService.ensureCsrf()
-      const session = await apiService.login(username, password)
-      setAuth({ user: session.user, loading: false })
+      await login({ username, password })
       setBanner('Добро пожаловать обратно 👋')
       handleNavigate('/')
     } catch (err) {
@@ -84,9 +59,7 @@ export function App() {
   const handleRegister = async (username: string, password1: string, password2: string) => {
     setError(null)
     try {
-      await apiService.ensureCsrf()
-      const session = await apiService.register(username, password1, password2)
-      setAuth({ user: session.user, loading: false })
+      await register({ username, password1, password2 })
       setBanner('Аккаунт создан. Можно общаться!')
       handleNavigate('/')
     } catch (err) {
@@ -96,8 +69,7 @@ export function App() {
   }
 
   const handleLogout = async () => {
-    await apiService.logout().catch(() => {})
-    setAuth({ user: null, loading: false })
+    await logout()
     setBanner('Вы вышли из аккаунта')
     handleNavigate('/login')
   }
@@ -110,14 +82,8 @@ export function App() {
     if (!auth.user) return
     setError(null)
     try {
-      await apiService.ensureCsrf()
-      const { user } = await apiService.updateProfile(fields)
-      const bustedImage =
-        user.profileImage && user.profileImage.length > 0
-          ? `${user.profileImage}${user.profileImage.includes('?') ? '&' : '?'}t=${Date.now()}`
-          : null
-      setAuth((prev) => ({ ...prev, user: { ...user, profileImage: bustedImage } }))
-      setBanner('Профиль обновлён')
+      await updateProfile(fields)
+      setBanner('Профиль обновлен')
     } catch (err) {
       debugLog('Profile update failed', err)
       setError(extractMessage(err))
@@ -191,3 +157,4 @@ export function App() {
 }
 
 export default App
+

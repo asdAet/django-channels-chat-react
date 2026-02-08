@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DJANGO_DEBUG: "0"
+      DJANGO_SECRET_KEY: "CHANGE_ME"
+      DJANGO_ALLOWED_HOSTS: "your-domain.com"
+      DJANGO_CSRF_TRUSTED_ORIGINS: "https://your-domain.com"
+      DJANGO_SECURE_SSL_REDIRECT: "1"
+      DJANGO_SESSION_COOKIE_SECURE: "1"
+      DJANGO_CSRF_COOKIE_SECURE: "1"
+      REDIS_URL: "redis://redis:6379/0"
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: deploy/nginx.Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/static
+      - media_volume:/media
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+volumes:
+  static_volume:
+  media_volume:
