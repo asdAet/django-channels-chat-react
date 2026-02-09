@@ -277,14 +277,13 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
           </div>
           {!user && isPublicRoom && (
             <div className="auth-callout">
-              <div>
-                <p className="auth-callout-title">Только чтение</p>
+              <div className="auth-callout-text">
                 <p className="muted">
                   Чтобы писать в публичном чате, войдите или зарегистрируйтесь.
                 </p>
               </div>
             </div>
-          )}
+            )}
           {user && (
             <div className={`chat-input${rateLimitActive ? ' blocked' : ''}`}>
               <input
