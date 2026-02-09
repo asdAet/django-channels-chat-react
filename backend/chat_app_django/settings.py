@@ -13,47 +13,47 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 from urllib.parse import urlparse
-
+ 
 from django.core.exceptions import ImproperlyConfigured
-
+ 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
+ 
+ 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
-
+ 
 def env_bool(name: str, default: bool) -> bool:
     value = os.getenv(name)
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
-
-
+ 
+ 
 def env_list(name: str, default: list[str]) -> list[str]:
     value = os.getenv(name)
     if not value:
         return default
     return [item.strip() for item in value.split(",") if item.strip()]
-
-
+ 
+ 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEFAULT_SECRET_KEY = "django-insecure-wlj0u8%db2sb1^!@ityk5_0@u7og=+r*-k1-6k=wdoqc7v2vz("
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", DEFAULT_SECRET_KEY)
-
+ 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env_bool("DJANGO_DEBUG", True)
-
+ 
 ALLOWED_HOSTS = env_list(
     "DJANGO_ALLOWED_HOSTS",
     ["*"] if DEBUG else ["localhost", "127.0.0.1"],
 )
 if not DEBUG and SECRET_KEY == DEFAULT_SECRET_KEY:
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set in production.")
-
-
+ 
+ 
 # Application definition
-
+ 
 INSTALLED_APPS = [
     'channels',
     'crispy_forms',
@@ -67,7 +67,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
-
+ 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -78,9 +78,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'users.middleware.UpdateLastSeenMiddleware',
 ]
-
+ 
 ROOT_URLCONF = 'chat_app_django.urls'
-
+ 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -97,30 +97,29 @@ TEMPLATES = [
         },
     },
 ]
-
+ 
 WSGI_APPLICATION = 'chat_app_django.wsgi.application'
-
+ 
 # ************************************ #
 # ADDED
 ASGI_APPLICATION = 'chat_app_django.asgi.application'
-
-
-
+ 
+ 
+ 
 if REDIS_URL:  
-        CACHES = {  
-            "default": {  
-                "BACKEND": "django.core.cache.backends.redis.RedisCache",  
-                "LOCATION": REDIS_URL,  
-            }  
+    CACHES = {  
+        "default": {  
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",  
+            "LOCATION": REDIS_URL,  
         }  
-    else:  
-        CACHES = {  
-            "default": {  
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",  
-            }  
-        }
-
-
+    }  
+else:  
+    CACHES = {  
+        "default": {  
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",  
+        }  
+    }
+ 
 # ************************************ #
 def _database_from_url(url: str) -> dict:
     parsed = urlparse(url)
@@ -134,8 +133,8 @@ def _database_from_url(url: str) -> dict:
             "PORT": str(parsed.port or ""),
         }
     raise ImproperlyConfigured("Unsupported DATABASE_URL scheme.")
-
-
+ 
+ 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -162,7 +161,7 @@ else:
                 "NAME": sqlite_path or (BASE_DIR / "db.sqlite3"),
             }
         }
-
+ 
 ALLOW_SQLITE_IN_PROD = env_bool("DJANGO_ALLOW_SQLITE", False)
 if (
     not DEBUG
@@ -170,11 +169,11 @@ if (
     and not ALLOW_SQLITE_IN_PROD
 ):
     raise ImproperlyConfigured("SQLite is not allowed in production.")
-
-
+ 
+ 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
-
+ 
 if env_bool("DJANGO_RELAX_PASSWORDS", DEBUG):
     AUTH_PASSWORD_VALIDATORS = [
         {
@@ -197,40 +196,40 @@ else:
             "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
         },
     ]
-
-
+ 
+ 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
-
+ 
 LANGUAGE_CODE = 'en-us'
-
+ 
 TIME_ZONE = 'UTC'
-
+ 
 USE_I18N = True
-
+ 
 USE_TZ = True
-
-
+ 
+ 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-
+ 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
+ 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
-
+ 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
+ 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+ 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
-
+ 
 LOGIN_REDIRECT_URL = 'chat-home'
-
+ 
 LOGIN_URL = 'login'
-
+ 
 CSRF_TRUSTED_ORIGINS = env_list(
     "DJANGO_CSRF_TRUSTED_ORIGINS",
     [
@@ -238,12 +237,12 @@ CSRF_TRUSTED_ORIGINS = env_list(
         "http://127.0.0.1:5173",
     ],
 )
-
+ 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = env_bool("DJANGO_SESSION_COOKIE_SECURE", not DEBUG)
 CSRF_COOKIE_SECURE = env_bool("DJANGO_CSRF_COOKIE_SECURE", not DEBUG)
 SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", not DEBUG)
-
+ 
 # App-level limits
 AUTH_RATE_LIMIT = int(os.getenv("AUTH_RATE_LIMIT", "10"))
 AUTH_RATE_WINDOW = int(os.getenv("AUTH_RATE_WINDOW", "60"))
@@ -251,7 +250,7 @@ CHAT_MESSAGE_MAX_LENGTH = int(os.getenv("CHAT_MESSAGE_MAX_LENGTH", "1000"))
 CHAT_MESSAGE_RATE_LIMIT = int(os.getenv("CHAT_MESSAGE_RATE_LIMIT", "20"))
 CHAT_MESSAGE_RATE_WINDOW = int(os.getenv("CHAT_MESSAGE_RATE_WINDOW", "10"))
 CHAT_ROOM_SLUG_REGEX = os.getenv("CHAT_ROOM_SLUG_REGEX", r"^[A-Za-z0-9_-]{3,50}$")
-
+ 
 # Cache (Redis preferred in production)
 if REDIS_URL:
     CACHES = {
