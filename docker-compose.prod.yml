@@ -6,8 +6,8 @@ services:
     environment:
       DJANGO_DEBUG: "0"
       DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:?set DJANGO_SECRET_KEY in .env}"
-      DJANGO_ALLOWED_HOSTS: "slowed.sbs,origin.slowed.sbs"
-      DJANGO_CSRF_TRUSTED_ORIGINS: "https://slowed.sbs,https://origin.slowed.sbs"
+      DJANGO_ALLOWED_HOSTS: "slowed.sbs,proxy.slowed.sbs"
+      DJANGO_CSRF_TRUSTED_ORIGINS: "https://slowed.sbs,https://proxy.slowed.sbs"
       DJANGO_SECURE_SSL_REDIRECT: "1"
       DJANGO_SESSION_COOKIE_SECURE: "1"
       DJANGO_CSRF_COOKIE_SECURE: "1"
