@@ -106,20 +106,24 @@ ASGI_APPLICATION = 'chat_app_django.asgi.application'
  
  
  
-if REDIS_URL:  
-    CACHES = {  
-        "default": {  
-            "BACKEND": "django.core.cache.backends.redis.RedisCache",  
-            "LOCATION": REDIS_URL,  
+
+REDIS_URL = os.getenv("REDIS_URL")  
+     
+   
+    if REDIS_URL:  
+        CHANNEL_LAYERS = {  
+            "default": {  
+                "BACKEND": "channels_redis.core.RedisChannelLayer",  
+                "CONFIG": {"hosts": [REDIS_URL]},  
+            }  
         }  
-    }  
-else:  
-    CACHES = {  
-        "default": {  
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",  
-        }  
-    }
- 
+    else:  
+        CHANNEL_LAYERS = {  
+            "default": {  
+                "BACKEND": "channels.layers.InMemoryChannelLayer"  
+            }  
+        }
+
 # ************************************ #
 def _database_from_url(url: str) -> dict:
     parsed = urlparse(url)
