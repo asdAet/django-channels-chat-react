@@ -68,6 +68,6 @@ def build_profile_url(scope, image_name: str | None) -> str | None:
         scheme = "https" if scope.get("scheme") in {"wss", "https"} else "http"
 
     if host_val:
-        return f"{scheme}://{host_val}:8443{path}"
+        return f"{scheme}://{host_val}{path}"
 
     return path
