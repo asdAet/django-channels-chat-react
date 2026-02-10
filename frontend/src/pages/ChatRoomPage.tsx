@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { UserProfile } from '../entities/user/types'
-import { avatarFallback, formatTimestamp } from '../shared/lib/format'
+import type { Message } from '../entities/message/types'
+import { avatarFallback, formatDayLabel, formatTimestamp } from '../shared/lib/format'
 import { debugLog } from '../shared/lib/debug'
 import { useChatRoom } from '../hooks/useChatRoom'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
@@ -206,6 +207,34 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
 
   const statusClass = status === 'online' ? 'success' : status === 'connecting' ? 'warning' : 'muted'
 
+  const timeline = useMemo(() => {
+    const items: Array<
+      | { type: 'day'; key: string; label: string }
+      | { type: 'message'; message: Message }
+    > = []
+    const nowDate = new Date()
+    let lastKey: string | null = null
+
+    for (const msg of messages) {
+      const date = new Date(msg.createdAt)
+      if (!Number.isNaN(date.getTime())) {
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+          date.getDate(),
+        ).padStart(2, '0')}`
+        if (key !== lastKey) {
+          const label = formatDayLabel(date, nowDate)
+          if (label) {
+            items.push({ type: 'day', key, label })
+            lastKey = key
+          }
+        }
+      }
+      items.push({ type: 'message', message: msg })
+    }
+
+    return items
+  }, [messages])
+
   return (
     <div className="chat">
       {!isOnline && (
@@ -256,24 +285,30 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
                 Это начало истории.
               </div>
             )}
-            {messages.map((msg) => (
-              <article className="message" key={`${msg.id}-${msg.createdAt}`}>
-                <div className="avatar small">
-                  {msg.profilePic ? (
-                    <img src={msg.profilePic} alt={msg.username} />
-                  ) : (
-                    <span>{avatarFallback(msg.username)}</span>
-                  )}
+            {timeline.map((item) =>
+              item.type === 'day' ? (
+                <div className="day-separator" role="separator" aria-label={item.label} key={`day-${item.key}`}>
+                  <span>{item.label}</span>
                 </div>
-                <div className="message-body">
-                  <div className="message-meta">
-                    <strong>{msg.username}</strong>
-                    <span className="muted">{formatTimestamp(msg.createdAt)}</span>
+              ) : (
+                <article className="message" key={`${item.message.id}-${item.message.createdAt}`}>
+                  <div className="avatar small">
+                    {item.message.profilePic ? (
+                      <img src={item.message.profilePic} alt={item.message.username} />
+                    ) : (
+                      <span>{avatarFallback(item.message.username)}</span>
+                    )}
                   </div>
-                  <p>{msg.content}</p>
-                </div>
-              </article>
-            ))}
+                  <div className="message-body">
+                    <div className="message-meta">
+                      <strong>{item.message.username}</strong>
+                      <span className="muted">{formatTimestamp(item.message.createdAt)}</span>
+                    </div>
+                    <p>{item.message.content}</p>
+                  </div>
+                </article>
+              ),
+            )}
           </div>
           {!user && isPublicRoom && (
             <div className="auth-callout">
