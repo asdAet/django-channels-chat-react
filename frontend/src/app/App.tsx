@@ -49,23 +49,34 @@ export function App() {
   }
 
   const extractAuthMessage = (err: unknown, fallback: string) => {
-    if (err && typeof err === 'object' && 'message' in err) {
-      const apiErr = err as ApiError
-      const apiErrors = apiErr.data && (apiErr.data.errors as Record<string, string[]> | undefined)
-      if (apiErrors) {
-        return Object.values(apiErrors)
-          .flat()
-          .join(' ')
+    const extractFromData = (data: unknown) => {
+      if (!data || typeof data !== 'object') return null
+      const record = data as Record<string, unknown>
+      const errors = record.errors as Record<string, string[] | string> | undefined
+      if (errors) {
+        const parts = Object.values(errors)
+          .flatMap((value) => (Array.isArray(value) ? value : [value]))
+          .filter((value) => typeof value === 'string') as string[]
+        if (parts.length) return parts.join(' ')
       }
-      const rawMessage = typeof apiErr.message === 'string' ? apiErr.message.trim() : ''
-      if (rawMessage && !rawMessage.includes('status code 400')) {
-        return rawMessage
-      }
-      if (apiErr.data && typeof apiErr.data.error === 'string') {
-        return apiErr.data.error
-      }
-      if (apiErr.status === 400) {
-        return fallback
+      if (typeof record.error === 'string') return record.error
+      if (typeof record.detail === 'string') return record.detail
+      return null
+    }
+
+    if (err && typeof err === 'object') {
+      const anyErr = err as ApiError & { response?: { data?: unknown } }
+      const direct = extractFromData(anyErr.data) || extractFromData(anyErr.response?.data)
+      if (direct) return direct
+
+      if ('message' in anyErr) {
+        const rawMessage = typeof anyErr.message === 'string' ? anyErr.message.trim() : ''
+        if (rawMessage && !rawMessage.includes('status code 400')) {
+          return rawMessage
+        }
+        if (anyErr.status === 400) {
+          return fallback
+        }
       }
     }
     return fallback
@@ -174,7 +185,7 @@ export function App() {
   }
 
   return (
-    <PresenceProvider user={auth.user}>
+    <PresenceProvider user={auth.user} ready={!auth.loading}>
       <div className="app-shell">
         <TopBar user={auth.user} onNavigate={handleNavigate} onLogout={handleLogout} />
         <main className="content">

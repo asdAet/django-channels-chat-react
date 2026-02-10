@@ -254,6 +254,9 @@ CHAT_MESSAGE_MAX_LENGTH = int(os.getenv("CHAT_MESSAGE_MAX_LENGTH", "1000"))
 CHAT_MESSAGE_RATE_LIMIT = int(os.getenv("CHAT_MESSAGE_RATE_LIMIT", "20"))
 CHAT_MESSAGE_RATE_WINDOW = int(os.getenv("CHAT_MESSAGE_RATE_WINDOW", "10"))
 CHAT_ROOM_SLUG_REGEX = os.getenv("CHAT_ROOM_SLUG_REGEX", r"^[A-Za-z0-9_-]{3,50}$")
+PRESENCE_TTL = int(os.getenv("PRESENCE_TTL", "90"))
+PRESENCE_GRACE = int(os.getenv("PRESENCE_GRACE", "5"))
+
  
 # Cache (Redis preferred in production)
 if REDIS_URL:

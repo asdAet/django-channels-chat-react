@@ -174,6 +174,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
     cache_key = "presence:online"
     guest_cache_key = "presence:guests"
     presence_ttl = int(getattr(settings, "PRESENCE_TTL", 90))
+    presence_grace = int(getattr(settings, "PRESENCE_GRACE", 5))
 
     async def connect(self):
         user = self.scope.get("user")
@@ -194,10 +195,11 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         user = self.scope.get("user")
+        graceful = close_code in (1000, 1001)
         if self.is_guest:
-            await self._remove_guest(self.guest_ip)
+            await self._remove_guest(self.guest_ip, graceful=graceful)
         elif user and user.is_authenticated:
-            await self._remove_user(user)
+            await self._remove_user(user, graceful=graceful)
 
         await self._broadcast()
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
@@ -249,19 +251,34 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         image_name = getattr(getattr(user, "profile", None), "image", None)
         image_name = image_name.name if image_name else ""
         image_url = build_profile_url(self.scope, image_name) if image_name else None
-        data[user.username] = {"count": count, "profileImage": image_url, "last_seen": time.time()}
+        data[user.username] = {
+            "count": count,
+            "profileImage": image_url,
+            "last_seen": time.time(),
+            "grace_until": 0,
+        }
         cache.set(self.cache_key, data, timeout=60 * 60)
 
     @sync_to_async
-    def _remove_user(self, user):
+    def _remove_user(self, user, graceful: bool = False):
         data = cache.get(self.cache_key, {})
         if user.username in data:
-            count = data[user.username].get("count", 1) - 1
+            entry = data[user.username]
+            count = entry.get("count", 1) - 1
+            now = time.time()
             if count <= 0:
-                data.pop(user.username, None)
+                if graceful or self.presence_grace <= 0:
+                    data.pop(user.username, None)
+                else:
+                    entry["count"] = 0
+                    entry["last_seen"] = now
+                    entry["grace_until"] = now + self.presence_grace
+                    data[user.username] = entry
             else:
-                data[user.username]["count"] = count
-                data[user.username]["last_seen"] = time.time()
+                entry["count"] = count
+                entry["last_seen"] = now
+                entry["grace_until"] = 0
+                data[user.username] = entry
             cache.set(self.cache_key, data, timeout=60 * 60)
 
     @sync_to_async
@@ -275,7 +292,15 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             except (TypeError, ValueError):
                 count = 0
             last_seen = info.get("last_seen", 0)
+            grace_until = info.get("grace_until", 0)
             if count > 0 and (now - last_seen) <= self.presence_ttl:
+                cleaned[username] = info
+            elif (
+                count <= 0
+                and grace_until
+                and grace_until > now
+                and (now - last_seen) <= self.presence_ttl
+            ):
                 cleaned[username] = info
         if cleaned != data:
             cache.set(self.cache_key, cleaned, timeout=60 * 60)
@@ -294,11 +319,11 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             count = int(current.get("count", 0))
         except (TypeError, ValueError, AttributeError):
             count = 0
-        data[ip] = {"count": count + 1, "last_seen": time.time()}
+        data[ip] = {"count": count + 1, "last_seen": time.time(), "grace_until": 0}
         cache.set(self.guest_cache_key, data, timeout=60 * 60)
 
     @sync_to_async
-    def _remove_guest(self, ip: str | None):
+    def _remove_guest(self, ip: str | None, graceful: bool = False):
         if not ip:
             return
         data = cache.get(self.guest_cache_key, {}) or {}
@@ -308,10 +333,14 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         except (TypeError, ValueError, AttributeError):
             count = 0
         count -= 1
+        now = time.time()
         if count <= 0:
-            data.pop(ip, None)
+            if graceful or self.presence_grace <= 0:
+                data.pop(ip, None)
+            else:
+                data[ip] = {"count": 0, "last_seen": now, "grace_until": now + self.presence_grace}
         else:
-            data[ip] = {"count": count, "last_seen": time.time()}
+            data[ip] = {"count": count, "last_seen": now, "grace_until": 0}
         if data:
             cache.set(self.guest_cache_key, data, timeout=60 * 60)
         else:
@@ -328,7 +357,15 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             except (TypeError, ValueError, AttributeError):
                 count = 0
             last_seen = info.get("last_seen", 0)
+            grace_until = info.get("grace_until", 0)
             if count > 0 and (now - last_seen) <= self.presence_ttl:
+                cleaned[ip] = info
+            elif (
+                count <= 0
+                and grace_until
+                and grace_until > now
+                and (now - last_seen) <= self.presence_ttl
+            ):
                 cleaned[ip] = info
         if cleaned != data:
             cache.set(self.guest_cache_key, cleaned, timeout=60 * 60)
@@ -342,9 +379,15 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         image_name = image_name.name if image_name else ""
         image_url = build_profile_url(self.scope, image_name) if image_name else None
         if not current:
-            data[user.username] = {"count": 1, "profileImage": image_url, "last_seen": time.time()}
+            data[user.username] = {
+                "count": 1,
+                "profileImage": image_url,
+                "last_seen": time.time(),
+                "grace_until": 0,
+            }
         else:
             current["last_seen"] = time.time()
+            current["grace_until"] = 0
             if image_url:
                 current["profileImage"] = image_url
             data[user.username] = current
@@ -357,9 +400,13 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         data = cache.get(self.guest_cache_key, {}) or {}
         current = data.get(ip)
         if not current:
-            data[ip] = {"count": 1, "last_seen": time.time()}
+            data[ip] = {"count": 1, "last_seen": time.time(), "grace_until": 0}
         else:
-            data[ip] = {"count": current.get("count", 1), "last_seen": time.time()}
+            data[ip] = {
+                "count": current.get("count", 1),
+                "last_seen": time.time(),
+                "grace_until": 0,
+            }
         cache.set(self.guest_cache_key, data, timeout=60 * 60)
 
     def _decode_header(self, value: bytes | None) -> str | None:

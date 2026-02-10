@@ -10,16 +10,18 @@ import { PresenceContext } from './context'
 
 type ProviderProps = {
   user: UserProfile | null
+  ready?: boolean
   children: ReactNode
 }
 
-export function PresenceProvider({ user, children }: ProviderProps) {
+export function PresenceProvider({ user, children, ready = true }: ProviderProps) {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([])
   const [guestCount, setGuestCount] = useState(0)
   const presenceUrl = useMemo(() => {
+    if (!ready) return null
     const base = `${getWebSocketBase()}/ws/presence/`
     return `${base}?auth=${user ? '1' : '0'}`
-  }, [user])
+  }, [user, ready])
 
   const handlePresence = useCallback((event: MessageEvent) => {
     try {
@@ -38,6 +40,13 @@ export function PresenceProvider({ user, children }: ProviderProps) {
     }
   }, [])
 
+
+  useEffect(() => {
+    if (!ready) {
+      setOnlineUsers([])
+      setGuestCount(0)
+    }
+  }, [ready])
   const { status, lastError, send } = useReconnectingWebSocket({
     url: presenceUrl,
     onMessage: handlePresence,
