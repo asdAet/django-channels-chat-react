@@ -9,7 +9,7 @@ type CacheEntry<T> = {
 const PUBLIC_ROOM_TTL_MS = 60_000
 const ROOM_DETAILS_TTL_MS = 30_000
 const ROOM_MESSAGES_TTL_MS = 15_000
-const MAX_MESSAGE_CACHE_ENTRIES = 120
+const MAX_MESSAGE_CACHE_ENTRIES = 320
 
 const roomDetailsCache = new Map<string, CacheEntry<RoomDetailsDto>>()
 const roomMessagesCache = new Map<string, CacheEntry<RoomMessagesDto>>()
