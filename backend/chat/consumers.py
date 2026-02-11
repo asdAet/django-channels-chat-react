@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import json
 import time
@@ -34,12 +35,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send({"close": True})
             return
 
-        # Channels группа должна содержать только ASCII. Сначала пробуем безопасный slug,
-        # если он пустой (например, на полностью юникодных названиях) — используем sha1-хэш.
         normalized = slugify(self.room_name)
         if not normalized:
             normalized = hashlib.sha1(self.room_name.encode("utf-8")).hexdigest()
-        normalized = normalized[:80]  # ограничим длину чтобы пройти валидацию Channels
+        normalized = normalized[:80]  # trim length to satisfy Channels validation
         self.room_group_name = f"chat_{normalized}"
 
         # Join room group
@@ -86,7 +85,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         user = self.scope['user']
         if not user.is_authenticated:
-            # Запрещаем постинг для неавторизованных, но соединение остаётся для чтения.
             return
 
         if await self._rate_limited(user):
@@ -99,10 +97,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         profile_name = await self._get_profile_image_name(user)
         profile_url = build_profile_url(self.scope, profile_name)
 
-        # Save message to DB
         await self.save_message(message, user, username, profile_name, room)
 
-        # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -125,7 +121,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         profile_pic = event['profile_pic']
         room = event['room']
 
-        # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message,
             'username': username,
@@ -176,6 +171,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
     guest_cache_key = "presence:guests"
     presence_ttl = int(getattr(settings, "PRESENCE_TTL", 90))
     presence_grace = int(getattr(settings, "PRESENCE_GRACE", 5))
+    presence_heartbeat = int(getattr(settings, "PRESENCE_HEARTBEAT", 20))
 
     async def connect(self):
         user = self.scope.get("user")
@@ -188,6 +184,8 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
+        self._heartbeat_task = asyncio.create_task(self._heartbeat())
+
         if self.is_guest:
             await self._add_guest(self.guest_ip)
         else:
@@ -195,6 +193,13 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         await self._broadcast()
 
     async def disconnect(self, close_code):
+        if getattr(self, "_heartbeat_task", None):
+            self._heartbeat_task.cancel()
+            try:
+                await self._heartbeat_task
+            except asyncio.CancelledError:
+                pass
+
         user = self.scope.get("user")
         graceful = close_code in (1000, 1001)
         if self.is_guest:
@@ -243,6 +248,21 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             payload["guests"] = event["guests"]
         if payload:
             await self.send(text_data=json.dumps(payload))
+
+    async def _heartbeat(self):
+        interval = max(5, self.presence_heartbeat)
+        while True:
+            await asyncio.sleep(interval)
+            try:
+                await self.send(text_data=json.dumps({"type": "ping"}))
+            except Exception:
+                break
+            if self.is_guest:
+                await self._touch_guest(self.guest_ip)
+            else:
+                user = self.scope.get("user")
+                if user and user.is_authenticated:
+                    await self._touch_user(user)
 
     @sync_to_async
     def _add_user(self, user):
@@ -444,4 +464,3 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             return str(client[0])
         return None
 
-    # build_profile_url moved to chat.utils to avoid duplication

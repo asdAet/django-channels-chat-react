@@ -8,6 +8,8 @@ import { getWebSocketBase } from '../lib/ws'
 import { useReconnectingWebSocket } from '../../hooks/useReconnectingWebSocket'
 import { PresenceContext } from './context'
 
+const PRESENCE_PING_MS = 10000
+
 type ProviderProps = {
   user: UserProfile | null
   ready?: boolean
@@ -86,7 +88,7 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
       send(JSON.stringify({ type: 'ping', ts: Date.now() }))
     }
     sendPing()
-    const id = window.setInterval(sendPing, 20000)
+    const id = window.setInterval(sendPing, PRESENCE_PING_MS)
     return () => window.clearInterval(id)
   }, [send, status])
 
