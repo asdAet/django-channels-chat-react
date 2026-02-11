@@ -43,11 +43,8 @@ export function UserProfilePage({
 
   return (
     <div className="card wide">
-      <div className="profile_header">
+      <div>
         <p className="eyebrow_profile">Профиль пользователя</p>
-        <div className="profile_meta">
-          Зарегистрирован: {formatRegistrationDate(user.registeredAt) || '—'}
-        </div>
       </div>
 
       <div className="profile_avatar_wrapper">
@@ -65,6 +62,9 @@ export function UserProfilePage({
           <h2>{user.username}</h2>
           <p className="muted">О себе</p>
           <p className="bio-text">{user.bio || "Пока ничего не указано."}</p>
+          <p className="profile_meta profile_meta_right">
+            Зарегистрирован: {formatRegistrationDate(user.registeredAt) || '—'}
+          </p>
         </div>
         <div className="actions">
           {isSelf && (

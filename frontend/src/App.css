@@ -938,3 +938,10 @@ button:focus {
   letter-spacing: 0.12em;
   text-align: right;
 }
+
+.profile_meta_right {
+  margin-top: 8px;
+  text-align: right;
+  width: 100%;
+}
+

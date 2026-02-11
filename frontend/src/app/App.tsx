@@ -162,6 +162,13 @@ export function App() {
         handleNavigate('/login')
         return { ok: false, message: 'Сессия истекла. Войдите снова.' }
       }
+      if (apiErr && typeof apiErr.status === 'number' && apiErr.status === 413) {
+        return {
+          ok: false,
+          errors: { image: ['Файл слишком большой. Максимум 20 МБ.'] },
+          message: 'Файл слишком большой. Максимум 20 МБ.',
+        }
+      }
       const fieldErrors = extractProfileErrors(err)
       if (fieldErrors) {
         return { ok: false, errors: fieldErrors }
