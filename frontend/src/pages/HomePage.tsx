@@ -26,7 +26,9 @@ export function HomePage({ user, onNavigate }: Props) {
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const tempIdRef = useRef(0);
-  const { online, guests } = usePresence();
+  const { online, guests, status } = usePresence();
+
+  const presenceLoading = Boolean(user && status !== "online");
 
   const visiblePublicRoom = useMemo(() => publicRoom, [publicRoom]);
   const isLoading = useMemo(() => loading, [loading]);
@@ -308,11 +310,13 @@ export function HomePage({ user, onNavigate }: Props) {
             <div>
               <p className="eyebrow">Кто онлайн</p>
             </div>
-            <span className="pill">{user ? online.length : "—"}</span>
+            <span className="pill">{user ? (presenceLoading ? "..." : online.length) : "—"}</span>
           </div>
 
           {!user ? (
             <p className="muted">Войдите, чтобы видеть участников онлайн.</p>
+          ) : presenceLoading ? (
+            <p className="muted">Загружаем список онлайн...</p>
           ) : online.length ? (
             <div className="online-list">
               {online.map((u) => (
