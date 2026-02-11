@@ -914,3 +914,27 @@ button:focus {
 }
 
 
+
+.profile_header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.profile_header .eyebrow_profile {
+  margin: 0;
+  text-align: left;
+  width: auto;
+  padding-bottom: 0;
+}
+
+.profile_meta {
+  margin-left: auto;
+  color: #9ab1d0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-align: right;
+}

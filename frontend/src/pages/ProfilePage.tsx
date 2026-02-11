@@ -1,5 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react';
-import { avatarFallback } from '../shared/lib/format';
+import { avatarFallback, formatRegistrationDate } from '../shared/lib/format';
 import type { UserProfile } from '../entities/user/types';
 
 type SaveResult =
@@ -86,8 +86,11 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
 
   return (
     <div className="card wide">
-      <div>
+      <div className="profile_header">
         <p className="eyebrow_profile">Профиль</p>
+        <div className="profile_meta">
+          Зарегистрирован: {formatRegistrationDate(user.registeredAt) || '—'}
+        </div>
       </div>
 
       {genericError && (

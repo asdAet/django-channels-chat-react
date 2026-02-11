@@ -1,4 +1,4 @@
-﻿import { avatarFallback } from "../shared/lib/format";
+﻿import { avatarFallback, formatRegistrationDate } from "../shared/lib/format";
 import type { UserProfile } from "../entities/user/types";
 import { useUserProfile } from "../hooks/useUserProfile";
 
@@ -43,8 +43,11 @@ export function UserProfilePage({
 
   return (
     <div className="card wide">
-      <div>
+      <div className="profile_header">
         <p className="eyebrow_profile">Профиль пользователя</p>
+        <div className="profile_meta">
+          Зарегистрирован: {formatRegistrationDate(user.registeredAt) || '—'}
+        </div>
       </div>
 
       <div className="profile_avatar_wrapper">

@@ -42,6 +42,7 @@ export const useUserProfile = (username: string) => {
             email: user.email || '',
             profileImage: user.profileImage || null,
             bio: user.bio || '',
+            registeredAt: user.registeredAt || null,
           },
           error: null,
         })

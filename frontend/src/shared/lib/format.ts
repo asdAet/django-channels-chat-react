@@ -16,3 +16,14 @@ export const formatDayLabel = (date: Date, now: Date = new Date()) => {
 
 export const avatarFallback = (username: string) =>
   username ? username[0].toUpperCase() : '?'
+
+export const formatRegistrationDate = (iso: string | null) => {
+  if (!iso) return ''
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+}
