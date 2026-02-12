@@ -83,16 +83,7 @@ const extractErrorMessage = (data?: Record<string, unknown>) => {
   return undefined;
 };
 
-const normalizeAxiosError = (error: unknown): ApiError => {
-  if (
-    error &&
-    typeof error === "object" &&
-    "status" in error &&
-    "message" in error
-  ) {
-    return error as ApiError;
-  }
-
+export const normalizeAxiosError = (error: unknown): ApiError => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError;
     const status = axiosError.response?.status ?? 0;
@@ -100,6 +91,15 @@ const normalizeAxiosError = (error: unknown): ApiError => {
     const message =
       extractErrorMessage(data) || axiosError.message || "Request failed";
     return { status, message, data };
+  }
+
+  if (
+    error &&
+    typeof error === "object" &&
+    "status" in error &&
+    "message" in error
+  ) {
+    return error as ApiError;
   }
 
   return { status: 0, message: "Request failed" };

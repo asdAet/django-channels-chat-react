@@ -1,0 +1,45 @@
+[run]
+branch = True
+source =
+    chat
+    users
+    chat_app_django
+omit =
+    */migrations/*
+    */admin.py
+    */apps.py
+    */views.py
+    */wsgi.py
+    */asgi.py
+    */manage.py
+    */tests/*
+    chat/context_processors.py
+    chat/forms.py
+    chat/urls.py
+    chat_app_django/settings.py
+    chat_app_django/urls.py
+    */chat/context_processors.py
+    */chat/forms.py
+    */chat/urls.py
+    */chat_app_django/settings.py
+    */chat_app_django/urls.py
+
+[report]
+omit =
+    */tests/*
+    chat/context_processors.py
+    chat/forms.py
+    chat/urls.py
+    chat_app_django/settings.py
+    chat_app_django/urls.py
+    */chat/context_processors.py
+    */chat/forms.py
+    */chat/urls.py
+    */chat_app_django/settings.py
+    */chat_app_django/urls.py
+show_missing = True
+skip_covered = False
+fail_under = 90
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:

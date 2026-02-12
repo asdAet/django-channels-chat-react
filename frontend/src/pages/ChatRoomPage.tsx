@@ -219,7 +219,7 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
   const statusLabel = (() => {
     switch (status) {
       case "online":
-        return "Подключено.";
+        return "Подключено";
       case "connecting":
         return "Подключаемся...";
       case "offline":

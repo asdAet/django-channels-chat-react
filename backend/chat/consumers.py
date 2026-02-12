@@ -56,7 +56,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         is_public = self.room_name == PUBLIC_ROOM_SLUG
         if not user.is_authenticated and not is_public:
-            await self.send({"close": True})
+            await self.close(code=4401)
             return
 
         normalized = slugify(self.room_name)
@@ -91,10 +91,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             except asyncio.CancelledError:
                 pass
 
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        if hasattr(self, 'room_group_name'):
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
 
     async def receive(self, text_data):
         """

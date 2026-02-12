@@ -4,6 +4,7 @@ Django settings for chat_app_django project.
 
 import os
 import secrets
+import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -28,6 +29,7 @@ def env_list(name: str, default: list[str]) -> list[str]:
 
 
 DEBUG = env_bool("DJANGO_DEBUG", True)
+TESTING = "test" in sys.argv
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
@@ -298,7 +300,12 @@ LOGGING = {
         },
         "django.request": {
             "handlers": ["console"],
-            "level": "WARNING",
+            "level": "ERROR" if TESTING else "WARNING",
+            "propagate": False,
+        },
+        "chat_app_django.health": {
+            "handlers": ["console"],
+            "level": "CRITICAL" if TESTING else LOG_LEVEL,
             "propagate": False,
         },
         "chat": {

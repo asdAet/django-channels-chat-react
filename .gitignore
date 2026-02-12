@@ -171,3 +171,9 @@ cython_debug/
 # SSL certs (do not commit)
 deploy/certs/
 
+
+# Frontend test artifacts
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+
