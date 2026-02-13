@@ -1,4 +1,7 @@
-﻿import asyncio
+"""Содержит тесты модуля `test_consumers_helpers` подсистемы `chat`."""
+
+
+import asyncio
 import json
 import time
 from types import SimpleNamespace
@@ -18,11 +21,14 @@ User = get_user_model()
 
 
 class ChatConsumerInternalTests(TestCase):
+    """Группирует тестовые сценарии класса `ChatConsumerInternalTests`."""
     def setUp(self):
+        """Проверяет сценарий `setUp`."""
         cache.clear()
         self.user = User.objects.create_user(username='chat_internal_user', password='pass12345')
 
     def _consumer(self, user=None):
+        """Проверяет сценарий `_consumer`."""
         consumer = ChatConsumer()
         consumer.scope = {
             'user': user if user is not None else self.user,
@@ -46,9 +52,11 @@ class ChatConsumerInternalTests(TestCase):
 
     @override_settings(CHAT_ROOM_SLUG_REGEX='[')
     def test_slug_validation_handles_invalid_regex(self):
+        """Проверяет сценарий `test_slug_validation_handles_invalid_regex`."""
         self.assertFalse(_is_valid_room_slug('private123'))
 
     def test_get_profile_image_name_returns_empty_when_profile_missing(self):
+        """Проверяет сценарий `test_get_profile_image_name_returns_empty_when_profile_missing`."""
         consumer = self._consumer()
         user_without_profile = SimpleNamespace()
 
@@ -57,6 +65,7 @@ class ChatConsumerInternalTests(TestCase):
 
     @override_settings(CHAT_MESSAGE_RATE_LIMIT=2, CHAT_MESSAGE_RATE_WINDOW=60)
     def test_rate_limit_counts_and_resets(self):
+        """Проверяет сценарий `test_rate_limit_counts_and_resets`."""
         consumer = self._consumer()
 
         self.assertFalse(async_to_sync(consumer._rate_limited)(self.user))
@@ -68,6 +77,7 @@ class ChatConsumerInternalTests(TestCase):
         self.assertFalse(async_to_sync(consumer._rate_limited)(self.user))
 
     def test_chat_message_serializes_and_sends_payload(self):
+        """Проверяет сценарий `test_chat_message_serializes_and_sends_payload`."""
         consumer = self._consumer()
 
         async_to_sync(consumer.chat_message)(
@@ -85,6 +95,7 @@ class ChatConsumerInternalTests(TestCase):
         self.assertEqual(payload['room'], 'private123')
 
     def test_receive_ignores_message_for_anonymous_user(self):
+        """Проверяет сценарий `test_receive_ignores_message_for_anonymous_user`."""
         consumer = self._consumer(user=AnonymousUser())
         consumer.save_message = AsyncMock()
         consumer._rate_limited = AsyncMock(return_value=False)
@@ -95,6 +106,7 @@ class ChatConsumerInternalTests(TestCase):
         consumer.send.assert_not_awaited()
 
     def test_receive_returns_rate_limit_error(self):
+        """Проверяет сценарий `test_receive_returns_rate_limit_error`."""
         consumer = self._consumer()
         consumer.save_message = AsyncMock()
         consumer._rate_limited = AsyncMock(return_value=True)
@@ -107,19 +119,25 @@ class ChatConsumerInternalTests(TestCase):
         self.assertEqual(payload['error'], 'rate_limited')
 
     def test_disconnect_without_group_name_is_safe(self):
+        """Проверяет сценарий `test_disconnect_without_group_name_is_safe`."""
         consumer = self._consumer()
         delattr(consumer, 'room_group_name')
 
         async_to_sync(consumer.disconnect)(1000)
 
     def test_disconnect_discards_group_when_present(self):
+        """Проверяет сценарий `test_disconnect_discards_group_when_present`."""
         consumer = self._consumer()
         class _IdleTask:
+            """Группирует тестовые сценарии класса `_IdleTask`."""
             def __init__(self):
+                """Проверяет сценарий `__init__`."""
                 self.cancel = Mock()
 
             def __await__(self):
+                """Проверяет сценарий `__await__`."""
                 async def _done():
+                    """Проверяет сценарий `_done`."""
                     return None
 
                 return _done().__await__()
@@ -136,11 +154,13 @@ class ChatConsumerInternalTests(TestCase):
         )
 
     def test_idle_watchdog_closes_connection_after_timeout(self):
+        """Проверяет сценарий `test_idle_watchdog_closes_connection_after_timeout`."""
         consumer = self._consumer()
         consumer.chat_idle_timeout = 1
         consumer._last_activity = 0.0
 
         async def _fast_sleep(_interval):
+            """Проверяет сценарий `_fast_sleep`."""
             return None
 
         with patch('chat.consumers.asyncio.sleep', new=_fast_sleep), patch(
@@ -152,11 +172,14 @@ class ChatConsumerInternalTests(TestCase):
 
 
 class PresenceConsumerInternalTests(TestCase):
+    """Группирует тестовые сценарии класса `PresenceConsumerInternalTests`."""
     def setUp(self):
+        """Проверяет сценарий `setUp`."""
         cache.clear()
         self.user = User.objects.create_user(username='presence_internal_user', password='pass12345')
 
     def _consumer(self, user=None):
+        """Проверяет сценарий `_consumer`."""
         consumer = PresenceConsumer()
         resolved_user = user if user is not None else self.user
         consumer.scope = {
@@ -189,16 +212,19 @@ class PresenceConsumerInternalTests(TestCase):
         return consumer
 
     def test_decode_header_handles_utf8_and_latin1(self):
+        """Проверяет сценарий `test_decode_header_handles_utf8_and_latin1`."""
         consumer = self._consumer()
         self.assertEqual(consumer._decode_header('test'.encode('utf-8')), 'test')
         self.assertEqual(consumer._decode_header(b'\xff'), '\xff'.encode('latin-1').decode('latin-1'))
 
     def test_get_client_ip_uses_ip_utils(self):
+        """Проверяет сценарий `test_get_client_ip_uses_ip_utils`."""
         consumer = self._consumer(user=AnonymousUser())
         with patch('chat.consumers.get_client_ip_from_scope', return_value='198.51.100.7'):
             self.assertEqual(consumer._get_client_ip(), '198.51.100.7')
 
     def test_receive_ignores_invalid_payload_and_throttles_guest_ping(self):
+        """Проверяет сценарий `test_receive_ignores_invalid_payload_and_throttles_guest_ping`."""
         consumer = self._consumer(user=AnonymousUser())
         consumer.is_guest = True
         consumer._touch_guest = AsyncMock()
@@ -216,6 +242,7 @@ class PresenceConsumerInternalTests(TestCase):
         consumer._touch_guest.assert_awaited_once_with('203.0.113.50')
 
     def test_receive_touches_authenticated_user(self):
+        """Проверяет сценарий `test_receive_touches_authenticated_user`."""
         consumer = self._consumer()
         consumer.is_guest = False
         consumer._touch_user = AsyncMock()
@@ -225,6 +252,7 @@ class PresenceConsumerInternalTests(TestCase):
         consumer._touch_user.assert_awaited_once_with(self.user)
 
     def test_presence_update_sends_only_non_empty_payload(self):
+        """Проверяет сценарий `test_presence_update_sends_only_non_empty_payload`."""
         consumer = self._consumer()
 
         async_to_sync(consumer.presence_update)({})
@@ -234,10 +262,12 @@ class PresenceConsumerInternalTests(TestCase):
         consumer.send.assert_awaited_once()
 
     def test_heartbeat_stops_when_send_raises(self):
+        """Проверяет сценарий `test_heartbeat_stops_when_send_raises`."""
         consumer = self._consumer()
         consumer.send = AsyncMock(side_effect=RuntimeError('boom'))
 
         async def _fast_sleep(_interval):
+            """Проверяет сценарий `_fast_sleep`."""
             return None
 
         with patch('chat.consumers.asyncio.sleep', new=_fast_sleep):
@@ -246,10 +276,12 @@ class PresenceConsumerInternalTests(TestCase):
         consumer.send.assert_awaited_once()
 
     def test_idle_watchdog_closes_on_timeout(self):
+        """Проверяет сценарий `test_idle_watchdog_closes_on_timeout`."""
         consumer = self._consumer()
         consumer._last_client_activity = 0.0
 
         async def _fast_sleep(_interval):
+            """Проверяет сценарий `_fast_sleep`."""
             return None
 
         with patch('chat.consumers.asyncio.sleep', new=_fast_sleep), patch(
@@ -260,6 +292,7 @@ class PresenceConsumerInternalTests(TestCase):
         consumer.close.assert_awaited_once_with(code=PRESENCE_CLOSE_IDLE_CODE)
 
     def test_guest_cache_lifecycle(self):
+        """Проверяет сценарий `test_guest_cache_lifecycle`."""
         consumer = self._consumer(user=AnonymousUser())
 
         async_to_sync(consumer._add_guest)('203.0.113.10')
@@ -272,6 +305,7 @@ class PresenceConsumerInternalTests(TestCase):
         self.assertEqual(async_to_sync(consumer._get_guest_count)(), 0)
 
     def test_add_guest_handles_invalid_existing_count(self):
+        """Проверяет сценарий `test_add_guest_handles_invalid_existing_count`."""
         consumer = self._consumer(user=AnonymousUser())
         cache.set(consumer.guest_cache_key, {'203.0.113.15': 'bad'}, timeout=300)
 
@@ -281,6 +315,7 @@ class PresenceConsumerInternalTests(TestCase):
         self.assertEqual(state['203.0.113.15']['count'], 1)
 
     def test_user_presence_lifecycle_and_get_online_cleanup(self):
+        """Проверяет сценарий `test_user_presence_lifecycle_and_get_online_cleanup`."""
         consumer = self._consumer()
 
         async_to_sync(consumer._add_user)(self.user)
@@ -298,6 +333,7 @@ class PresenceConsumerInternalTests(TestCase):
         self.assertEqual(async_to_sync(consumer._get_online)(), [])
 
     def test_get_online_and_guest_count_drop_expired_entries(self):
+        """Проверяет сценарий `test_get_online_and_guest_count_drop_expired_entries`."""
         consumer = self._consumer()
         now = time.time()
         cache.set(
@@ -324,6 +360,7 @@ class PresenceConsumerInternalTests(TestCase):
         self.assertEqual(async_to_sync(consumer._get_guest_count)(), 1)
 
     def test_touch_user_and_guest_paths(self):
+        """Проверяет сценарий `test_touch_user_and_guest_paths`."""
         consumer = self._consumer()
 
         async_to_sync(consumer._touch_user)(self.user)
@@ -336,6 +373,7 @@ class PresenceConsumerInternalTests(TestCase):
         self.assertEqual(guest_state['203.0.113.20']['count'], 1)
 
     def test_disconnect_paths_for_guest_and_auth(self):
+        """Проверяет сценарий `test_disconnect_paths_for_guest_and_auth`."""
         guest_consumer = self._consumer(user=AnonymousUser())
         guest_consumer.is_guest = True
         guest_consumer.group_name = guest_consumer.group_name_guest
@@ -363,6 +401,7 @@ class PresenceConsumerInternalTests(TestCase):
         auth_consumer._remove_user.assert_awaited_once_with(self.user, graceful=False)
 
     def test_connect_adds_guest_and_authenticated_users(self):
+        """Проверяет сценарий `test_connect_adds_guest_and_authenticated_users`."""
         guest_consumer = self._consumer(user=AnonymousUser())
         guest_consumer.accept = AsyncMock()
         guest_consumer._add_guest = AsyncMock()
@@ -370,6 +409,7 @@ class PresenceConsumerInternalTests(TestCase):
         guest_consumer._broadcast = AsyncMock()
 
         def _fake_task(coro):
+            """Проверяет сценарий `_fake_task`."""
             coro.close()
             return AsyncMock(cancel=Mock())
 
@@ -393,12 +433,15 @@ class PresenceConsumerInternalTests(TestCase):
 
 
 class ChatConsumerDirectInboxTargetsTests(TestCase):
+    """Группирует тестовые сценарии класса `ChatConsumerDirectInboxTargetsTests`."""
     def setUp(self):
+        """Проверяет сценарий `setUp`."""
         cache.clear()
         self.owner = User.objects.create_user(username='target_owner', password='pass12345')
         self.member = User.objects.create_user(username='target_member', password='pass12345')
 
     def _consumer(self):
+        """Проверяет сценарий `_consumer`."""
         consumer = ChatConsumer()
         consumer.scope = {
             'user': self.owner,
@@ -409,11 +452,13 @@ class ChatConsumerDirectInboxTargetsTests(TestCase):
         return consumer
 
     def test_build_targets_returns_empty_for_missing_room(self):
+        """Проверяет сценарий `test_build_targets_returns_empty_for_missing_room`."""
         consumer = self._consumer()
         result = async_to_sync(consumer._build_direct_inbox_targets)(999999, self.owner.id, 'msg', '2026-01-01T00:00:00Z')
         self.assertEqual(result, [])
 
     def test_build_targets_handles_invalid_pair_key(self):
+        """Проверяет сценарий `test_build_targets_handles_invalid_pair_key`."""
         room = Room.objects.create(
             slug='dm_badpair',
             name='badpair',
@@ -435,6 +480,7 @@ class ChatConsumerDirectInboxTargetsTests(TestCase):
         self.assertEqual(result[0]['payload']['item']['slug'], room.slug)
 
     def test_build_targets_fills_missing_pair_participant_from_pair_key(self):
+        """Проверяет сценарий `test_build_targets_fills_missing_pair_participant_from_pair_key`."""
         room = Room.objects.create(
             slug='dm_missingpair',
             name='missingpair',
@@ -459,11 +505,14 @@ class ChatConsumerDirectInboxTargetsTests(TestCase):
 
 
 class DirectInboxConsumerInternalTests(TestCase):
+    """Группирует тестовые сценарии класса `DirectInboxConsumerInternalTests`."""
     def setUp(self):
+        """Проверяет сценарий `setUp`."""
         cache.clear()
         self.user = User.objects.create_user(username='direct_inbox_internal', password='pass12345')
 
     def _consumer(self):
+        """Проверяет сценарий `_consumer`."""
         consumer = DirectInboxConsumer()
         consumer.scope = {
             'user': self.user,
@@ -485,6 +534,7 @@ class DirectInboxConsumerInternalTests(TestCase):
         return consumer
 
     def test_receive_handles_ping_and_payload_guards(self):
+        """Проверяет сценарий `test_receive_handles_ping_and_payload_guards`."""
         consumer = self._consumer()
         consumer._touch_active_room = AsyncMock()
         consumer._send_error = AsyncMock()
@@ -497,6 +547,7 @@ class DirectInboxConsumerInternalTests(TestCase):
         consumer._send_error.assert_awaited_with('invalid_payload')
 
     def test_receive_set_active_room_branches(self):
+        """Проверяет сценарий `test_receive_set_active_room_branches`."""
         consumer = self._consumer()
         consumer._clear_active_room = AsyncMock()
         consumer._set_active_room = AsyncMock()
@@ -514,6 +565,7 @@ class DirectInboxConsumerInternalTests(TestCase):
         consumer._send_error.assert_awaited_with('forbidden')
 
     def test_receive_mark_read_branches(self):
+        """Проверяет сценарий `test_receive_mark_read_branches`."""
         consumer = self._consumer()
         consumer._send_error = AsyncMock()
         consumer._mark_read = AsyncMock(return_value={'dialogs': 0, 'slugs': []})
@@ -527,6 +579,7 @@ class DirectInboxConsumerInternalTests(TestCase):
         consumer._send_error.assert_awaited_with('forbidden')
 
     def test_direct_event_and_disconnect_and_watchdogs(self):
+        """Проверяет сценарий `test_direct_event_and_disconnect_and_watchdogs`."""
         consumer = self._consumer()
         consumer._clear_active_room = AsyncMock()
 
@@ -541,6 +594,7 @@ class DirectInboxConsumerInternalTests(TestCase):
         heartbeat_consumer.send = AsyncMock(side_effect=RuntimeError('boom'))
 
         async def _fast_sleep(_interval):
+            """Проверяет сценарий `_fast_sleep`."""
             return None
 
         with patch('chat.consumers.asyncio.sleep', new=_fast_sleep):

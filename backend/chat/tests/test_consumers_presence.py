@@ -1,4 +1,7 @@
-﻿import json
+"""Содержит тесты модуля `test_consumers_presence` подсистемы `chat`."""
+
+
+import json
 
 from asgiref.sync import async_to_sync
 from channels.routing import URLRouter
@@ -14,10 +17,13 @@ application = URLRouter(websocket_urlpatterns)
 
 
 class PresenceConsumerTests(TransactionTestCase):
+    """Группирует тестовые сценарии класса `PresenceConsumerTests`."""
     def setUp(self):
+        """Проверяет сценарий `setUp`."""
         self.user = User.objects.create_user(username='presence_user', password='pass12345')
 
     async def _connect(self, user=None, ip='198.51.100.10', port=55000):
+        """Проверяет сценарий `_connect`."""
         communicator = WebsocketCommunicator(
             application,
             '/ws/presence/',
@@ -29,7 +35,9 @@ class PresenceConsumerTests(TransactionTestCase):
         return communicator, connected, close_code
 
     def test_guest_connect_receives_count(self):
+        """Проверяет сценарий `test_guest_connect_receives_count`."""
         async def run():
+            """Проверяет сценарий `run`."""
             communicator, connected, _ = await self._connect()
             self.assertTrue(connected)
             payload = json.loads(await communicator.receive_from(timeout=2))
@@ -40,7 +48,9 @@ class PresenceConsumerTests(TransactionTestCase):
         async_to_sync(run)()
 
     def test_authenticated_receives_online_list(self):
+        """Проверяет сценарий `test_authenticated_receives_online_list`."""
         async def run():
+            """Проверяет сценарий `run`."""
             communicator, connected, _ = await self._connect(user=self.user)
             self.assertTrue(connected)
             payload = json.loads(await communicator.receive_from(timeout=2))
@@ -52,7 +62,9 @@ class PresenceConsumerTests(TransactionTestCase):
         async_to_sync(run)()
 
     def test_guests_count_unique_by_ip(self):
+        """Проверяет сценарий `test_guests_count_unique_by_ip`."""
         async def run():
+            """Проверяет сценарий `run`."""
             first, connected1, _ = await self._connect(ip='203.0.113.5', port=50001)
             self.assertTrue(connected1)
             await first.receive_from(timeout=2)

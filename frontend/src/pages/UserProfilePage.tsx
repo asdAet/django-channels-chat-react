@@ -24,6 +24,12 @@ type Props = {
   onNavigate: (path: string) => void;
 };
 
+/**
+ * Рендерит компонент `UserProfilePage` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `UserProfilePage`.
+ */
+
 export function UserProfilePage({
   username,
   currentUser,
@@ -73,10 +79,21 @@ export function UserProfilePage({
     nextZoom: number,
   ) => {
     const rect = contentRef.current?.getBoundingClientRect();
+    /**
+     * Выполняет метод `setZoom`.
+     * @returns Результат выполнения `setZoom`.
+     */
+
     setZoom((currentZoom) => {
       const clampedZoom = clampZoom(nextZoom);
       if (!rect || rect.width <= 0 || rect.height <= 0) {
         if (clampedZoom <= 1) {
+          /**
+           * Выполняет метод `setPan`.
+           * @param props Входной параметр `props`.
+           * @returns Результат выполнения `setPan`.
+           */
+
           setPan({ x: 0, y: 0 });
         }
         return clampedZoom;
@@ -86,6 +103,11 @@ export function UserProfilePage({
       const dx = offsetX - rect.width / 2;
       const dy = offsetY - rect.height / 2;
       const scale = clampedZoom / currentZoom;
+      /**
+       * Выполняет метод `setPan`.
+       * @returns Результат выполнения `setPan`.
+       */
+
       setPan((prev) => {
         const nextPan = {
           x: prev.x - dx * (scale - 1),
@@ -101,10 +123,27 @@ export function UserProfilePage({
 
   const openPreview = () => {
     if (!hasProfileImage) return;
+    /**
+     * Выполняет метод `setZoom`.
+     * @returns Результат выполнения `setZoom`.
+     */
+
     setZoom(1);
+    /**
+     * Выполняет метод `setPan`.
+     * @param props Входной параметр `props`.
+     * @returns Результат выполнения `setPan`.
+     */
+
     setPan({ x: 0, y: 0 });
     pinchState.current = null;
     dragState.current = null;
+    /**
+     * Выполняет метод `setIsPreviewOpen`.
+     * @param true Входной параметр `true`.
+     * @returns Результат выполнения `setIsPreviewOpen`.
+     */
+
     setIsPreviewOpen(true);
   };
   const closePreview = () => setIsPreviewOpen(false);
@@ -112,6 +151,11 @@ export function UserProfilePage({
   const handleWheel = (event: ReactWheelEvent<HTMLDivElement>) => {
     event.preventDefault();
     const step = event.deltaY < 0 ? 0.2 : -0.2;
+    /**
+     * Выполняет метод `applyZoomAtPoint`.
+     * @returns Результат выполнения `applyZoomAtPoint`.
+     */
+
     applyZoomAtPoint(event.clientX, event.clientY, zoom + step);
   };
 
@@ -157,6 +201,11 @@ export function UserProfilePage({
         dragState.current.panX + (touch.clientX - dragState.current.x);
       const nextY =
         dragState.current.panY + (touch.clientY - dragState.current.y);
+      /**
+       * Выполняет метод `setPan`.
+       * @returns Результат выполнения `setPan`.
+       */
+
       setPan(clampPan(nextX, nextY));
       return;
     }
@@ -172,9 +221,28 @@ export function UserProfilePage({
     if (first && second) {
       const centerX = (first.clientX + second.clientX) / 2;
       const centerY = (first.clientY + second.clientY) / 2;
+      /**
+       * Выполняет метод `applyZoomAtPoint`.
+       * @param centerX Входной параметр `centerX`.
+       * @param centerY Входной параметр `centerY`.
+       * @param nextZoom Входной параметр `nextZoom`.
+       * @returns Результат выполнения `applyZoomAtPoint`.
+       */
+
       applyZoomAtPoint(centerX, centerY, nextZoom);
     } else {
+      /**
+       * Выполняет метод `setZoom`.
+       * @param nextZoom Входной параметр `nextZoom`.
+       * @returns Результат выполнения `setZoom`.
+       */
+
       setZoom(nextZoom);
+      /**
+       * Выполняет метод `setPan`.
+       * @returns Результат выполнения `setPan`.
+       */
+
       setPan((prev) =>
         nextZoom <= 1 ? { x: 0, y: 0 } : clampPan(prev.x, prev.y, nextZoom),
       );
@@ -204,6 +272,11 @@ export function UserProfilePage({
       dragState.current.panX + (event.clientX - dragState.current.x);
     const nextY =
       dragState.current.panY + (event.clientY - dragState.current.y);
+    /**
+     * Выполняет метод `setPan`.
+     * @returns Результат выполнения `setPan`.
+     */
+
     setPan(clampPan(nextX, nextY));
   };
 
@@ -215,9 +288,20 @@ export function UserProfilePage({
     if (!hasProfileImage) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
+      /**
+       * Выполняет метод `openPreview`.
+       * @returns Результат выполнения `openPreview`.
+       */
+
       openPreview();
     }
   };
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     if (!isPreviewOpen) return;
@@ -347,6 +431,11 @@ export function UserProfilePage({
             <button
               className="btn primary"
               onClick={() =>
+                /**
+                 * Выполняет метод `onNavigate`.
+                 * @returns Результат выполнения `onNavigate`.
+                 */
+
                 onNavigate(`/direct/@${encodeURIComponent(user.username)}`)
               }
             >

@@ -21,6 +21,11 @@ vi.mock('../adapters/ApiService', () => ({
   apiService: apiMocks,
 }))
 
+/**
+ * Выполняет функцию `loadController`.
+ * @returns Результат выполнения `loadController`.
+ */
+
 const loadController = async () => {
   vi.resetModules()
   const mod = await import('./ChatController')
@@ -28,6 +33,11 @@ const loadController = async () => {
 }
 
 describe('ChatController', () => {
+  /**
+   * Выполняет метод `beforeEach`.
+   * @returns Результат выполнения `beforeEach`.
+   */
+
   beforeEach(() => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'))
@@ -38,6 +48,11 @@ describe('ChatController', () => {
     apiMocks.getDirectChats.mockReset()
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('does not cache public room between calls', async () => {
     const room: RoomDetailsDto = { slug: 'public', name: 'Public', kind: 'public', created: false, createdBy: null }
     apiMocks.getPublicRoom.mockResolvedValue(room)
@@ -47,8 +62,18 @@ describe('ChatController', () => {
     await chatController.getPublicRoom()
     await chatController.getPublicRoom()
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getPublicRoom).toHaveBeenCalledTimes(2)
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('deduplicates in-flight public room request', async () => {
     let settle: (value: RoomDetailsDto) => void = () => undefined
@@ -62,14 +87,40 @@ describe('ChatController', () => {
     const firstPromise = chatController.getPublicRoom()
     const secondPromise = chatController.getPublicRoom()
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getPublicRoom).toHaveBeenCalledTimes(1)
+
+    /**
+     * Выполняет метод `settle`.
+     * @param props Входной параметр `props`.
+     * @returns Результат выполнения `settle`.
+     */
 
     settle({ slug: 'public', name: 'Public', kind: 'public', created: false, createdBy: null })
     const [first, second] = await Promise.all([firstPromise, secondPromise])
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(first.slug).toBe('public')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(second.slug).toBe('public')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('deduplicates in-flight room details by slug', async () => {
     let settle: (value: RoomDetailsDto) => void = () => undefined
@@ -83,7 +134,18 @@ describe('ChatController', () => {
     const firstPromise = chatController.getRoomDetails('abc')
     const secondPromise = chatController.getRoomDetails('abc')
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getRoomDetails).toHaveBeenCalledTimes(1)
+
+    /**
+     * Выполняет метод `settle`.
+     * @param props Входной параметр `props`.
+     * @returns Результат выполнения `settle`.
+     */
 
     settle({
       slug: 'abc',
@@ -94,9 +156,24 @@ describe('ChatController', () => {
     })
 
     const [first, second] = await Promise.all([firstPromise, secondPromise])
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(first.slug).toBe('abc')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(second.slug).toBe('abc')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('does not cache room details after request completes', async () => {
     apiMocks.getRoomDetails.mockResolvedValue({
@@ -112,10 +189,30 @@ describe('ChatController', () => {
     await chatController.getRoomDetails('abc')
     await chatController.getRoomDetails('abc')
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getRoomDetails).toHaveBeenCalledTimes(2)
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getRoomDetails).toHaveBeenNthCalledWith(1, 'abc')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getRoomDetails).toHaveBeenNthCalledWith(2, 'abc')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('deduplicates in-flight room messages by params', async () => {
     let settle: (value: RoomMessagesDto) => void = () => undefined
@@ -129,7 +226,18 @@ describe('ChatController', () => {
     const firstPromise = chatController.getRoomMessages('public', { limit: 50 })
     const secondPromise = chatController.getRoomMessages('public', { limit: 50 })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getRoomMessages).toHaveBeenCalledTimes(1)
+
+    /**
+     * Выполняет метод `settle`.
+     * @param props Входной параметр `props`.
+     * @returns Результат выполнения `settle`.
+     */
 
     settle({
       messages: [],
@@ -138,6 +246,11 @@ describe('ChatController', () => {
 
     await Promise.all([firstPromise, secondPromise])
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('does not cache room messages after request completes', async () => {
     apiMocks.getRoomMessages.mockResolvedValue({
@@ -150,8 +263,18 @@ describe('ChatController', () => {
     await chatController.getRoomMessages('public', { limit: 50 })
     await chatController.getRoomMessages('public', { limit: 50 })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getRoomMessages).toHaveBeenCalledTimes(2)
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('deduplicates in-flight direct chats request', async () => {
     let settle: (value: DirectChatsResponseDto) => void = () => undefined
@@ -165,7 +288,18 @@ describe('ChatController', () => {
     const firstPromise = chatController.getDirectChats()
     const secondPromise = chatController.getDirectChats()
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getDirectChats).toHaveBeenCalledTimes(1)
+
+    /**
+     * Выполняет метод `settle`.
+     * @param props Входной параметр `props`.
+     * @returns Результат выполнения `settle`.
+     */
 
     settle({
       items: [
@@ -180,6 +314,11 @@ describe('ChatController', () => {
 
     await Promise.all([firstPromise, secondPromise])
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('does not cache direct chats after request completes', async () => {
     apiMocks.getDirectChats.mockResolvedValue({
@@ -197,6 +336,11 @@ describe('ChatController', () => {
 
     await chatController.getDirectChats()
     await chatController.getDirectChats()
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(apiMocks.getDirectChats).toHaveBeenCalledTimes(2)
   })
 })

@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `views` подсистемы `chat`."""
+
+
 from django.contrib import messages
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -8,17 +12,13 @@ from .models import Message, Room
 
 
 def _get_room_display_name(room_slug: str) -> str:
-    """
-    Возвращает человекочитаемое имя комнаты, если она зарегистрирована в модели Room.
-    """
+    """Выполняет логику `_get_room_display_name` с параметрами из сигнатуры."""
     room_name = Room.objects.filter(slug=room_slug).values_list('name', flat=True).first()
     return room_name or room_slug
 
 
 def _public_room():
-    """
-    Гарантирует наличие публичной комнаты в базе и возвращает её.
-    """
+    """Выполняет логику `_public_room` с параметрами из сигнатуры."""
     room, _ = Room.objects.get_or_create(
         slug=PUBLIC_ROOM_SLUG,
         defaults={"name": PUBLIC_ROOM_NAME},
@@ -28,6 +28,7 @@ def _public_room():
 
 @login_required()
 def chat_home(request):
+    """Выполняет логику `chat_home` с параметрами из сигнатуры."""
 
     form = RoomForm(request.POST or None)
 
@@ -60,6 +61,7 @@ def chat_home(request):
 
 @login_required
 def chat_room(request, room_name):
+    """Выполняет логику `chat_room` с параметрами из сигнатуры."""
     db_messages = Message.objects.filter(room=room_name)[:]
 
     messages.success(request, f"Joined: {room_name}")
@@ -73,9 +75,7 @@ def chat_room(request, room_name):
 
 @login_required
 def public_chat(request):
-    """
-    Публичная комната, доступная всем зарегистрированным пользователям без присоединения.
-    """
+    """Выполняет логику `public_chat` с параметрами из сигнатуры."""
     room = _public_room()
     db_messages = Message.objects.filter(room=room.slug)[:]
     messages.success(request, f"Joined: {room.name}")

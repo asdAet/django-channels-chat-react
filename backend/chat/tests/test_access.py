@@ -1,3 +1,7 @@
+
+"""Содержит тесты модуля `test_access` подсистемы `chat`."""
+
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404
@@ -10,7 +14,9 @@ User = get_user_model()
 
 
 class ChatAccessTests(TestCase):
+    """Группирует тестовые сценарии класса `ChatAccessTests`."""
     def setUp(self):
+        """Проверяет сценарий `setUp`."""
         self.owner = User.objects.create_user(username='owner', password='pass12345')
         self.member = User.objects.create_user(username='member', password='pass12345')
         self.other = User.objects.create_user(username='other', password='pass12345')
@@ -37,6 +43,7 @@ class ChatAccessTests(TestCase):
         )
 
     def test_public_room_permissions(self):
+        """Проверяет сценарий `test_public_room_permissions`."""
         public_room = Room.objects.create(slug='public', name='public', kind=Room.Kind.PUBLIC)
 
         self.assertTrue(can_read(public_room, AnonymousUser()))
@@ -44,9 +51,11 @@ class ChatAccessTests(TestCase):
         self.assertTrue(can_write(public_room, self.owner))
 
     def test_get_user_role_returns_none_for_guest(self):
+        """Проверяет сценарий `test_get_user_role_returns_none_for_guest`."""
         self.assertIsNone(get_user_role(self.private_room, AnonymousUser()))
 
     def test_private_room_permissions(self):
+        """Проверяет сценарий `test_private_room_permissions`."""
         self.assertFalse(can_read(self.private_room, AnonymousUser()))
         self.assertFalse(can_write(self.private_room, AnonymousUser()))
         self.assertTrue(can_read(self.private_room, self.member))
@@ -54,6 +63,7 @@ class ChatAccessTests(TestCase):
 
 
     def test_direct_room_without_pair_key_denied(self):
+        """Проверяет сценарий `test_direct_room_without_pair_key_denied`."""
         direct = Room.objects.create(
             slug='dm_empty',
             name='dm',
@@ -73,6 +83,7 @@ class ChatAccessTests(TestCase):
         self.assertFalse(can_write(direct, self.owner))
 
     def test_direct_room_pair_key_is_strict(self):
+        """Проверяет сценарий `test_direct_room_pair_key_is_strict`."""
         direct = Room.objects.create(
             slug='dm_abc123',
             name='dm',
@@ -92,6 +103,7 @@ class ChatAccessTests(TestCase):
         self.assertFalse(can_write(direct, self.owner))
 
     def test_direct_room_denies_third_user_even_with_role(self):
+        """Проверяет сценарий `test_direct_room_denies_third_user_even_with_role`."""
         direct = Room.objects.create(
             slug='dm_abc124',
             name='dm',
@@ -111,6 +123,7 @@ class ChatAccessTests(TestCase):
         self.assertFalse(can_write(direct, self.other))
 
     def test_ensure_helpers(self):
+        """Проверяет сценарий `test_ensure_helpers`."""
         with self.assertRaises(Http404):
             ensure_can_read_or_404(self.private_room, self.other)
 

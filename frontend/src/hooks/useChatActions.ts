@@ -3,6 +3,11 @@ import { useCallback } from 'react'
 import { chatController } from '../controllers/ChatController'
 import type { RoomMessagesParams } from '../dto/chat'
 
+/**
+ * Управляет состоянием и эффектами хука `useChatActions`.
+ * @returns Результат выполнения `useChatActions`.
+ */
+
 export const useChatActions = () => {
   const getRoomDetails = useCallback((slug: string) => chatController.getRoomDetails(slug), [])
   const getRoomMessages = useCallback(

@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `health` подсистемы `chat_app_django`."""
+
+
 import logging
 import uuid
 
@@ -13,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 @require_GET
 def live(_request):
+    """Выполняет логику `live` с параметрами из сигнатуры."""
     return JsonResponse(
         {
             "status": "ok",
@@ -24,6 +29,7 @@ def live(_request):
 
 @require_GET
 def ready(_request):
+    """Выполняет логику `ready` с параметрами из сигнатуры."""
     components: dict[str, str] = {}
     ok = True
 

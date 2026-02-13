@@ -18,6 +18,12 @@ type DirectChatState = {
   error: string | null
 }
 
+/**
+ * Рендерит компонент `DirectChatByUsernamePage` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `DirectChatByUsernamePage`.
+ */
+
 export function DirectChatByUsernamePage({ user, username, onNavigate }: Props) {
   const requestKey = useMemo(() => (user ? `${user.username}:${username}` : 'guest'), [user, username])
 
@@ -26,6 +32,11 @@ export function DirectChatByUsernamePage({ user, username, onNavigate }: Props) 
     slug: null,
     error: null,
   }))
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     if (!user) return
@@ -36,24 +47,60 @@ export function DirectChatByUsernamePage({ user, username, onNavigate }: Props) 
       .startDirectChat(username)
       .then((payload) => {
         if (!active) return
+        /**
+         * Выполняет метод `setState`.
+         * @param props Входной параметр `props`.
+         * @returns Результат выполнения `setState`.
+         */
+
         setState({ key: requestKey, slug: payload.slug, error: null })
       })
       .catch((err) => {
         if (!active) return
+        /**
+         * Выполняет метод `debugLog`.
+         * @param err Входной параметр `err`.
+         * @returns Результат выполнения `debugLog`.
+         */
+
         debugLog('Direct start failed', err)
         const apiErr = err as ApiError
         if (apiErr.status === 404) {
+          /**
+           * Выполняет метод `setState`.
+           * @param props Входной параметр `props`.
+           * @returns Результат выполнения `setState`.
+           */
+
           setState({ key: requestKey, slug: null, error: 'Пользователь не найден' })
           return
         }
         if (apiErr.status === 400) {
+          /**
+           * Выполняет метод `setState`.
+           * @param props Входной параметр `props`.
+           * @returns Результат выполнения `setState`.
+           */
+
           setState({ key: requestKey, slug: null, error: 'Нельзя открыть диалог с этим пользователем' })
           return
         }
         if (apiErr.status === 401) {
+          /**
+           * Выполняет метод `setState`.
+           * @param props Входной параметр `props`.
+           * @returns Результат выполнения `setState`.
+           */
+
           setState({ key: requestKey, slug: null, error: 'Нужна авторизация' })
           return
         }
+        /**
+         * Выполняет метод `setState`.
+         * @param props Входной параметр `props`.
+         * @returns Результат выполнения `setState`.
+         */
+
         setState({ key: requestKey, slug: null, error: 'Не удалось открыть личный чат' })
       })
 

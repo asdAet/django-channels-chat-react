@@ -1,11 +1,9 @@
-"""
-Crispy form for entering a room name
-"""
+
+"""Содержит логику модуля forms подсистемы chat."""
+
 from django import forms
 
 
 class RoomForm(forms.Form):
-    """
-    Normal form, not connected to models.
-    """
+    """Инкапсулирует логику класса RoomForm."""
     room_name = forms.CharField()

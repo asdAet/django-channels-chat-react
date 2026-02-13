@@ -3,6 +3,13 @@ import type { AxiosInstance } from 'axios'
 import type { UpdateProfileInput } from '../../domain/interfaces/IApiService'
 import type { UserProfile } from '../../entities/user/types'
 
+/**
+ * Выполняет функцию `updateProfile`.
+ * @param apiClient Входной параметр `apiClient`.
+ * @param fields Входной параметр `fields`.
+ * @returns Результат выполнения `updateProfile`.
+ */
+
 export async function updateProfile(
   apiClient: AxiosInstance,
   fields: UpdateProfileInput,

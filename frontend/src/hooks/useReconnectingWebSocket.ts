@@ -14,6 +14,12 @@ type WebSocketOptions = {
   maxDelayMs?: number
 }
 
+/**
+ * Управляет состоянием и эффектами хука `useReconnectingWebSocket`.
+ * @param options Входной параметр `options`.
+ * @returns Результат выполнения `useReconnectingWebSocket`.
+ */
+
 export const useReconnectingWebSocket = (options: WebSocketOptions) => {
   const {
     url,
@@ -38,6 +44,12 @@ export const useReconnectingWebSocket = (options: WebSocketOptions) => {
   const handlersRef = useRef({ onMessage, onOpen, onClose, onError })
   const activeRef = useRef(true)
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     handlersRef.current = { onMessage, onOpen, onClose, onError }
   }, [onMessage, onOpen, onClose, onError])
@@ -50,6 +62,11 @@ export const useReconnectingWebSocket = (options: WebSocketOptions) => {
   }
 
   const cleanup = useCallback(() => {
+    /**
+     * Выполняет метод `clearRetry`.
+     * @returns Результат выполнения `clearRetry`.
+     */
+
     clearRetry()
     if (socketRef.current) {
       socketRef.current.onopen = null
@@ -63,18 +80,48 @@ export const useReconnectingWebSocket = (options: WebSocketOptions) => {
 
   const connect = useCallback(() => {
     if (!url) {
+      /**
+       * Выполняет метод `cleanup`.
+       * @returns Результат выполнения `cleanup`.
+       */
+
       cleanup()
+      /**
+       * Выполняет метод `setStatus`.
+       * @returns Результат выполнения `setStatus`.
+       */
+
       setStatus('idle')
       return
     }
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      /**
+       * Выполняет метод `cleanup`.
+       * @returns Результат выполнения `cleanup`.
+       */
+
       cleanup()
+      /**
+       * Выполняет метод `setStatus`.
+       * @returns Результат выполнения `setStatus`.
+       */
+
       setStatus('offline')
       return
     }
 
+    /**
+     * Выполняет метод `cleanup`.
+     * @returns Результат выполнения `cleanup`.
+     */
+
     cleanup()
+    /**
+     * Выполняет метод `setStatus`.
+     * @returns Результат выполнения `setStatus`.
+     */
+
     setStatus('connecting')
 
     const socket = new WebSocket(url, protocols)
@@ -82,7 +129,18 @@ export const useReconnectingWebSocket = (options: WebSocketOptions) => {
 
     socket.onopen = () => {
       retryRef.current.attempt = 0
+      /**
+       * Выполняет метод `setStatus`.
+       * @returns Результат выполнения `setStatus`.
+       */
+
       setStatus('online')
+      /**
+       * Выполняет метод `setLastError`.
+       * @param null Входной параметр `null`.
+       * @returns Результат выполнения `setLastError`.
+       */
+
       setLastError(null)
       handlersRef.current.onOpen?.()
     }
@@ -92,7 +150,17 @@ export const useReconnectingWebSocket = (options: WebSocketOptions) => {
     }
 
     socket.onerror = (event) => {
+      /**
+       * Выполняет метод `setStatus`.
+       * @returns Результат выполнения `setStatus`.
+       */
+
       setStatus('error')
+      /**
+       * Выполняет метод `setLastError`.
+       * @returns Результат выполнения `setLastError`.
+       */
+
       setLastError('connection_error')
       handlersRef.current.onError?.(event)
     }
@@ -102,14 +170,34 @@ export const useReconnectingWebSocket = (options: WebSocketOptions) => {
       if (!activeRef.current) return
 
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        /**
+         * Выполняет метод `setStatus`.
+         * @returns Результат выполнения `setStatus`.
+         */
+
         setStatus('offline')
         return
       }
 
+      /**
+       * Выполняет метод `setStatus`.
+       * @returns Результат выполнения `setStatus`.
+       */
+
       setStatus('closed')
 
       if (retryRef.current.attempt >= maxRetries) {
+        /**
+         * Выполняет метод `setStatus`.
+         * @returns Результат выполнения `setStatus`.
+         */
+
         setStatus('error')
+        /**
+         * Выполняет метод `setLastError`.
+         * @returns Результат выполнения `setLastError`.
+         */
+
         setLastError('reconnect_limit')
         return
       }
@@ -124,26 +212,74 @@ export const useReconnectingWebSocket = (options: WebSocketOptions) => {
     }
   }, [baseDelayMs, cleanup, maxDelayMs, maxRetries, protocols, url])
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     connectRef.current = connect
   }, [connect])
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     activeRef.current = true
+    /**
+     * Выполняет метод `queueMicrotask`.
+     * @returns Результат выполнения `queueMicrotask`.
+     */
+
     queueMicrotask(() => connect())
     return () => {
       activeRef.current = false
+      /**
+       * Выполняет метод `cleanup`.
+       * @returns Результат выполнения `cleanup`.
+       */
+
       cleanup()
     }
   }, [connect, cleanup])
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     const handleOnline = () => {
+      /**
+       * Выполняет метод `setStatus`.
+       * @returns Результат выполнения `setStatus`.
+       */
+
       setStatus('connecting')
+      /**
+       * Выполняет метод `connect`.
+       * @returns Результат выполнения `connect`.
+       */
+
       connect()
     }
     const handleOffline = () => {
+      /**
+       * Выполняет метод `setStatus`.
+       * @returns Результат выполнения `setStatus`.
+       */
+
       setStatus('offline')
+      /**
+       * Выполняет метод `cleanup`.
+       * @returns Результат выполнения `cleanup`.
+       */
+
       cleanup()
     }
     window.addEventListener('online', handleOnline)

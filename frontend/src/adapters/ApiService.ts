@@ -25,6 +25,12 @@ const API_BASE = "/api";
 
 const CSRF_STORAGE_KEY = "csrfToken";
 
+/**
+ * Выполняет функцию `getCookie`.
+ * @param name Входной параметр `name`.
+ * @returns Результат выполнения `getCookie`.
+ */
+
 const getCookie = (name: string) => {
   if (typeof document === "undefined") return null;
   return document.cookie
@@ -34,12 +40,28 @@ const getCookie = (name: string) => {
     ?.split("=")[1];
 };
 
+/**
+ * Выполняет функцию `getStoredCsrf`.
+ * @returns Результат выполнения `getStoredCsrf`.
+ */
+
 const getStoredCsrf = () => {
   if (typeof sessionStorage === "undefined") return null;
   return sessionStorage.getItem(CSRF_STORAGE_KEY);
 };
 
+/**
+ * Выполняет функцию `getCsrfToken`.
+ * @returns Результат выполнения `getCsrfToken`.
+ */
+
 const getCsrfToken = () => getCookie("csrftoken") || getStoredCsrf();
+/**
+ * Выполняет функцию `setCsrfToken`.
+ * @param token Входной параметр `token`.
+ * @returns Результат выполнения `setCsrfToken`.
+ */
+
 const setCsrfToken = (token: string | null) => {
   if (typeof sessionStorage === "undefined") return;
   if (!token) {
@@ -49,6 +71,12 @@ const setCsrfToken = (token: string | null) => {
   sessionStorage.setItem(CSRF_STORAGE_KEY, token);
 };
 
+/**
+ * Выполняет функцию `parseJson`.
+ * @param text Входной параметр `text`.
+ * @returns Результат выполнения `parseJson`.
+ */
+
 const parseJson = (text: string): unknown => {
   try {
     return JSON.parse(text);
@@ -56,6 +84,12 @@ const parseJson = (text: string): unknown => {
     return null;
   }
 };
+
+/**
+ * Выполняет функцию `normalizeErrorPayload`.
+ * @param payload Входной параметр `payload`.
+ * @returns Результат выполнения `normalizeErrorPayload`.
+ */
 
 const normalizeErrorPayload = (
   payload: unknown,
@@ -74,6 +108,11 @@ const normalizeErrorPayload = (
   return undefined;
 };
 
+/**
+ * Выполняет функцию `extractErrorMessage`.
+ * @returns Результат выполнения `extractErrorMessage`.
+ */
+
 const extractErrorMessage = (data?: Record<string, unknown>) => {
   if (!data) return undefined;
   const errors = data.errors as Record<string, string[]> | undefined;
@@ -85,12 +124,24 @@ const extractErrorMessage = (data?: Record<string, unknown>) => {
   return undefined;
 };
 
+/**
+ * Выполняет функцию `normalizeAxiosError`.
+ * @param error Входной параметр `error`.
+ * @returns Результат выполнения `normalizeAxiosError`.
+ */
+
 export const normalizeAxiosError = (error: unknown): ApiError => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError;
     const status = axiosError.response?.status ?? 0;
     const data = normalizeErrorPayload(axiosError.response?.data);
     const message =
+      /**
+       * Выполняет метод `extractErrorMessage`.
+       * @param data Входной параметр `data`.
+       * @returns Результат выполнения `extractErrorMessage`.
+       */
+
       extractErrorMessage(data) || axiosError.message || "Request failed";
     return { status, message, data };
   }
@@ -106,6 +157,10 @@ export const normalizeAxiosError = (error: unknown): ApiError => {
 
   return { status: 0, message: "Request failed" };
 };
+
+/**
+ * Описывает назначение класса `ApiService`.
+ */
 
 class ApiService implements IApiService {
   private apiClient: AxiosInstance;
@@ -150,19 +205,49 @@ class ApiService implements IApiService {
     );
   }
 
+  /**
+   * Выполняет метод `ensureCsrf`.
+   * @returns Результат выполнения `ensureCsrf`.
+   */
+
   public async ensureCsrf(): Promise<{ csrfToken: string }> {
     const data = await ensureCsrfRequest(this.apiClient);
+    /**
+     * Выполняет метод `setCsrfToken`.
+     * @returns Результат выполнения `setCsrfToken`.
+     */
+
     setCsrfToken(data.csrfToken || null);
     return data;
   }
+
+  /**
+   * Выполняет метод `getSession`.
+   * @returns Результат выполнения `getSession`.
+   */
 
   public async getSession() {
     return await getSession(this.apiClient);
   }
 
+  /**
+   * Выполняет метод `login`.
+   * @param username Входной параметр `username`.
+   * @param password Входной параметр `password`.
+   * @returns Результат выполнения `login`.
+   */
+
   public async login(username: string, password: string) {
     return await login(this.apiClient, username, password);
   }
+
+  /**
+   * Выполняет метод `register`.
+   * @param username Входной параметр `username`.
+   * @param password1 Входной параметр `password1`.
+   * @param password2 Входной параметр `password2`.
+   * @returns Результат выполнения `register`.
+   */
 
   public async register(
     username: string,
@@ -172,25 +257,58 @@ class ApiService implements IApiService {
     return await register(this.apiClient, username, password1, password2);
   }
 
+  /**
+   * Выполняет метод `getPasswordRules`.
+   * @returns Результат выполнения `getPasswordRules`.
+   */
+
   public async getPasswordRules() {
     return await getPasswordRules(this.apiClient);
   }
+
+  /**
+   * Выполняет метод `logout`.
+   * @returns Результат выполнения `logout`.
+   */
 
   public async logout() {
     return await logout(this.apiClient);
   }
 
+  /**
+   * Выполняет метод `updateProfile`.
+   * @param fields Входной параметр `fields`.
+   * @returns Результат выполнения `updateProfile`.
+   */
+
   public async updateProfile(fields: UpdateProfileInput) {
     return await updateProfile(this.apiClient, fields);
   }
+
+  /**
+   * Выполняет метод `getPublicRoom`.
+   * @returns Результат выполнения `getPublicRoom`.
+   */
 
   public async getPublicRoom() {
     return await getPublicRoom(this.apiClient);
   }
 
+  /**
+   * Выполняет метод `getRoomDetails`.
+   * @param slug Входной параметр `slug`.
+   * @returns Результат выполнения `getRoomDetails`.
+   */
+
   public async getRoomDetails(slug: string) {
     return await getRoomDetails(this.apiClient, slug);
   }
+
+  /**
+   * Выполняет метод `getRoomMessages`.
+   * @param slug Входной параметр `slug`.
+   * @returns Результат выполнения `getRoomMessages`.
+   */
 
   public async getRoomMessages(
     slug: string,
@@ -199,13 +317,30 @@ class ApiService implements IApiService {
     return await getRoomMessages(this.apiClient, slug, params);
   }
 
+  /**
+   * Выполняет метод `startDirectChat`.
+   * @param username Входной параметр `username`.
+   * @returns Результат выполнения `startDirectChat`.
+   */
+
   public async startDirectChat(username: string) {
     return await startDirectChat(this.apiClient, username);
   }
 
+  /**
+   * Выполняет метод `getDirectChats`.
+   * @returns Результат выполнения `getDirectChats`.
+   */
+
   public async getDirectChats() {
     return await getDirectChats(this.apiClient);
   }
+
+  /**
+   * Выполняет метод `getUserProfile`.
+   * @param username Входной параметр `username`.
+   * @returns Результат выполнения `getUserProfile`.
+   */
 
   public async getUserProfile(username: string) {
     return await getUserProfile(this.apiClient, username);

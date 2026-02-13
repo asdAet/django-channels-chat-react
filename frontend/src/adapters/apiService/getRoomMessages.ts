@@ -11,6 +11,13 @@ type RoomMessagesResponse = {
   }
 }
 
+/**
+ * Выполняет функцию `getRoomMessages`.
+ * @param apiClient Входной параметр `apiClient`.
+ * @param slug Входной параметр `slug`.
+ * @returns Результат выполнения `getRoomMessages`.
+ */
+
 export async function getRoomMessages(
   apiClient: AxiosInstance,
   slug: string,

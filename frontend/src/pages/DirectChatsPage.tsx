@@ -15,6 +15,12 @@ type ListProps = Props & {
   className?: string
 }
 
+/**
+ * Рендерит компонент `DirectChatsList` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `DirectChatsList`.
+ */
+
 export function DirectChatsList({
   user,
   onNavigate,
@@ -24,10 +30,28 @@ export function DirectChatsList({
 }: ListProps) {
   const { items, loading, error, setActiveRoom, refresh, unreadCounts } = useDirectInbox()
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     if (!resetActiveOnMount) return
+    /**
+     * Выполняет метод `setActiveRoom`.
+     * @param null Входной параметр `null`.
+     * @returns Результат выполнения `setActiveRoom`.
+     */
+
     setActiveRoom(null)
   }, [resetActiveOnMount, setActiveRoom])
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     if (!user) return
@@ -108,6 +132,12 @@ export function DirectChatsList({
     </section>
   )
 }
+
+/**
+ * Рендерит компонент `DirectChatsPage` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `DirectChatsPage`.
+ */
 
 export function DirectChatsPage({ user, onNavigate }: Props) {
   return <DirectChatsList user={user} onNavigate={onNavigate} />

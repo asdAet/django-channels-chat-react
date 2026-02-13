@@ -1,3 +1,7 @@
+
+"""Инициализирует пакет `chat_app_django`."""
+
+
 import sys
 
 
@@ -6,6 +10,7 @@ if sys.version_info >= (3, 14):
         from django.template import context as django_context
 
         def _basecontext_copy(self):
+            """Создает безопасную копию BaseContext для Python 3.14."""
             duplicate = self.__class__.__new__(self.__class__)
             duplicate.__dict__.update(self.__dict__)
             duplicate.dicts = self.dicts[:]

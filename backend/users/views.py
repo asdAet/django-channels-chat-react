@@ -1,13 +1,16 @@
+
+"""Содержит логику модуля `views` подсистемы `users`."""
+
+
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 
-# Create your views here.
-
 
 def register(request):
+    """Выполняет логику `register` с параметрами из сигнатуры."""
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
@@ -23,6 +26,7 @@ def register(request):
 
 @login_required
 def profile(request):
+    """Выполняет логику `profile` с параметрами из сигнатуры."""
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST,

@@ -1,9 +1,14 @@
+
+"""Содержит логику модуля `models` подсистемы `chat`."""
+
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
 
 class Message(models.Model):
+    """Инкапсулирует логику класса `Message`."""
     username = models.CharField(max_length=50, db_index=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -18,6 +23,7 @@ class Message(models.Model):
     profile_pic = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
+        """Инкапсулирует логику класса `Meta`."""
         ordering = ("date_added",)
         indexes = [
             models.Index(fields=["room", "date_added"], name="chat_msg_room_date_idx"),
@@ -25,12 +31,15 @@ class Message(models.Model):
         ]
 
     def __str__(self):
+        """Возвращает строковое представление `Message`."""
         name = self.user.username if self.user else self.username
         return f"{name}: {self.message_content}"
 
 
 class Room(models.Model):
+    """Инкапсулирует логику класса `Room`."""
     class Kind(models.TextChoices):
+        """Инкапсулирует логику класса `Kind`."""
         PUBLIC = "public", "Public"
         PRIVATE = "private", "Private"
         DIRECT = "direct", "Direct"
@@ -59,11 +68,14 @@ class Room(models.Model):
     )
 
     def __str__(self):
+        """Возвращает строковое представление `Room`."""
         return str(self.name)
 
 
 class ChatRole(models.Model):
+    """Инкапсулирует логику класса `ChatRole`."""
     class Role(models.TextChoices):
+        """Инкапсулирует логику класса `Role`."""
         OWNER = "owner", "Owner"
         ADMIN = "admin", "Admin"
         MEMBER = "member", "Member"
@@ -93,6 +105,7 @@ class ChatRole(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Инкапсулирует логику класса `Meta`."""
         constraints = [
             models.UniqueConstraint(fields=["room", "user"], name="chat_role_room_user_uniq"),
         ]
@@ -101,4 +114,5 @@ class ChatRole(models.Model):
         ]
 
     def __str__(self):
+        """Возвращает строковое представление `ChatRole`."""
         return f"{self.room.slug}:{self.user.username}:{self.role}"

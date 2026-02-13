@@ -1,6 +1,6 @@
-"""
-Django settings for chat_app_django project.
-"""
+
+"""Содержит логику модуля `settings` подсистемы `chat_app_django`."""
+
 
 import os
 import secrets
@@ -15,6 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def env_bool(name: str, default: bool) -> bool:
+    """Выполняет логику `env_bool` с параметрами из сигнатуры."""
     value = os.getenv(name)
     if value is None:
         return default
@@ -22,6 +23,7 @@ def env_bool(name: str, default: bool) -> bool:
 
 
 def env_list(name: str, default: list[str]) -> list[str]:
+    """Выполняет логику `env_list` с параметрами из сигнатуры."""
     value = os.getenv(name)
     if not value:
         return default
@@ -122,6 +124,7 @@ else:
 
 
 def _database_from_url(url: str) -> dict:
+    """Выполняет логику `_database_from_url` с параметрами из сигнатуры."""
     parsed = urlparse(url)
     if parsed.scheme in {"postgres", "postgresql"}:
         return {
@@ -325,6 +328,5 @@ LOGGING = {
         },
     },
 }
-
 
 

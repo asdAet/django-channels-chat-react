@@ -1,6 +1,6 @@
-"""
-This file is for routing to the consumer
-"""
+
+"""Содержит логику модуля `routing` подсистемы `chat`."""
+
 from django.urls import re_path
 
 from . import consumers

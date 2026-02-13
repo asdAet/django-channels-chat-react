@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `api_urls` подсистемы `chat`."""
+
+
 from django.urls import path
 
 from . import api

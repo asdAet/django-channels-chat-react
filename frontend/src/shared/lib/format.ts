@@ -1,8 +1,21 @@
+/**
+ * Выполняет функцию `formatTimestamp`.
+ * @param iso Входной параметр `iso`.
+ * @returns Результат выполнения `formatTimestamp`.
+ */
+
 export const formatTimestamp = (iso: string) =>
   new Intl.DateTimeFormat('ru-RU', {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(iso))
+
+/**
+ * Выполняет функцию `formatDayLabel`.
+ * @param date Входной параметр `date`.
+ * @param now Входной параметр `now`.
+ * @returns Результат выполнения `formatDayLabel`.
+ */
 
 export const formatDayLabel = (date: Date, now: Date = new Date()) => {
   if (Number.isNaN(date.getTime())) return ''
@@ -14,8 +27,20 @@ export const formatDayLabel = (date: Date, now: Date = new Date()) => {
   return new Intl.DateTimeFormat('ru-RU', options).format(date)
 }
 
+/**
+ * Выполняет функцию `avatarFallback`.
+ * @param username Входной параметр `username`.
+ * @returns Результат выполнения `avatarFallback`.
+ */
+
 export const avatarFallback = (username: string) =>
   username ? username[0].toUpperCase() : '?'
+
+/**
+ * Выполняет функцию `formatRegistrationDate`.
+ * @param iso Входной параметр `iso`.
+ * @returns Результат выполнения `formatRegistrationDate`.
+ */
 
 export const formatRegistrationDate = (iso: string | null) => {
   if (!iso) return ''
@@ -31,6 +56,12 @@ export const formatRegistrationDate = (iso: string | null) => {
     hour12: false,
   }).format(date)
 }
+
+/**
+ * Выполняет функцию `formatLastSeen`.
+ * @param iso Входной параметр `iso`.
+ * @returns Результат выполнения `formatLastSeen`.
+ */
 
 export const formatLastSeen = (iso: string | null) => {
   if (!iso) return ''

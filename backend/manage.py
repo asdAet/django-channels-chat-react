@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+"""Содержит логику модуля `manage` подсистемы `manage.py`."""
+
+
 import os
 import sys
 
 
 def main():
-    """Run administrative tasks."""
+    """Выполняет логику `main` с параметрами из сигнатуры."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'chat_app_django.settings')
     try:
         from django.core.management import execute_from_command_line

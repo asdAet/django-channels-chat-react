@@ -17,6 +17,12 @@ clientsClaim()
 
 precacheAndRoute(self.__WB_MANIFEST)
 
+/**
+ * Выполняет функцию `isSameOrigin`.
+ * @param url Входной параметр `url`.
+ * @returns Результат выполнения `isSameOrigin`.
+ */
+
 const isSameOrigin = (url: URL) => url.origin === self.location.origin
 
 registerRoute(
@@ -57,19 +63,61 @@ registerRoute(
   }),
 )
 
+/**
+ * Выполняет функцию `matchRoomMessages`.
+ * @param url Входной параметр `url`.
+ * @returns Результат выполнения `matchRoomMessages`.
+ */
+
 const matchRoomMessages = (url: URL) =>
   url.pathname.startsWith('/api/chat/rooms/') && url.pathname.endsWith('/messages/')
+
+/**
+ * Выполняет функцию `matchRoomDetails`.
+ * @param url Входной параметр `url`.
+ * @returns Результат выполнения `matchRoomDetails`.
+ */
 
 const matchRoomDetails = (url: URL) =>
   url.pathname.startsWith('/api/chat/rooms/') && !url.pathname.endsWith('/messages/')
 
+/**
+ * Выполняет функцию `matchPublicRoom`.
+ * @param url Входной параметр `url`.
+ * @returns Результат выполнения `matchPublicRoom`.
+ */
+
 const matchPublicRoom = (url: URL) => url.pathname === '/api/chat/public-room/'
+
+/**
+ * Выполняет функцию `matchDirectChats`.
+ * @param url Входной параметр `url`.
+ * @returns Результат выполнения `matchDirectChats`.
+ */
 
 const matchDirectChats = (url: URL) => url.pathname === '/api/chat/direct/chats/'
 
+/**
+ * Выполняет функцию `matchUserProfile`.
+ * @param url Входной параметр `url`.
+ * @returns Результат выполнения `matchUserProfile`.
+ */
+
 const matchUserProfile = (url: URL) => url.pathname.startsWith('/api/auth/users/')
 
+/**
+ * Выполняет функцию `matchSelfProfile`.
+ * @param url Входной параметр `url`.
+ * @returns Результат выполнения `matchSelfProfile`.
+ */
+
 const matchSelfProfile = (url: URL) => url.pathname === '/api/auth/profile/'
+
+/**
+ * Выполняет функцию `matchAuthNoCache`.
+ * @param url Входной параметр `url`.
+ * @returns Результат выполнения `matchAuthNoCache`.
+ */
 
 const matchAuthNoCache = (url: URL) =>
   url.pathname === '/api/auth/login/' ||
@@ -144,6 +192,13 @@ registerRoute(
   }),
 )
 
+/**
+ * Выполняет функцию `deleteMatching`.
+ * @param cacheName Входной параметр `cacheName`.
+ * @param predicate Входной параметр `predicate`.
+ * @returns Результат выполнения `deleteMatching`.
+ */
+
 const deleteMatching = async (cacheName: string, predicate: (url: URL) => boolean) => {
   const cache = await caches.open(cacheName)
   const keys = await cache.keys()
@@ -155,6 +210,11 @@ const deleteMatching = async (cacheName: string, predicate: (url: URL) => boolea
     }),
   )
 }
+
+/**
+ * Выполняет функцию `clearUserCaches`.
+ * @returns Результат выполнения `clearUserCaches`.
+ */
 
 const clearUserCaches = async () => {
   await Promise.all([
@@ -184,6 +244,11 @@ self.addEventListener('message', (event) => {
       const slug = payload.slug?.trim()
       if (!slug) return
       event.waitUntil(
+        /**
+         * Выполняет метод `deleteMatching`.
+         * @returns Результат выполнения `deleteMatching`.
+         */
+
         deleteMatching(CACHE_NAMES.apiMessages, (url) => url.pathname === `/api/chat/rooms/${slug}/messages/`),
       )
       return
@@ -192,12 +257,22 @@ self.addEventListener('message', (event) => {
       const slug = payload.slug?.trim()
       if (!slug) return
       event.waitUntil(
+        /**
+         * Выполняет метод `deleteMatching`.
+         * @returns Результат выполнения `deleteMatching`.
+         */
+
         deleteMatching(CACHE_NAMES.apiRooms, (url) => url.pathname === `/api/chat/rooms/${slug}/`),
       )
       return
     }
     case 'directChats': {
       event.waitUntil(
+        /**
+         * Выполняет метод `deleteMatching`.
+         * @returns Результат выполнения `deleteMatching`.
+         */
+
         deleteMatching(CACHE_NAMES.apiDirect, (url) => url.pathname === '/api/chat/direct/chats/'),
       )
       return
@@ -206,12 +281,22 @@ self.addEventListener('message', (event) => {
       const username = payload.username?.trim()
       if (!username) return
       event.waitUntil(
+        /**
+         * Выполняет метод `deleteMatching`.
+         * @returns Результат выполнения `deleteMatching`.
+         */
+
         deleteMatching(CACHE_NAMES.apiProfiles, (url) => url.pathname === `/api/auth/users/${username}/`),
       )
       return
     }
     case 'selfProfile': {
       event.waitUntil(
+        /**
+         * Выполняет метод `deleteMatching`.
+         * @returns Результат выполнения `deleteMatching`.
+         */
+
         deleteMatching(CACHE_NAMES.apiProfiles, (url) => url.pathname === '/api/auth/profile/'),
       )
       return

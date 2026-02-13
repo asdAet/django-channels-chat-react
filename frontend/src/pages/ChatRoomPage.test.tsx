@@ -69,6 +69,11 @@ const user = {
 }
 
 describe('ChatRoomPage', () => {
+  /**
+   * Выполняет метод `beforeEach`.
+   * @returns Результат выполнения `beforeEach`.
+   */
+
   beforeEach(() => {
     wsState.status = 'online'
     wsState.lastError = null
@@ -88,14 +93,34 @@ describe('ChatRoomPage', () => {
     presenceMock.lastError = null
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('shows read-only mode for guest in public room', () => {
     const { container } = render(
       <ChatRoomPage slug="public" user={null} onNavigate={vi.fn()} />,
     )
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(container.querySelector('.auth-callout')).toBeTruthy()
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(container.querySelector('.chat-input input')).toBeNull()
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('sends message for authenticated user', () => {
     const { container } = render(
@@ -108,11 +133,31 @@ describe('ChatRoomPage', () => {
     fireEvent.change(input, { target: { value: 'Hello from test' } })
     fireEvent.click(submit)
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(wsState.send).toHaveBeenCalledTimes(1)
     const payload = JSON.parse(wsState.send.mock.calls[0][0])
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(payload.message).toBe('Hello from test')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(payload.username).toBe('demo')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('disables submit while websocket is not online', () => {
     wsState.status = 'connecting'
@@ -126,8 +171,18 @@ describe('ChatRoomPage', () => {
 
     fireEvent.change(input, { target: { value: 'text' } })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(submit.disabled).toBe(true)
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('activates local rate limit cooldown from ws error event', () => {
     const { container } = render(
@@ -138,7 +193,17 @@ describe('ChatRoomPage', () => {
     const submit = container.querySelector('.chat-input button') as HTMLButtonElement
 
     fireEvent.change(input, { target: { value: 'text' } })
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(submit.disabled).toBe(false)
+
+    /**
+     * Выполняет метод `act`.
+     * @returns Результат выполнения `act`.
+     */
 
     act(() => {
       wsState.options?.onMessage?.(
@@ -148,8 +213,18 @@ describe('ChatRoomPage', () => {
       )
     })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(submit.disabled).toBe(true)
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('shows online status for direct peer', () => {
     chatRoomMock.details = {
@@ -166,8 +241,18 @@ describe('ChatRoomPage', () => {
       <ChatRoomPage slug="dm_1" user={user} onNavigate={vi.fn()} />,
     )
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(container.textContent).toContain('В сети')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('shows last seen for offline direct peer', () => {
     chatRoomMock.details = {
@@ -183,6 +268,11 @@ describe('ChatRoomPage', () => {
     const { container } = render(
       <ChatRoomPage slug="dm_2" user={user} onNavigate={vi.fn()} />,
     )
+
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
 
     expect(container.textContent).toContain('Последний раз в сети:')
   })

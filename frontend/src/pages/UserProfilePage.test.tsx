@@ -35,6 +35,12 @@ vi.mock('../shared/presence', () => ({
 
 import { UserProfilePage } from './UserProfilePage'
 
+/**
+ * Выполняет функцию `makeUser`.
+ * @param username Входной параметр `username`.
+ * @returns Результат выполнения `makeUser`.
+ */
+
 const makeUser = (username: string) => ({
   username,
   email: `${username}@example.com`,
@@ -45,6 +51,11 @@ const makeUser = (username: string) => ({
 }) as UserProfile
 
 describe('UserProfilePage', () => {
+  /**
+   * Выполняет метод `beforeEach`.
+   * @returns Результат выполнения `beforeEach`.
+   */
+
   beforeEach(() => {
     profileMock.user = {
       username: 'alice',
@@ -61,8 +72,18 @@ describe('UserProfilePage', () => {
     presenceMock.lastError = null
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('shows send message button only for foreign profile', () => {
     const onNavigate = vi.fn()
+
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
 
     render(
       <UserProfilePage
@@ -76,10 +97,26 @@ describe('UserProfilePage', () => {
 
     const button = screen.getByRole('button', { name: SEND_DM_LABEL })
     fireEvent.click(button)
+    /**
+     * Выполняет метод `expect`.
+     * @param onNavigate Входной параметр `onNavigate`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(onNavigate).toHaveBeenCalledWith('/direct/@alice')
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('hides send message button for own profile', () => {
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(
       <UserProfilePage
         user={makeUser('alice')}
@@ -90,11 +127,26 @@ describe('UserProfilePage', () => {
       />,
     )
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.queryByRole('button', { name: SEND_DM_LABEL })).toBeNull()
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('shows online label when user is online', () => {
     presenceMock.online = [{ username: 'alice', profileImage: null }]
+
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
 
     render(
       <UserProfilePage
@@ -106,8 +158,18 @@ describe('UserProfilePage', () => {
       />,
     )
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByText('В сети')).toBeInTheDocument()
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('shows last seen label when user is offline', () => {
     profileMock.user = {
@@ -119,6 +181,11 @@ describe('UserProfilePage', () => {
       registeredAt: null,
     }
 
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(
       <UserProfilePage
         user={makeUser('bob')}
@@ -128,6 +195,11 @@ describe('UserProfilePage', () => {
         onLogout={vi.fn()}
       />,
     )
+
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
 
     expect(screen.getByText(/Последний раз в сети:/i)).toBeInTheDocument()
   })

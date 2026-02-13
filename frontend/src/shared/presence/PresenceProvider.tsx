@@ -16,6 +16,12 @@ type ProviderProps = {
   children: ReactNode
 }
 
+/**
+ * Рендерит компонент `PresenceProvider` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `PresenceProvider`.
+ */
+
 export function PresenceProvider({ user, children, ready = true }: ProviderProps) {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([])
   const [guestCount, setGuestCount] = useState(0)
@@ -32,6 +38,11 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
         const incoming = data.online
         if (user) {
           const nextImage = user.profileImage || null
+          /**
+           * Выполняет метод `setOnlineUsers`.
+           * @returns Результат выполнения `setOnlineUsers`.
+           */
+
           setOnlineUsers(
             incoming.map((entry: OnlineUser) =>
               entry.username === user.username
@@ -40,6 +51,12 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
             ),
           )
         } else {
+          /**
+           * Выполняет метод `setOnlineUsers`.
+           * @param incoming Входной параметр `incoming`.
+           * @returns Результат выполнения `setOnlineUsers`.
+           */
+
           setOnlineUsers(incoming)
         }
       }
@@ -47,22 +64,62 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
       const parsedGuests =
         typeof rawGuests === 'number' ? rawGuests : Number.isFinite(Number(rawGuests)) ? Number(rawGuests) : null
       if (parsedGuests !== null) {
+        /**
+         * Выполняет метод `setGuestCount`.
+         * @param parsedGuests Входной параметр `parsedGuests`.
+         * @returns Результат выполнения `setGuestCount`.
+         */
+
         setGuestCount(parsedGuests)
       }
     } catch (err) {
+      /**
+       * Выполняет метод `debugLog`.
+       * @param err Входной параметр `err`.
+       * @returns Результат выполнения `debugLog`.
+       */
+
       debugLog('Presence WS parse failed', err)
     }
   }, [user])
 
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     if (!ready) {
+      /**
+       * Выполняет метод `setOnlineUsers`.
+       * @param props Входной параметр `props`.
+       * @returns Результат выполнения `setOnlineUsers`.
+       */
+
       setOnlineUsers([])
+      /**
+       * Выполняет метод `setGuestCount`.
+       * @returns Результат выполнения `setGuestCount`.
+       */
+
       setGuestCount(0)
     }
   }, [ready])
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     if (!user) return
+    /**
+     * Выполняет метод `setOnlineUsers`.
+     * @returns Результат выполнения `setOnlineUsers`.
+     */
+
     setOnlineUsers((prev) => {
       let changed = false
       const updated = prev.map((entry) => {
@@ -82,11 +139,27 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
     onError: (err) => debugLog('Presence WS error', err),
   })
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     if (status !== 'online') return
     const sendPing = () => {
+      /**
+       * Выполняет метод `send`.
+       * @returns Результат выполнения `send`.
+       */
+
       send(JSON.stringify({ type: 'ping', ts: Date.now() }))
     }
+    /**
+     * Выполняет метод `sendPing`.
+     * @returns Результат выполнения `sendPing`.
+     */
+
     sendPing()
     const id = window.setInterval(sendPing, PRESENCE_PING_MS)
     return () => window.clearInterval(id)

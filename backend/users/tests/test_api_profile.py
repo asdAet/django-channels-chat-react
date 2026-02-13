@@ -1,4 +1,7 @@
-﻿import io
+"""Содержит тесты модуля `test_api_profile` подсистемы `users`."""
+
+
+import io
 
 from PIL import Image
 from django.contrib.auth import get_user_model
@@ -9,7 +12,9 @@ User = get_user_model()
 
 
 class ProfileApiTests(TestCase):
+    """Группирует тестовые сценарии класса `ProfileApiTests`."""
     def setUp(self):
+        """Проверяет сценарий `setUp`."""
         self.client = Client(enforce_csrf_checks=True)
         self.user = User.objects.create_user(
             username='profile_user',
@@ -23,11 +28,13 @@ class ProfileApiTests(TestCase):
         )
 
     def _csrf(self) -> str:
+        """Проверяет сценарий `_csrf`."""
         response = self.client.get('/api/auth/csrf/')
         return response.cookies['csrftoken'].value
 
     @staticmethod
     def _image_upload(filename: str = 'avatar.png') -> SimpleUploadedFile:
+        """Проверяет сценарий `_image_upload`."""
         image = Image.new('RGB', (20, 20), (30, 60, 90))
         buff = io.BytesIO()
         image.save(buff, format='PNG')
@@ -35,10 +42,12 @@ class ProfileApiTests(TestCase):
         return SimpleUploadedFile(filename, buff.read(), content_type='image/png')
 
     def test_profile_requires_auth(self):
+        """Проверяет сценарий `test_profile_requires_auth`."""
         response = self.client.get('/api/auth/profile/')
         self.assertEqual(response.status_code, 401)
 
     def test_get_profile_authenticated(self):
+        """Проверяет сценарий `test_get_profile_authenticated`."""
         self.client.force_login(self.user)
         response = self.client.get('/api/auth/profile/')
         self.assertEqual(response.status_code, 200)
@@ -49,6 +58,7 @@ class ProfileApiTests(TestCase):
         self.assertIn('lastSeen', payload)
 
     def test_profile_update_allows_same_username(self):
+        """Проверяет сценарий `test_profile_update_allows_same_username`."""
         self.client.force_login(self.user)
         csrf = self._csrf()
         response = self.client.post(
@@ -66,6 +76,7 @@ class ProfileApiTests(TestCase):
         self.assertEqual(self.user.profile.bio, 'updated')
 
     def test_profile_update_rejects_duplicate_username(self):
+        """Проверяет сценарий `test_profile_update_rejects_duplicate_username`."""
         self.client.force_login(self.user)
         csrf = self._csrf()
         response = self.client.post(
@@ -82,6 +93,7 @@ class ProfileApiTests(TestCase):
         self.assertIn('username', payload['errors'])
 
     def test_profile_update_rejects_long_username(self):
+        """Проверяет сценарий `test_profile_update_rejects_long_username`."""
         self.client.force_login(self.user)
         csrf = self._csrf()
         response = self.client.post(
@@ -98,6 +110,7 @@ class ProfileApiTests(TestCase):
         self.assertIn('username', payload['errors'])
 
     def test_profile_update_rejects_duplicate_email(self):
+        """Проверяет сценарий `test_profile_update_rejects_duplicate_email`."""
         self.client.force_login(self.user)
         csrf = self._csrf()
         response = self.client.post(
@@ -114,6 +127,7 @@ class ProfileApiTests(TestCase):
         self.assertIn('email', payload['errors'])
 
     def test_profile_update_sanitizes_bio(self):
+        """Проверяет сценарий `test_profile_update_sanitizes_bio`."""
         self.client.force_login(self.user)
         csrf = self._csrf()
         response = self.client.post(
@@ -130,6 +144,7 @@ class ProfileApiTests(TestCase):
         self.assertEqual(self.user.profile.bio, 'Hello alert(1)')
 
     def test_profile_update_image_upload(self):
+        """Проверяет сценарий `test_profile_update_image_upload`."""
         self.client.force_login(self.user)
         csrf = self._csrf()
         response = self.client.post(
@@ -147,6 +162,7 @@ class ProfileApiTests(TestCase):
         self.assertIn('/media/profile_pics/', payload['profileImage'])
 
     def test_public_profile_hides_email(self):
+        """Проверяет сценарий `test_public_profile_hides_email`."""
         response = self.client.get(f'/api/auth/users/{self.user.username}/')
         self.assertEqual(response.status_code, 200)
         payload = response.json()['user']

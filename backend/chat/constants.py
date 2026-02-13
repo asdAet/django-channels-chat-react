@@ -1,4 +1,5 @@
-"""Chat application constants."""
+"""Содержит логику модуля `constants` подсистемы `chat`."""
+
 
 PUBLIC_ROOM_SLUG = "public"
 PUBLIC_ROOM_NAME = "Public Chat"

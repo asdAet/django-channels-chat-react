@@ -31,6 +31,11 @@ const sessionUser = {
 }
 
 describe('useAuth', () => {
+  /**
+   * Выполняет метод `beforeEach`.
+   * @returns Результат выполнения `beforeEach`.
+   */
+
   beforeEach(() => {
     authControllerMock.ensureCsrf.mockReset().mockResolvedValue({ csrfToken: 'token' })
     authControllerMock.getSession.mockReset().mockResolvedValue({ authenticated: true, user: sessionUser })
@@ -40,15 +45,40 @@ describe('useAuth', () => {
     authControllerMock.updateProfile.mockReset().mockResolvedValue({ user: { ...sessionUser, bio: 'updated' } })
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('loads session on mount', async () => {
     const { result } = renderHook(() => useAuth())
 
     await waitFor(() => expect(result.current.auth.loading).toBe(false))
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(authControllerMock.ensureCsrf).toHaveBeenCalledTimes(1)
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(authControllerMock.getSession).toHaveBeenCalledTimes(1)
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(result.current.auth.user?.username).toBe('demo')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('falls back to guest state when session request fails', async () => {
     authControllerMock.getSession.mockRejectedValueOnce(new Error('session failed'))
@@ -56,8 +86,18 @@ describe('useAuth', () => {
     const { result } = renderHook(() => useAuth())
 
     await waitFor(() => expect(result.current.auth.loading).toBe(false))
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(result.current.auth.user).toBeNull()
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('login and register refresh auth user', async () => {
     const { result } = renderHook(() => useAuth())
@@ -68,14 +108,34 @@ describe('useAuth', () => {
       await result.current.register({ username: 'demo', password1: 'pass12345', password2: 'pass12345' })
     })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(authControllerMock.login).toHaveBeenCalledWith({ username: 'demo', password: 'pass12345' })
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(authControllerMock.register).toHaveBeenCalledWith({
       username: 'demo',
       password1: 'pass12345',
       password2: 'pass12345',
     })
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(result.current.auth.user?.username).toBe('demo')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('logout clears auth user even when api fails', async () => {
     const { result } = renderHook(() => useAuth())
@@ -87,8 +147,18 @@ describe('useAuth', () => {
       await result.current.logout()
     })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(result.current.auth.user).toBeNull()
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('updateProfile normalizes empty profile image', async () => {
     const { result } = renderHook(() => useAuth())
@@ -105,8 +175,18 @@ describe('useAuth', () => {
       await result.current.updateProfile({ username: 'demo', email: '' })
     })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(result.current.auth.user?.profileImage).toBeNull()
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('updateProfile drops user on 401', async () => {
     const { result } = renderHook(() => useAuth())
@@ -125,6 +205,12 @@ describe('useAuth', () => {
         thrown = error
       }
     })
+
+    /**
+     * Выполняет метод `expect`.
+     * @param thrown Входной параметр `thrown`.
+     * @returns Результат выполнения `expect`.
+     */
 
     expect(thrown).toMatchObject({ status: 401 })
     await waitFor(() => expect(result.current.auth.user).toBeNull())

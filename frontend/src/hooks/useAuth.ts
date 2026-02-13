@@ -11,6 +11,12 @@ export type AuthState = {
   loading: boolean
 }
 
+/**
+ * Выполняет функцию `normalizeProfileImage`.
+ * @param user Входной параметр `user`.
+ * @returns Результат выполнения `normalizeProfileImage`.
+ */
+
 const normalizeProfileImage = (user: UserProfileDto): UserProfileDto => {
   if (!user.profileImage || user.profileImage.length === 0) {
     return { ...user, profileImage: null }
@@ -18,8 +24,19 @@ const normalizeProfileImage = (user: UserProfileDto): UserProfileDto => {
   return user
 }
 
+/**
+ * Управляет состоянием и эффектами хука `useAuth`.
+ * @returns Результат выполнения `useAuth`.
+ */
+
 export const useAuth = () => {
   const [auth, setAuth] = useState<AuthState>({ user: null, loading: true })
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     let active = true
@@ -31,11 +48,29 @@ export const useAuth = () => {
           .getSession()
           .then((session) => {
             if (!active) return
+            /**
+             * Выполняет метод `setAuth`.
+             * @param props Входной параметр `props`.
+             * @returns Результат выполнения `setAuth`.
+             */
+
             setAuth({ user: session.user, loading: false })
           })
           .catch((err) => {
+            /**
+             * Выполняет метод `debugLog`.
+             * @param err Входной параметр `err`.
+             * @returns Результат выполнения `debugLog`.
+             */
+
             debugLog('Session fetch failed', err)
             if (!active) return
+            /**
+             * Выполняет метод `setAuth`.
+             * @param props Входной параметр `props`.
+             * @returns Результат выполнения `setAuth`.
+             */
+
             setAuth({ user: null, loading: false })
           })
       })
@@ -48,7 +83,18 @@ export const useAuth = () => {
   const login = useCallback(async (dto: LoginDto) => {
     await authController.ensureCsrf()
     const session = await authController.login(dto)
+    /**
+     * Выполняет метод `setAuth`.
+     * @param props Входной параметр `props`.
+     * @returns Результат выполнения `setAuth`.
+     */
+
     setAuth({ user: session.user, loading: false })
+    /**
+     * Выполняет метод `clearAllUserCaches`.
+     * @returns Результат выполнения `clearAllUserCaches`.
+     */
+
     clearAllUserCaches()
     return session
   }, [])
@@ -56,14 +102,36 @@ export const useAuth = () => {
   const register = useCallback(async (dto: RegisterDto) => {
     await authController.ensureCsrf()
     const session = await authController.register(dto)
+    /**
+     * Выполняет метод `setAuth`.
+     * @param props Входной параметр `props`.
+     * @returns Результат выполнения `setAuth`.
+     */
+
     setAuth({ user: session.user, loading: false })
+    /**
+     * Выполняет метод `clearAllUserCaches`.
+     * @returns Результат выполнения `clearAllUserCaches`.
+     */
+
     clearAllUserCaches()
     return session
   }, [])
 
   const logout = useCallback(async () => {
     await authController.logout().catch(() => {})
+    /**
+     * Выполняет метод `setAuth`.
+     * @param props Входной параметр `props`.
+     * @returns Результат выполнения `setAuth`.
+     */
+
     setAuth({ user: null, loading: false })
+    /**
+     * Выполняет метод `clearAllUserCaches`.
+     * @returns Результат выполнения `clearAllUserCaches`.
+     */
+
     clearAllUserCaches()
   }, [])
 
@@ -72,12 +140,28 @@ export const useAuth = () => {
     try {
       const { user } = await authController.updateProfile(dto)
       const normalizedUser = normalizeProfileImage(user)
+      /**
+       * Выполняет метод `setAuth`.
+       * @returns Результат выполнения `setAuth`.
+       */
+
       setAuth((prev) => ({ ...prev, user: normalizedUser }))
+      /**
+       * Выполняет метод `invalidateSelfProfile`.
+       * @returns Результат выполнения `invalidateSelfProfile`.
+       */
+
       invalidateSelfProfile()
       return { user: normalizedUser }
     } catch (err) {
       const apiErr = err as ApiError
       if (apiErr && typeof apiErr.status === 'number' && apiErr.status === 401) {
+        /**
+         * Выполняет метод `setAuth`.
+         * @param props Входной параметр `props`.
+         * @returns Результат выполнения `setAuth`.
+         */
+
         setAuth({ user: null, loading: false })
       }
       throw err

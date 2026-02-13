@@ -24,13 +24,28 @@ const user = {
 }
 
 describe('ProfilePage', () => {
+  /**
+   * Выполняет метод `beforeEach`.
+   * @returns Результат выполнения `beforeEach`.
+   */
+
   beforeEach(() => {
     presenceMock.online = []
     presenceMock.status = 'online'
     presenceMock.lastError = null
   })
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('asks guest to login before editing profile', () => {
     const onNavigate = vi.fn()
+
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
 
     render(
       <ProfilePage
@@ -41,8 +56,19 @@ describe('ProfilePage', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Войти' }))
+    /**
+     * Выполняет метод `expect`.
+     * @param onNavigate Входной параметр `onNavigate`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(onNavigate).toHaveBeenCalledWith('/login')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('shows field-level validation errors from onSave', async () => {
     const onSave = vi.fn(async () => ({
@@ -50,6 +76,11 @@ describe('ProfilePage', () => {
       errors: { username: ['Имя уже занято'] },
       message: 'Проверьте введённые данные и попробуйте снова.',
     }))
+
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
 
     render(
       <ProfilePage
@@ -62,14 +93,34 @@ describe('ProfilePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }))
 
     await waitFor(() => {
+      /**
+       * Выполняет метод `expect`.
+       * @returns Результат выполнения `expect`.
+       */
+
       expect(screen.getByText('Имя уже занято')).toBeInTheDocument()
+      /**
+       * Выполняет метод `expect`.
+       * @returns Результат выполнения `expect`.
+       */
+
       expect(
         screen.getByText('Проверьте введённые данные и попробуйте снова.'),
       ).toBeInTheDocument()
     })
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('shows max-bio warning over 1000 chars', () => {
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(
       <ProfilePage
         user={user}
@@ -81,11 +132,26 @@ describe('ProfilePage', () => {
     const textarea = screen.getByLabelText('О себе')
     fireEvent.change(textarea, { target: { value: 'a'.repeat(1001) } })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByText('Максимум 1000 символов.')).toBeInTheDocument()
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('shows online label when current user is online', () => {
     presenceMock.online = [{ username: 'demo', profileImage: null }]
+
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
 
     render(
       <ProfilePage
@@ -95,10 +161,25 @@ describe('ProfilePage', () => {
       />,
     )
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByText('В сети')).toBeInTheDocument()
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('shows last seen label when current user is offline', () => {
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(
       <ProfilePage
         user={{ ...user, lastSeen: '2026-02-13T10:00:00.000Z' }}
@@ -106,6 +187,11 @@ describe('ProfilePage', () => {
         onNavigate={vi.fn()}
       />,
     )
+
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
 
     expect(screen.getByText(/Последний раз в сети:/i)).toBeInTheDocument()
   })

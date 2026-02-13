@@ -1,3 +1,7 @@
+
+"""Содержит миграцию `0009_seed_room_kind_and_roles` приложения `chat`."""
+
+
 from django.db import migrations
 
 
@@ -5,6 +9,7 @@ PUBLIC_ROOM_SLUG = "public"
 
 
 def seed_room_kinds_and_owner_roles(apps, schema_editor):
+    """Выполняет логику `seed_room_kinds_and_owner_roles` с параметрами из сигнатуры."""
     Room = apps.get_model("chat", "Room")
     ChatRole = apps.get_model("chat", "ChatRole")
 
@@ -42,10 +47,12 @@ def seed_room_kinds_and_owner_roles(apps, schema_editor):
 
 
 def noop_reverse(apps, schema_editor):
+    """Выполняет логику `noop_reverse` с параметрами из сигнатуры."""
     return
 
 
 class Migration(migrations.Migration):
+    """Описывает операции миграции схемы данных."""
 
     dependencies = [
         ("chat", "0008_room_direct_pair_key_room_kind_chatrole_and_more"),

@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `admin` подсистемы `users`."""
+
+
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
@@ -9,21 +13,25 @@ from .models import Profile
 
 
 class ProfileInlineForm(forms.ModelForm):
+    """Инкапсулирует логику класса `ProfileInlineForm`."""
     email = forms.EmailField(required=False, label="Email")
     is_staff = forms.BooleanField(required=False, label="Модератор/админ")
 
 
     class Meta:
+        """Инкапсулирует логику класса `Meta`."""
         model = Profile
         fields = ("image", "bio")
 
     def __init__(self, *args, **kwargs):
+        """Инициализирует экземпляр `ProfileInlineForm`."""
         super().__init__(*args, **kwargs)
         user = getattr(self.instance, "user", None)
         if user:
             self.fields["is_staff"].initial = user.is_staff
 
     def save(self, commit=True):
+        """Выполняет логику `save` с параметрами из сигнатуры."""
         profile = super().save(commit=False)
         user = getattr(profile, "user", None)
         if user:
@@ -36,6 +44,7 @@ class ProfileInlineForm(forms.ModelForm):
 
 
 class ProfileInline(admin.StackedInline):
+    """Инкапсулирует логику класса `ProfileInline`."""
     model = Profile
     form = ProfileInlineForm
     can_delete = False
@@ -53,10 +62,12 @@ class ProfileInline(admin.StackedInline):
 
     @admin.display(description="Логин")
     def username_display(self, obj):
+        """Выполняет логику `username_display` с параметрами из сигнатуры."""
         return getattr(obj.user, "username", "—")
 
     @admin.display(description="Avatar")
     def avatar_preview(self, obj):
+        """Выполняет логику `avatar_preview` с параметрами из сигнатуры."""
         if obj and getattr(obj, "image", None):
             try:
                 return format_html(
@@ -77,6 +88,7 @@ except NotRegistered:
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
+    """Инкапсулирует логику класса `UserAdmin`."""
     inlines = [ProfileInline]
     list_display = (
         "username",
@@ -90,18 +102,22 @@ class UserAdmin(BaseUserAdmin):
 
     @admin.display(description="Last seen", ordering="profile__last_seen")
     def profile_last_seen(self, obj):
+        """Выполняет логику `profile_last_seen` с параметрами из сигнатуры."""
         profile = getattr(obj, "profile", None)
         return profile.last_seen if profile else "—"
 
 
 class ProfileAdminForm(ProfileInlineForm):
+    """Инкапсулирует логику класса `ProfileAdminForm`."""
     class Meta(ProfileInlineForm.Meta):
+        """Инкапсулирует логику класса `Meta`."""
         model = Profile
         fields = ("user", "image", "bio")
 
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
+    """Инкапсулирует логику класса `ProfileAdmin`."""
     form = ProfileAdminForm
     list_display = ("user", "is_staff", "last_seen", "avatar_preview")
     list_select_related = ("user",)
@@ -111,10 +127,12 @@ class ProfileAdmin(admin.ModelAdmin):
 
     @admin.display(boolean=True, description="Модератор/админ", ordering="user__is_staff")
     def is_staff(self, obj):
+        """Выполняет логику `is_staff` с параметрами из сигнатуры."""
         return getattr(obj.user, "is_staff", False)
 
     @admin.display(description="Avatar")
     def avatar_preview(self, obj):
+        """Выполняет логику `avatar_preview` с параметрами из сигнатуры."""
         if obj and getattr(obj, "image", None):
             try:
                 return format_html(

@@ -16,7 +16,19 @@ type Props = {
   onNavigate: (path: string) => void;
 };
 
+/**
+ * Выполняет функцию `buildTempId`.
+ * @param seed Входной параметр `seed`.
+ * @returns Результат выполнения `buildTempId`.
+ */
+
 const buildTempId = (seed: number) => Date.now() * 1000 + seed;
+
+/**
+ * Рендерит компонент `HomePage` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `HomePage`.
+ */
 
 export function HomePage({ user, onNavigate }: Props) {
   const { publicRoom, loading } = usePublicRoom(user);
@@ -37,15 +49,31 @@ export function HomePage({ user, onNavigate }: Props) {
   const openUserProfile = useCallback(
     (username: string) => {
       if (!username) return;
+      /**
+       * Выполняет метод `onNavigate`.
+       * @returns Результат выполнения `onNavigate`.
+       */
+
       onNavigate(`/users/${encodeURIComponent(username)}`);
     },
     [onNavigate],
   );
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     let active = true;
 
     if (!visiblePublicRoom) {
+      /**
+       * Выполняет метод `queueMicrotask`.
+       * @returns Результат выполнения `queueMicrotask`.
+       */
+
       queueMicrotask(() => {
         if (active) setLiveMessages([]);
       });
@@ -55,6 +83,13 @@ export function HomePage({ user, onNavigate }: Props) {
     }
 
     const roomSlug = visiblePublicRoom.slug;
+    /**
+     * Выполняет метод `getRoomMessages`.
+     * @param roomSlug Входной параметр `roomSlug`.
+     * @param props Входной параметр `props`.
+     * @returns Результат выполнения `getRoomMessages`.
+     */
+
     getRoomMessages(roomSlug, { limit: 4 })
       .then((payload) => {
         if (!active) return;
@@ -62,6 +97,11 @@ export function HomePage({ user, onNavigate }: Props) {
           ...msg,
           content: sanitizeText(msg.content, 200),
         }));
+        /**
+         * Выполняет метод `setLiveMessages`.
+         * @returns Результат выполнения `setLiveMessages`.
+         */
+
         setLiveMessages(sanitized.slice(-4));
       })
       .catch((err) => debugLog("Live feed history failed", err));
@@ -88,14 +128,31 @@ export function HomePage({ user, onNavigate }: Props) {
         profilePic: data.profile_pic || null,
         createdAt: new Date().toISOString(),
       };
+      /**
+       * Выполняет метод `setLiveMessages`.
+       * @returns Результат выполнения `setLiveMessages`.
+       */
+
       setLiveMessages((prev) => {
         const updated = [...prev, next];
         return updated.slice(-4);
       });
     } catch (error) {
+      /**
+       * Выполняет метод `debugLog`.
+       * @param error Входной параметр `error`.
+       * @returns Результат выполнения `debugLog`.
+       */
+
       debugLog("Live feed WS parse failed", error);
     }
   }, []);
+
+  /**
+   * Выполняет метод `useReconnectingWebSocket`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useReconnectingWebSocket`.
+   */
 
   useReconnectingWebSocket({
     url: liveUrl,
@@ -126,7 +183,19 @@ export function HomePage({ user, onNavigate }: Props) {
 
   const onCreateRoom = async () => {
     if (!user || creatingRoom) return;
+    /**
+     * Выполняет метод `setCreateError`.
+     * @param null Входной параметр `null`.
+     * @returns Результат выполнения `setCreateError`.
+     */
+
     setCreateError(null);
+    /**
+     * Выполняет метод `setCreatingRoom`.
+     * @param true Входной параметр `true`.
+     * @returns Результат выполнения `setCreatingRoom`.
+     */
+
     setCreatingRoom(true);
     let navigated = false;
 
@@ -140,6 +209,11 @@ export function HomePage({ user, onNavigate }: Props) {
             continue;
           }
           navigated = true;
+          /**
+           * Выполняет метод `onNavigate`.
+           * @returns Результат выполнения `onNavigate`.
+           */
+
           onNavigate(`/rooms/${encodeURIComponent(slug)}`);
           return;
         } catch (err) {
@@ -154,14 +228,36 @@ export function HomePage({ user, onNavigate }: Props) {
           throw err;
         }
       }
+      /**
+       * Выполняет метод `setCreateError`.
+       * @returns Результат выполнения `setCreateError`.
+       */
+
       setCreateError(
         "Не удалось создать уникальную комнату. Попробуйте еще раз.",
       );
     } catch (err) {
+      /**
+       * Выполняет метод `debugLog`.
+       * @param err Входной параметр `err`.
+       * @returns Результат выполнения `debugLog`.
+       */
+
       debugLog("Room create failed", err);
+      /**
+       * Выполняет метод `setCreateError`.
+       * @returns Результат выполнения `setCreateError`.
+       */
+
       setCreateError("Не удалось создать комнату. Попробуйте еще раз.");
     } finally {
       if (!navigated) {
+        /**
+         * Выполняет метод `setCreatingRoom`.
+         * @param false Входной параметр `false`.
+         * @returns Результат выполнения `setCreatingRoom`.
+         */
+
         setCreatingRoom(false);
       }
     }
@@ -257,6 +353,11 @@ export function HomePage({ user, onNavigate }: Props) {
             className="btn primary"
             disabled={!user || !visiblePublicRoom}
             onClick={() =>
+              /**
+               * Выполняет метод `onNavigate`.
+               * @returns Результат выполнения `onNavigate`.
+               */
+
               onNavigate(
                 `/rooms/${encodeURIComponent(visiblePublicRoom?.slug || "public")}`,
               )

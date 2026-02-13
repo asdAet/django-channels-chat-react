@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `api` подсистемы `chat`."""
+
+
 import hashlib
 import json
 import re
@@ -18,6 +22,7 @@ User = get_user_model()
 
 
 def _build_profile_pic_url(request, profile_pic):
+    """Выполняет логику `_build_profile_pic_url` с параметрами из сигнатуры."""
     if not profile_pic:
         return None
 
@@ -30,6 +35,7 @@ def _build_profile_pic_url(request, profile_pic):
 
 
 def _serialize_peer(request, user):
+    """Выполняет логику `_serialize_peer` с параметрами из сигнатуры."""
     profile_pic = None
     profile = getattr(user, "profile", None)
     image = getattr(profile, "image", None) if profile else None
@@ -46,6 +52,7 @@ def _serialize_peer(request, user):
 
 
 def _parse_json_body(request):
+    """Выполняет логику `_parse_json_body` с параметрами из сигнатуры."""
     if request.POST:
         return request.POST
 
@@ -63,6 +70,7 @@ def _parse_json_body(request):
 
 
 def _normalize_username(raw_username):
+    """Выполняет логику `_normalize_username` с параметрами из сигнатуры."""
     if not isinstance(raw_username, str):
         return ""
     value = raw_username.strip()
@@ -72,16 +80,19 @@ def _normalize_username(raw_username):
 
 
 def _direct_pair_key(user_a_id: int, user_b_id: int) -> str:
+    """Выполняет логику `_direct_pair_key` с параметрами из сигнатуры."""
     low, high = sorted([int(user_a_id), int(user_b_id)])
     return f"{low}:{high}"
 
 
 def _direct_room_slug(pair_key: str) -> str:
+    """Выполняет логику `_direct_room_slug` с параметрами из сигнатуры."""
     digest = hashlib.sha256(pair_key.encode("utf-8")).hexdigest()[:24]
     return f"dm_{digest}"
 
 
 def _parse_pair_key_users(pair_key: str | None) -> tuple[int, int] | None:
+    """Выполняет логику `_parse_pair_key_users` с параметрами из сигнатуры."""
     if not pair_key or ":" not in pair_key:
         return None
     first, second = pair_key.split(":", 1)
@@ -92,6 +103,7 @@ def _parse_pair_key_users(pair_key: str | None) -> tuple[int, int] | None:
 
 
 def _ensure_role(room: Room, user, role: str, granted_by=None):
+    """Выполняет логику `_ensure_role` с параметрами из сигнатуры."""
     role_obj, _ = ChatRole.objects.get_or_create(
         room=room,
         user=user,
@@ -114,18 +126,21 @@ def _ensure_role(room: Room, user, role: str, granted_by=None):
 
 
 def _ensure_room_owner_role(room: Room):
+    """Выполняет логику `_ensure_room_owner_role` с параметрами из сигнатуры."""
     if not room.created_by:
         return
     _ensure_role(room, room.created_by, ChatRole.Role.OWNER, granted_by=room.created_by)
 
 
 def _ensure_direct_roles(room: Room, initiator, peer, created: bool):
+    """Выполняет логику `_ensure_direct_roles` с параметрами из сигнатуры."""
     initiator_role = ChatRole.Role.OWNER if created else ChatRole.Role.MEMBER
     _ensure_role(room, initiator, initiator_role, granted_by=initiator)
     _ensure_role(room, peer, ChatRole.Role.MEMBER, granted_by=initiator)
 
 
 def _create_or_get_direct_room(initiator, target, pair_key: str, slug: str):
+    """Выполняет логику `_create_or_get_direct_room` с параметрами из сигнатуры."""
     room, created = Room.objects.get_or_create(
         direct_pair_key=pair_key,
         defaults={
@@ -153,6 +168,7 @@ def _create_or_get_direct_room(initiator, target, pair_key: str, slug: str):
 
 
 def _ensure_direct_room_with_retry(initiator, target, pair_key: str, slug: str):
+    """Выполняет логику `_ensure_direct_room_with_retry` с параметрами из сигнатуры."""
     attempts = max(1, int(getattr(settings, "CHAT_DIRECT_START_RETRIES", 3)))
 
     for attempt in range(attempts):
@@ -178,6 +194,7 @@ def _ensure_direct_room_with_retry(initiator, target, pair_key: str, slug: str):
 
 
 def _direct_peer_for_user(room: Room, user):
+    """Выполняет логику `_direct_peer_for_user` с параметрами из сигнатуры."""
     peer_role = (
         ChatRole.objects.filter(room=room)
         .exclude(user=user)
@@ -191,7 +208,7 @@ def _direct_peer_for_user(room: Room, user):
 
 
 def _public_room():
-    """Ensure the public room exists in the database."""
+    """Выполняет логику `_public_room` с параметрами из сигнатуры."""
     try:
         room, _created = Room.objects.get_or_create(
             slug=PUBLIC_ROOM_SLUG,
@@ -212,6 +229,7 @@ def _public_room():
 
 
 def _is_valid_room_slug(slug: str) -> bool:
+    """Выполняет логику `_is_valid_room_slug` с параметрами из сигнатуры."""
     pattern = getattr(settings, "CHAT_ROOM_SLUG_REGEX", r"^[A-Za-z0-9_-]{3,50}$")
     try:
         return bool(re.match(pattern, slug or ""))
@@ -220,6 +238,7 @@ def _is_valid_room_slug(slug: str) -> bool:
 
 
 def _parse_positive_int(raw_value: str | None, param_name: str) -> int:
+    """Выполняет логику `_parse_positive_int` с параметрами из сигнатуры."""
     try:
         parsed = int(raw_value)  # type: ignore[arg-type]
     except (TypeError, ValueError):
@@ -230,6 +249,7 @@ def _parse_positive_int(raw_value: str | None, param_name: str) -> int:
 
 
 def _resolve_room(room_slug: str):
+    """Выполняет логику `_resolve_room` с параметрами из сигнатуры."""
     if room_slug == PUBLIC_ROOM_SLUG:
         return _public_room(), None
 
@@ -241,6 +261,7 @@ def _resolve_room(room_slug: str):
 
 
 def _serialize_room_details(request, room: Room, created: bool):
+    """Выполняет логику `_serialize_room_details` с параметрами из сигнатуры."""
     payload = {
         "slug": room.slug,
         "name": room.name,
@@ -260,12 +281,14 @@ def _serialize_room_details(request, room: Room, created: bool):
 
 @require_http_methods(["GET"])
 def public_room(request):
+    """Выполняет логику `public_room` с параметрами из сигнатуры."""
     room = _public_room()
     return JsonResponse({"slug": room.slug, "name": room.name, "kind": room.kind})
 
 
 @require_http_methods(["POST"])
 def direct_start(request):
+    """Выполняет логику `direct_start` с параметрами из сигнатуры."""
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required"}, status=401)
 
@@ -306,6 +329,7 @@ def direct_start(request):
 
 @require_http_methods(["GET"])
 def direct_chats(request):
+    """Выполняет логику `direct_chats` с параметрами из сигнатуры."""
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required"}, status=401)
 
@@ -362,6 +386,7 @@ def direct_chats(request):
 
 @require_http_methods(["GET"])
 def room_details(request, room_slug):
+    """Выполняет логику `room_details` с параметрами из сигнатуры."""
     try:
         room, error_response = _resolve_room(room_slug)
         if error_response:
@@ -408,6 +433,7 @@ def room_details(request, room_slug):
 
 @require_http_methods(["GET"])
 def room_messages(request, room_slug):
+    """Выполняет логику `room_messages` с параметрами из сигнатуры."""
     room, error_response = _resolve_room(room_slug)
     if error_response:
         return error_response

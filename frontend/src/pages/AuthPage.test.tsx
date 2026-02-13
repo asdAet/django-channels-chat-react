@@ -4,8 +4,18 @@ import { describe, expect, it, vi } from 'vitest'
 import { AuthPage } from './AuthPage'
 
 describe('AuthPage', () => {
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('submits credentials and trims username', () => {
     const onSubmit = vi.fn()
+
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
 
     render(
       <AuthPage
@@ -24,10 +34,26 @@ describe('AuthPage', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Войти' }))
 
+    /**
+     * Выполняет метод `expect`.
+     * @param onSubmit Входной параметр `onSubmit`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(onSubmit).toHaveBeenCalledWith('demo', 'pass12345', '')
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('renders confirm password for registration mode', () => {
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(
       <AuthPage
         title="Регистрация"
@@ -38,11 +64,26 @@ describe('AuthPage', () => {
       />,
     )
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByLabelText('Повторите пароль')).toBeInTheDocument()
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('navigates between login/register views', () => {
     const onNavigate = vi.fn()
+
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
 
     render(
       <AuthPage
@@ -54,6 +95,12 @@ describe('AuthPage', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Зарегистрироваться' }))
+    /**
+     * Выполняет метод `expect`.
+     * @param onNavigate Входной параметр `onNavigate`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(onNavigate).toHaveBeenCalledWith('/register')
   })
 })

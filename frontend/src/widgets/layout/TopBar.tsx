@@ -8,10 +8,11 @@ type Props = {
   onLogout: () => void
 }
 /**
- * 
- * @param param0 
- * @returns 
+ * Рендерит компонент `TopBar` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `TopBar`.
  */
+
 export function TopBar({ user, onNavigate }: Props) {
   const { unreadDialogsCount } = useDirectInbox()
 

@@ -1,8 +1,13 @@
+
+"""Содержит миграцию `0007_message_room_user_indexes` приложения `chat`."""
+
+
 from django.db import migrations, models
 import django.utils.timezone
 
 
 class Migration(migrations.Migration):
+    """Описывает операции миграции схемы данных."""
 
     dependencies = [
         ("chat", "0006_message_user"),

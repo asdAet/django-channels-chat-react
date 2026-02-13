@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `middleware` подсистемы `users`."""
+
+
 from datetime import timedelta
 
 from django.core.cache import cache
@@ -8,15 +12,14 @@ from .models import Profile
 
 
 class UpdateLastSeenMiddleware:
-    """
-    Обновляет поле last_seen у авторизованных пользователей.
-    Чтобы избежать лишних запросов, обновляем не чаще чем раз в 30 секунд.
-    """
+    """Инкапсулирует логику класса `UpdateLastSeenMiddleware`."""
 
     def __init__(self, get_response):
+        """Инициализирует экземпляр `UpdateLastSeenMiddleware`."""
         self.get_response = get_response
 
     def __call__(self, request):
+        """Выполняет логику `__call__` с параметрами из сигнатуры."""
         user = getattr(request, "user", None)
         if user and user.is_authenticated:
             try:

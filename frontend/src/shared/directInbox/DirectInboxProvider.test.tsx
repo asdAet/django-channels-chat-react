@@ -45,6 +45,11 @@ const user = {
   registeredAt: null,
 }
 
+/**
+ * Рендерит компонент `Probe` и связанную разметку.
+ * @returns Результат выполнения `Probe`.
+ */
+
 function Probe() {
   const inbox = useDirectInbox()
 
@@ -60,6 +65,11 @@ function Probe() {
   )
 }
 
+/**
+ * Выполняет функцию `sentPayloads`.
+ * @returns Результат выполнения `sentPayloads`.
+ */
+
 const sentPayloads = () =>
   wsMock.send.mock.calls.map(([raw]) => {
     try {
@@ -70,6 +80,11 @@ const sentPayloads = () =>
   })
 
 describe('DirectInboxProvider', () => {
+  /**
+   * Выполняет метод `beforeEach`.
+   * @returns Результат выполнения `beforeEach`.
+   */
+
   beforeEach(() => {
     wsMock.status = 'online'
     wsMock.lastError = null
@@ -77,6 +92,11 @@ describe('DirectInboxProvider', () => {
     wsMock.options = null
     chatMock.getDirectChats.mockReset().mockResolvedValue({ items: [] })
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('loads initial chats and applies unread events', async () => {
     chatMock.getDirectChats.mockResolvedValue({
@@ -90,6 +110,11 @@ describe('DirectInboxProvider', () => {
       ],
     })
 
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(
       <DirectInboxProvider user={user}>
         <Probe />
@@ -97,8 +122,18 @@ describe('DirectInboxProvider', () => {
     )
 
     await waitFor(() => {
+      /**
+       * Выполняет метод `expect`.
+       * @returns Результат выполнения `expect`.
+       */
+
       expect(screen.getByTestId('items-order').textContent).toBe('dm_1')
     })
+
+    /**
+     * Выполняет метод `act`.
+     * @returns Результат выполнения `act`.
+     */
 
     act(() => {
       wsMock.options?.onMessage?.(
@@ -111,8 +146,23 @@ describe('DirectInboxProvider', () => {
       )
     })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByTestId('unread-count').textContent).toBe('1')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByTestId('unread-counts').textContent).toBe('{"dm_1":2}')
+
+    /**
+     * Выполняет метод `act`.
+     * @returns Результат выполнения `act`.
+     */
 
     act(() => {
       wsMock.options?.onMessage?.(
@@ -126,9 +176,24 @@ describe('DirectInboxProvider', () => {
       )
     })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByTestId('unread-count').textContent).toBe('0')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByTestId('unread-counts').textContent).toBe('{}')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('reorders chats when realtime item arrives', async () => {
     chatMock.getDirectChats.mockResolvedValue({
@@ -148,6 +213,11 @@ describe('DirectInboxProvider', () => {
       ],
     })
 
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(
       <DirectInboxProvider user={user}>
         <Probe />
@@ -155,8 +225,18 @@ describe('DirectInboxProvider', () => {
     )
 
     await waitFor(() => {
+      /**
+       * Выполняет метод `expect`.
+       * @returns Результат выполнения `expect`.
+       */
+
       expect(screen.getByTestId('items-order').textContent).toBe('dm_old,dm_new')
     })
+
+    /**
+     * Выполняет метод `act`.
+     * @returns Результат выполнения `act`.
+     */
 
     act(() => {
       wsMock.options?.onMessage?.(
@@ -175,12 +255,37 @@ describe('DirectInboxProvider', () => {
       )
     })
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByTestId('items-order').textContent).toBe('dm_old,dm_new')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByTestId('unread-count').textContent).toBe('1')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByTestId('unread-counts').textContent).toBe('{"dm_old":3}')
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('sends mark_read and set_active_room commands', async () => {
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(
       <DirectInboxProvider user={user}>
         <Probe />
@@ -188,8 +293,18 @@ describe('DirectInboxProvider', () => {
     )
 
     await waitFor(() => {
+      /**
+       * Выполняет метод `expect`.
+       * @returns Результат выполнения `expect`.
+       */
+
       expect(chatMock.getDirectChats).toHaveBeenCalledTimes(1)
     })
+
+    /**
+     * Выполняет метод `act`.
+     * @returns Результат выполнения `act`.
+     */
 
     act(() => {
       wsMock.options?.onMessage?.(
@@ -206,11 +321,36 @@ describe('DirectInboxProvider', () => {
     fireEvent.click(screen.getByRole('button', { name: 'set-active' }))
 
     const payloads = sentPayloads()
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(payloads.some((payload) => payload?.type === 'mark_read' && payload?.roomSlug === 'dm_1')).toBe(true)
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(payloads.some((payload) => payload?.type === 'set_active_room' && payload?.roomSlug === 'dm_1')).toBe(true)
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByTestId('unread-count').textContent).toBe('0')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByTestId('unread-counts').textContent).toBe('{}')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('re-sends active room after reconnect', async () => {
     wsMock.status = 'offline'
@@ -222,6 +362,11 @@ describe('DirectInboxProvider', () => {
     )
 
     await waitFor(() => {
+      /**
+       * Выполняет метод `expect`.
+       * @returns Результат выполнения `expect`.
+       */
+
       expect(chatMock.getDirectChats).toHaveBeenCalledTimes(1)
     })
 
@@ -229,6 +374,11 @@ describe('DirectInboxProvider', () => {
     wsMock.send.mockClear()
 
     wsMock.status = 'online'
+    /**
+     * Выполняет метод `rerender`.
+     * @returns Результат выполнения `rerender`.
+     */
+
     rerender(
       <DirectInboxProvider user={user}>
         <Probe />
@@ -236,7 +386,17 @@ describe('DirectInboxProvider', () => {
     )
 
     const payloads = sentPayloads()
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(payloads.some((payload) => payload?.type === 'ping')).toBe(true)
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(payloads.some((payload) => payload?.type === 'set_active_room' && payload?.roomSlug === 'dm_1')).toBe(true)
   })
 })

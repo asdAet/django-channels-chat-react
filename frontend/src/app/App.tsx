@@ -21,6 +21,11 @@ type ProfileSaveResult =
   | { ok: true }
   | { ok: false; errors?: ProfileFieldErrors; message?: string }
 
+/**
+ * Рендерит компонент `App` и связанную разметку.
+ * @returns Результат выполнения `App`.
+ */
+
 export function App() {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.pathname))
   const { auth, login, register, logout, updateProfile } = useAuth()
@@ -28,11 +33,23 @@ export function App() {
   const [banner, setBanner] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     const onPop = () => setRoute(parseRoute(window.location.pathname))
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     if (!banner) return
@@ -112,32 +129,96 @@ export function App() {
   const handleNavigate = (path: string) => navigate(path, setRoute)
 
   const handleLogin = async (username: string, password: string) => {
+    /**
+     * Выполняет метод `setError`.
+     * @param null Входной параметр `null`.
+     * @returns Результат выполнения `setError`.
+     */
+
     setError(null)
     try {
       await login({ username, password })
+      /**
+       * Выполняет метод `setBanner`.
+       * @returns Результат выполнения `setBanner`.
+       */
+
       setBanner('Добро пожаловать обратно!')
+      /**
+       * Выполняет метод `handleNavigate`.
+       * @returns Результат выполнения `handleNavigate`.
+       */
+
       handleNavigate('/')
     } catch (err) {
+      /**
+       * Выполняет метод `debugLog`.
+       * @param err Входной параметр `err`.
+       * @returns Результат выполнения `debugLog`.
+       */
+
       debugLog('Login failed', err)
+      /**
+       * Выполняет метод `setError`.
+       * @returns Результат выполнения `setError`.
+       */
+
       setError(extractAuthMessage(err, 'Неверный логин или пароль'))
     }
   }
 
   const handleRegister = async (username: string, password1: string, password2: string) => {
+    /**
+     * Выполняет метод `setError`.
+     * @param null Входной параметр `null`.
+     * @returns Результат выполнения `setError`.
+     */
+
     setError(null)
     try {
       await register({ username, password1, password2 })
+      /**
+       * Выполняет метод `setBanner`.
+       * @returns Результат выполнения `setBanner`.
+       */
+
       setBanner('Аккаунт создан. Можно общаться!')
+      /**
+       * Выполняет метод `handleNavigate`.
+       * @returns Результат выполнения `handleNavigate`.
+       */
+
       handleNavigate('/')
     } catch (err) {
+      /**
+       * Выполняет метод `debugLog`.
+       * @param err Входной параметр `err`.
+       * @returns Результат выполнения `debugLog`.
+       */
+
       debugLog('Registration failed', err)
+      /**
+       * Выполняет метод `setError`.
+       * @returns Результат выполнения `setError`.
+       */
+
       setError(extractAuthMessage(err, 'Проверьте данные регистрации'))
     }
   }
 
   const handleLogout = async () => {
     await logout()
+    /**
+     * Выполняет метод `setBanner`.
+     * @returns Результат выполнения `setBanner`.
+     */
+
     setBanner('Вы вышли из аккаунта')
+    /**
+     * Выполняет метод `handleNavigate`.
+     * @returns Результат выполнения `handleNavigate`.
+     */
+
     handleNavigate('/login')
   }
 
@@ -148,20 +229,52 @@ export function App() {
     bio?: string
   }): Promise<ProfileSaveResult> => {
     if (!auth.user) return { ok: false, message: 'Сначала войдите в аккаунт.' }
+    /**
+     * Выполняет метод `setError`.
+     * @param null Входной параметр `null`.
+     * @returns Результат выполнения `setError`.
+     */
+
     setError(null)
     try {
       await updateProfile(fields)
+      /**
+       * Выполняет метод `setBanner`.
+       * @returns Результат выполнения `setBanner`.
+       */
+
       setBanner('Профиль обновлен')
       const nextUsername = fields.username?.trim() || auth.user?.username
       if (nextUsername) {
+        /**
+         * Выполняет метод `handleNavigate`.
+         * @returns Результат выполнения `handleNavigate`.
+         */
+
         handleNavigate(`/users/${encodeURIComponent(nextUsername)}`)
       }
       return { ok: true }
     } catch (err) {
+      /**
+       * Выполняет метод `debugLog`.
+       * @param err Входной параметр `err`.
+       * @returns Результат выполнения `debugLog`.
+       */
+
       debugLog('Profile update failed', err)
       const apiErr = err as ApiError
       if (apiErr && typeof apiErr.status === 'number' && apiErr.status === 401) {
+        /**
+         * Выполняет метод `setError`.
+         * @returns Результат выполнения `setError`.
+         */
+
         setError('Сессия истекла. Войдите снова.')
+        /**
+         * Выполняет метод `handleNavigate`.
+         * @returns Результат выполнения `handleNavigate`.
+         */
+
         handleNavigate('/login')
         return { ok: false, message: 'Сессия истекла. Войдите снова.' }
       }

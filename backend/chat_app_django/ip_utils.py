@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `ip_utils` подсистемы `chat_app_django`."""
+
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -7,6 +11,7 @@ from django.conf import settings
 
 
 def _decode_header(value: bytes | None) -> str | None:
+    """Выполняет логику `_decode_header` с параметрами из сигнатуры."""
     if not value:
         return None
     try:
@@ -16,12 +21,14 @@ def _decode_header(value: bytes | None) -> str | None:
 
 
 def _first_value(value: str | None) -> str | None:
+    """Выполняет логику `_first_value` с параметрами из сигнатуры."""
     if not value:
         return None
     return value.split(",")[0].strip()
 
 
 def _parse_ip(value: str | None) -> str | None:
+    """Выполняет логику `_parse_ip` с параметрами из сигнатуры."""
     if not value:
         return None
     try:
@@ -33,6 +40,7 @@ def _parse_ip(value: str | None) -> str | None:
 
 @lru_cache(maxsize=1)
 def _trusted_networks() -> list:
+    """Выполняет логику `_trusted_networks` с параметрами из сигнатуры."""
     raw = []
     raw.extend(getattr(settings, "TRUSTED_PROXY_IPS", []) or [])
     raw.extend(getattr(settings, "TRUSTED_PROXY_RANGES", []) or [])
@@ -46,6 +54,7 @@ def _trusted_networks() -> list:
 
 
 def is_trusted_proxy(ip: str | None) -> bool:
+    """Выполняет логику `is_trusted_proxy` с параметрами из сигнатуры."""
     parsed = _parse_ip(ip)
     if not parsed:
         return False
@@ -57,6 +66,7 @@ def is_trusted_proxy(ip: str | None) -> bool:
 
 
 def _pick_ip(candidates: list[str | None]) -> str | None:
+    """Выполняет логику `_pick_ip` с параметрами из сигнатуры."""
     for value in candidates:
         ip_val = _parse_ip(_first_value(value))
         if ip_val:
@@ -65,6 +75,7 @@ def _pick_ip(candidates: list[str | None]) -> str | None:
 
 
 def get_client_ip_from_request(request) -> str | None:
+    """Выполняет логику `get_client_ip_from_request` с параметрами из сигнатуры."""
     remote = request.META.get("REMOTE_ADDR")
     if not is_trusted_proxy(remote):
         return _parse_ip(remote) or remote
@@ -80,12 +91,14 @@ def get_client_ip_from_request(request) -> str | None:
 
 
 def get_client_ip_from_scope(scope) -> str | None:
+    """Выполняет логику `get_client_ip_from_scope` с параметрами из сигнатуры."""
     client = scope.get("client")
     remote = str(client[0]) if client else None
     if not is_trusted_proxy(remote):
         return _parse_ip(remote) or remote
 
     def header(name: bytes) -> str | None:
+        """Выполняет логику `header` с параметрами из сигнатуры."""
         for key, value in scope.get("headers", []):
             if key == name:
                 return _decode_header(value)

@@ -1,3 +1,5 @@
+"""Содержит утилиты для построения корректных публичных URL медиа."""
+
 import posixpath
 from ipaddress import ip_address
 from urllib.parse import urlparse
@@ -19,6 +21,7 @@ INTERNAL_HOSTNAMES = {
 
 
 def _decode_header(value: bytes | None) -> str | None:
+    """Декодирует HTTP-заголовок, учитывая UTF-8 и fallback на latin-1."""
     if not value:
         return None
     try:
@@ -28,6 +31,7 @@ def _decode_header(value: bytes | None) -> str | None:
 
 
 def _get_header(scope, name: bytes) -> str | None:
+    """Возвращает значение заголовка ASGI-события по имени."""
     for header, value in scope.get("headers", []):
         if header == name:
             return _decode_header(value)
@@ -35,12 +39,14 @@ def _get_header(scope, name: bytes) -> str | None:
 
 
 def _first_value(value: str | None) -> str | None:
+    """Извлекает первое значение из потенциально спискового заголовка."""
     if not value:
         return None
     return value.split(",")[0].strip()
 
 
 def _normalize_scheme(value: str | None) -> str | None:
+    """Нормализует схему протокола до http/https."""
     if not value:
         return None
     lowered = value.strip().lower()
@@ -54,6 +60,7 @@ def _normalize_scheme(value: str | None) -> str | None:
 
 
 def _normalize_base_url(value: str | None) -> str | None:
+    """Приводит базовый URL к виду scheme://host[:port] или возвращает None."""
     if not value:
         return None
     parsed = urlparse(value)
@@ -65,6 +72,7 @@ def _normalize_base_url(value: str | None) -> str | None:
 
 
 def _base_from_host_and_scheme(host: str | None, scheme: str | None) -> str | None:
+    """Собирает базовый URL из host и scheme."""
     host_value = _first_value(host)
     if not host_value:
         return None
@@ -74,6 +82,7 @@ def _base_from_host_and_scheme(host: str | None, scheme: str | None) -> str | No
 
 
 def normalize_media_path(image_name: str | None) -> str | None:
+    """Нормализует путь к медиа и отбрасывает traversal/пустые значения."""
     if not image_name:
         return None
 
@@ -92,6 +101,7 @@ def normalize_media_path(image_name: str | None) -> str | None:
 
 
 def _is_internal_host(hostname: str | None) -> bool:
+    """Проверяет, относится ли хост к внутренней сети/локальному окружению."""
     if not hostname:
         return False
 
@@ -108,6 +118,7 @@ def _is_internal_host(hostname: str | None) -> bool:
 
 
 def _hostname_from_base(base: str | None) -> str | None:
+    """Извлекает hostname из базового URL."""
     if not base:
         return None
     parsed = urlparse(base)
@@ -115,6 +126,7 @@ def _hostname_from_base(base: str | None) -> str | None:
 
 
 def _should_prefer_origin(candidate_base: str | None, origin_base: str | None) -> bool:
+    """Определяет, нужно ли предпочесть Origin вместо внутреннего хоста."""
     if not candidate_base or not origin_base:
         return False
 
@@ -132,6 +144,7 @@ def _pick_base_url(
     host_base: str | None,
     origin_base: str | None,
 ) -> str | None:
+    """Выбирает приоритетную базу URL для формирования абсолютного пути."""
     if configured_base:
         return configured_base
 
@@ -149,6 +162,7 @@ def _pick_base_url(
 
 
 def _coerce_media_source(image_name: str | None) -> str | None:
+    """Преобразует входное имя/URL медиа к безопасному источнику."""
     if not image_name:
         return None
 
@@ -168,6 +182,7 @@ def _coerce_media_source(image_name: str | None) -> str | None:
 
 
 def _media_url_path(image_name: str | None) -> str | None:
+    """Строит URL-путь до медиа-файла на основе MEDIA_URL."""
     normalized = normalize_media_path(image_name)
     if not normalized:
         return None
@@ -182,6 +197,7 @@ def _media_url_path(image_name: str | None) -> str | None:
 
 
 def build_profile_url_from_request(request, image_name: str | None) -> str | None:
+    """Формирует абсолютный URL аватара с учетом HTTP-заголовков запроса."""
     source = _coerce_media_source(image_name)
     if not source:
         return None
@@ -217,6 +233,7 @@ def build_profile_url_from_request(request, image_name: str | None) -> str | Non
 
 
 def build_profile_url(scope, image_name: str | None) -> str | None:
+    """Формирует абсолютный URL аватара для WebSocket ASGI scope."""
     source = _coerce_media_source(image_name)
     if not source:
         return None

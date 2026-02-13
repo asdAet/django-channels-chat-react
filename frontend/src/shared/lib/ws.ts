@@ -1,3 +1,8 @@
+/**
+ * Выполняет функцию `getWebSocketBase`.
+ * @returns Результат выполнения `getWebSocketBase`.
+ */
+
 export const getWebSocketBase = () => {
   const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
   if (import.meta.env.DEV) {

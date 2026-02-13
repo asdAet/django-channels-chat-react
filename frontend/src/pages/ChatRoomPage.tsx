@@ -26,6 +26,12 @@ type Props = {
 const MAX_MESSAGE_LENGTH = 1000;
 const RATE_LIMIT_COOLDOWN_MS = 10_000;
 
+/**
+ * Рендерит компонент `ChatRoomPage` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `ChatRoomPage`.
+ */
+
 export function ChatRoomPage({ slug, user, onNavigate }: Props) {
   const {
     details,
@@ -54,6 +60,11 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
   const openUserProfile = useCallback(
     (username: string) => {
       if (!username) return;
+      /**
+       * Выполняет метод `onNavigate`.
+       * @returns Результат выполнения `onNavigate`.
+       */
+
       onNavigate(`/users/${encodeURIComponent(username)}`);
     },
     [onNavigate],
@@ -66,7 +77,17 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
 
   const applyRateLimit = useCallback((cooldownMs: number) => {
     const until = Date.now() + cooldownMs;
+    /**
+     * Выполняет метод `setRateLimitUntil`.
+     * @returns Результат выполнения `setRateLimitUntil`.
+     */
+
     setRateLimitUntil((prev) => (prev && prev > until ? prev : until));
+    /**
+     * Выполняет метод `setNow`.
+     * @returns Результат выполнения `setNow`.
+     */
+
     setNow(Date.now());
   }, []);
 
@@ -80,10 +101,21 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
         const cooldownMs = Number.isFinite(retryAfter)
           ? Math.max(1, retryAfter) * 1000
           : RATE_LIMIT_COOLDOWN_MS;
+        /**
+         * Выполняет метод `applyRateLimit`.
+         * @param cooldownMs Входной параметр `cooldownMs`.
+         * @returns Результат выполнения `applyRateLimit`.
+         */
+
         applyRateLimit(cooldownMs);
         return;
       }
       if (data?.error === "message_too_long") {
+        /**
+         * Выполняет метод `setRoomError`.
+         * @returns Результат выполнения `setRoomError`.
+         */
+
         setRoomError(
           `Сообщение слишком длинное (макс ${MAX_MESSAGE_LENGTH} символов)`,
         );
@@ -93,10 +125,26 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
       const content = sanitizeText(String(data.message), MAX_MESSAGE_LENGTH);
       if (!content) return;
       tempIdRef.current += 1;
+      /**
+       * Выполняет метод `invalidateRoomMessages`.
+       * @param slug Входной параметр `slug`.
+       * @returns Результат выполнения `invalidateRoomMessages`.
+       */
+
       invalidateRoomMessages(slug);
       if (details?.kind === "direct") {
+        /**
+         * Выполняет метод `invalidateDirectChats`.
+         * @returns Результат выполнения `invalidateDirectChats`.
+         */
+
         invalidateDirectChats();
       }
+      /**
+       * Выполняет метод `setMessages`.
+       * @returns Результат выполнения `setMessages`.
+       */
+
       setMessages((prev) => [
         ...prev,
         {
@@ -108,17 +156,47 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
         },
       ]);
     } catch (error) {
+      /**
+       * Выполняет метод `debugLog`.
+       * @param error Входной параметр `error`.
+       * @returns Результат выполнения `debugLog`.
+       */
+
       debugLog("WS payload parse failed", error);
     }
   };
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     if (!user || details?.kind !== "direct") return;
 
+    /**
+     * Выполняет метод `setActiveRoom`.
+     * @param slug Входной параметр `slug`.
+     * @returns Результат выполнения `setActiveRoom`.
+     */
+
     setActiveRoom(slug);
+    /**
+     * Выполняет метод `markRead`.
+     * @param slug Входной параметр `slug`.
+     * @returns Результат выполнения `markRead`.
+     */
+
     markRead(slug);
 
     return () => {
+      /**
+       * Выполняет метод `setActiveRoom`.
+       * @param null Входной параметр `null`.
+       * @returns Результат выполнения `setActiveRoom`.
+       */
+
       setActiveRoom(null);
     };
   }, [details?.kind, markRead, setActiveRoom, slug, user]);
@@ -129,16 +207,33 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
     onOpen: () => setRoomError(null),
     onClose: (event) => {
       if (event.code !== 1000 && event.code !== 1001) {
+        /**
+         * Выполняет метод `setRoomError`.
+         * @returns Результат выполнения `setRoomError`.
+         */
+
         setRoomError("Соединение потеряно. Пытаемся восстановить...");
       }
     },
     onError: () => setRoomError("Ошибка соединения"),
   });
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     if (!rateLimitUntil) return;
     const id = window.setInterval(() => {
       const current = Date.now();
+      /**
+       * Выполняет метод `setNow`.
+       * @param current Входной параметр `current`.
+       * @returns Результат выполнения `setNow`.
+       */
+
       setNow(current);
       if (current >= rateLimitUntil) {
         window.clearInterval(id);
@@ -147,10 +242,21 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
     return () => window.clearInterval(id);
   }, [rateLimitUntil]);
 
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
+
   useEffect(() => {
     if (!user) return;
     const nextProfile = user.profileImage || null;
     const username = user.username;
+    /**
+     * Выполняет метод `setMessages`.
+     * @returns Результат выполнения `setMessages`.
+     */
+
     setMessages((prev) => {
       let changed = false;
       const updated = prev.map((msg) => {
@@ -173,9 +279,20 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
     if (scrollTop < 120 && hasMore && !loadingMore && !loading) {
       prependingRef.current = true;
       prevScrollHeightRef.current = scrollHeight;
+      /**
+       * Выполняет метод `loadMore`.
+       * @returns Результат выполнения `loadMore`.
+       */
+
       loadMore();
     }
   }, [hasMore, loadingMore, loading, loadMore]);
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     const list = listRef.current;
@@ -199,22 +316,42 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
 
   const sendMessage = () => {
     if (!user) {
+      /**
+       * Выполняет метод `setRoomError`.
+       * @returns Результат выполнения `setRoomError`.
+       */
+
       setRoomError("Авторизуйтесь, чтобы отправлять сообщения");
       return;
     }
     const raw = draft;
     if (!raw.trim()) return;
     if (rateLimitActive) {
+      /**
+       * Выполняет метод `setRoomError`.
+       * @returns Результат выполнения `setRoomError`.
+       */
+
       setRoomError(`Слишком часто. Подождите ${rateLimitSeconds} сек.`);
       return;
     }
     if (raw.length > MAX_MESSAGE_LENGTH) {
+      /**
+       * Выполняет метод `setRoomError`.
+       * @returns Результат выполнения `setRoomError`.
+       */
+
       setRoomError(
         `Сообщение слишком длинное (макс ${MAX_MESSAGE_LENGTH} символов)`,
       );
       return;
     }
     if (!isOnline || status !== "online") {
+      /**
+       * Выполняет метод `setRoomError`.
+       * @returns Результат выполнения `setRoomError`.
+       */
+
       setRoomError("Нет соединения с сервером");
       return;
     }
@@ -228,9 +365,19 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
     });
 
     if (!send(payload)) {
+      /**
+       * Выполняет метод `setRoomError`.
+       * @returns Результат выполнения `setRoomError`.
+       */
+
       setRoomError("Не удалось отправить сообщение");
       return;
     }
+    /**
+     * Выполняет метод `setDraft`.
+     * @returns Результат выполнения `setDraft`.
+     */
+
     setDraft("");
   };
 
@@ -441,6 +588,11 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
+                    /**
+                     * Выполняет метод `sendMessage`.
+                     * @returns Результат выполнения `sendMessage`.
+                     */
+
                     sendMessage();
                   }
                 }}

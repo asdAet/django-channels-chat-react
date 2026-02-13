@@ -33,20 +33,95 @@ export type DirectChatsResponse = {
 }
 
 export interface IApiService {
+  /**
+   * Выполняет метод `ensureCsrf`.
+   * @returns Результат выполнения `ensureCsrf`.
+   */
+
   ensureCsrf(): Promise<{ csrfToken: string }>
+  /**
+   * Выполняет метод `getSession`.
+   * @returns Результат выполнения `getSession`.
+   */
+
   getSession(): Promise<SessionResponse>
+  /**
+   * Выполняет метод `login`.
+   * @param username Входной параметр `username`.
+   * @param password Входной параметр `password`.
+   * @returns Результат выполнения `login`.
+   */
+
   login(username: string, password: string): Promise<SessionResponse>
+  /**
+   * Выполняет метод `register`.
+   * @param username Входной параметр `username`.
+   * @param password1 Входной параметр `password1`.
+   * @param password2 Входной параметр `password2`.
+   * @returns Результат выполнения `register`.
+   */
+
   register(username: string, password1: string, password2: string): Promise<SessionResponse>
+  /**
+   * Выполняет метод `getPasswordRules`.
+   * @returns Результат выполнения `getPasswordRules`.
+   */
+
   getPasswordRules(): Promise<{ rules: string[] }>
+  /**
+   * Выполняет метод `logout`.
+   * @returns Результат выполнения `logout`.
+   */
+
   logout(): Promise<{ ok: boolean }>
+  /**
+   * Выполняет метод `updateProfile`.
+   * @param fields Входной параметр `fields`.
+   * @returns Результат выполнения `updateProfile`.
+   */
+
   updateProfile(fields: UpdateProfileInput): Promise<{ user: UserProfile }>
+  /**
+   * Выполняет метод `getPublicRoom`.
+   * @returns Результат выполнения `getPublicRoom`.
+   */
+
   getPublicRoom(): Promise<RoomDetails>
+  /**
+   * Выполняет метод `getRoomDetails`.
+   * @param slug Входной параметр `slug`.
+   * @returns Результат выполнения `getRoomDetails`.
+   */
+
   getRoomDetails(slug: string): Promise<RoomDetails>
+  /**
+   * Выполняет метод `getRoomMessages`.
+   * @param slug Входной параметр `slug`.
+   * @returns Результат выполнения `getRoomMessages`.
+   */
+
   getRoomMessages(
     slug: string,
     params?: { limit?: number; beforeId?: number },
   ): Promise<RoomMessagesResponse>
+  /**
+   * Выполняет метод `startDirectChat`.
+   * @param username Входной параметр `username`.
+   * @returns Результат выполнения `startDirectChat`.
+   */
+
   startDirectChat(username: string): Promise<DirectStartResponse>
+  /**
+   * Выполняет метод `getDirectChats`.
+   * @returns Результат выполнения `getDirectChats`.
+   */
+
   getDirectChats(): Promise<DirectChatsResponse>
+  /**
+   * Выполняет метод `getUserProfile`.
+   * @param username Входной параметр `username`.
+   * @returns Результат выполнения `getUserProfile`.
+   */
+
   getUserProfile(username: string): Promise<{ user: UserProfile }>
 }

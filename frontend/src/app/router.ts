@@ -10,7 +10,19 @@ export type Route =
 
 const ROOM_SLUG_RE = /^[A-Za-z0-9_-]{3,50}$/
 
+/**
+ * Выполняет функцию `isValidRoomSlug`.
+ * @param value Входной параметр `value`.
+ * @returns Результат выполнения `isValidRoomSlug`.
+ */
+
 const isValidRoomSlug = (value: string) => ROOM_SLUG_RE.test(value)
+
+/**
+ * Выполняет функцию `parseRoute`.
+ * @param pathname Входной параметр `pathname`.
+ * @returns Результат выполнения `parseRoute`.
+ */
 
 export const parseRoute = (pathname: string): Route => {
   const normalized = pathname.replace(/\/+$/, '') || '/'
@@ -35,10 +47,22 @@ export const parseRoute = (pathname: string): Route => {
   return { name: 'home' }
 }
 
+/**
+ * Выполняет функцию `navigate`.
+ * @param path Входной параметр `path`.
+ * @param setRoute Входной параметр `setRoute`.
+ * @returns Результат выполнения `navigate`.
+ */
+
 export const navigate = (path: string, setRoute: (route: Route) => void) => {
   if (path !== window.location.pathname) {
     window.history.pushState({}, '', path)
   }
+  /**
+   * Выполняет метод `setRoute`.
+   * @returns Результат выполнения `setRoute`.
+   */
+
   setRoute(parseRoute(path))
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }

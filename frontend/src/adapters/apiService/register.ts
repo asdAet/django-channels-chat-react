@@ -2,6 +2,15 @@ import type { AxiosInstance } from 'axios'
 
 import type { SessionResponse } from '../../shared/api/types'
 
+/**
+ * Выполняет функцию `register`.
+ * @param apiClient Входной параметр `apiClient`.
+ * @param username Входной параметр `username`.
+ * @param password1 Входной параметр `password1`.
+ * @param password2 Входной параметр `password2`.
+ * @returns Результат выполнения `register`.
+ */
+
 export async function register(
   apiClient: AxiosInstance,
   username: string,

@@ -8,6 +8,12 @@ type Props = {
   onNavigate: (path: string) => void
 }
 
+/**
+ * Рендерит компонент `DirectLayout` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `DirectLayout`.
+ */
+
 export function DirectLayout({ user, username, onNavigate }: Props) {
   const hasActive = Boolean(username)
 

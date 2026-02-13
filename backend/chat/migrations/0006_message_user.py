@@ -1,14 +1,20 @@
+
+"""Содержит миграцию `0006_message_user` приложения `chat`."""
+
+
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 
 
 def _get_user_model(apps):
+    """Выполняет логику `_get_user_model` с параметрами из сигнатуры."""
     app_label, model_name = settings.AUTH_USER_MODEL.split(".")
     return apps.get_model(app_label, model_name)
 
 
 def forwards(apps, schema_editor):
+    """Выполняет логику `forwards` с параметрами из сигнатуры."""
     Message = apps.get_model("chat", "Message")
     User = _get_user_model(apps)
     username_to_id = {user.username: user.id for user in User.objects.all()}
@@ -20,11 +26,13 @@ def forwards(apps, schema_editor):
 
 
 def backwards(apps, schema_editor):
+    """Выполняет логику `backwards` с параметрами из сигнатуры."""
     Message = apps.get_model("chat", "Message")
     Message.objects.update(user=None)
 
 
 class Migration(migrations.Migration):
+    """Описывает операции миграции схемы данных."""
 
     dependencies = [
         ("chat", "0005_alter_message_date_added"),

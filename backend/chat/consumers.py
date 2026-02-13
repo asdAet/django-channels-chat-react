@@ -1,3 +1,6 @@
+"""Содержит логику модуля `consumers` подсистемы `chat`."""
+
+
 import asyncio
 import json
 import re
@@ -44,6 +47,7 @@ User = get_user_model()
 
 
 def _is_valid_room_slug(value: str) -> bool:
+    """Выполняет логику `_is_valid_room_slug` с параметрами из сигнатуры."""
     pattern = getattr(settings, "CHAT_ROOM_SLUG_REGEX", r"^[A-Za-z0-9_-]{3,50}$")
     try:
         return bool(re.match(pattern, value or ""))
@@ -52,10 +56,12 @@ def _is_valid_room_slug(value: str) -> bool:
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
+    """Инкапсулирует логику класса `ChatConsumer`."""
     chat_idle_timeout = int(getattr(settings, "CHAT_WS_IDLE_TIMEOUT", 600))
     direct_inbox_unread_ttl = int(getattr(settings, "DIRECT_INBOX_UNREAD_TTL", 30 * 24 * 60 * 60))
 
     async def connect(self):
+        """Выполняет логику `connect` с параметрами из сигнатуры."""
         user = self.scope["user"]
         room_slug = self.scope["url_route"]["kwargs"]["room_name"]
 
@@ -86,6 +92,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self._idle_task = asyncio.create_task(self._idle_watchdog())
 
     async def disconnect(self, close_code):
+        """Выполняет логику `disconnect` с параметрами из сигнатуры."""
         idle_task = getattr(self, "_idle_task", None)
         if idle_task:
             idle_task.cancel()
@@ -98,6 +105,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def receive(self, text_data):
+        """Выполняет логику `receive` с параметрами из сигнатуры."""
         self._last_activity = time.monotonic()
         try:
             text_data_json = json.loads(text_data)
@@ -165,6 +173,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 )
 
     async def chat_message(self, event):
+        """Выполняет логику `chat_message` с параметрами из сигнатуры."""
         self._last_activity = time.monotonic()
         await self.send(
             text_data=json.dumps(
@@ -178,6 +187,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def _idle_watchdog(self):
+        """Выполняет логику `_idle_watchdog` с параметрами из сигнатуры."""
         interval = max(10, min(60, self.chat_idle_timeout))
         while True:
             await asyncio.sleep(interval)
@@ -188,6 +198,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _load_room(self, slug: str):
+        """Выполняет логику `_load_room` с параметрами из сигнатуры."""
         try:
             if slug == PUBLIC_ROOM_SLUG:
                 room, _ = Room.objects.get_or_create(
@@ -210,14 +221,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _can_read(self, room: Room, user) -> bool:
+        """Выполняет логику `_can_read` с параметрами из сигнатуры."""
         return can_read(room, user)
 
     @sync_to_async
     def _can_write(self, room: Room, user) -> bool:
+        """Выполняет логику `_can_write` с параметрами из сигнатуры."""
         return can_write(room, user)
 
     @sync_to_async
     def save_message(self, message, user, username, profile_pic, room):
+        """Выполняет логику `save_message` с параметрами из сигнатуры."""
         return Message.objects.create(
             message_content=message,
             username=username,
@@ -228,6 +242,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _get_profile_image_name(self, user) -> str:
+        """Выполняет логику `_get_profile_image_name` с параметрами из сигнатуры."""
         try:
             profile = user.profile
             name = getattr(profile.image, "name", "")
@@ -237,6 +252,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _rate_limited(self, user) -> bool:
+        """Выполняет логику `_rate_limited` с параметрами из сигнатуры."""
         limit = int(getattr(settings, "CHAT_MESSAGE_RATE_LIMIT", 20))
         window = int(getattr(settings, "CHAT_MESSAGE_RATE_WINDOW", 10))
         key = f"rl:chat:{user.id}"
@@ -253,6 +269,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _build_direct_inbox_targets(self, room_id: int, sender_id: int, message: str, created_at: str):
+        """Выполняет логику `_build_direct_inbox_targets` с параметрами из сигнатуры."""
         room = Room.objects.filter(id=room_id, kind=Room.Kind.DIRECT).first()
         if not room:
             return []
@@ -338,12 +355,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 
 class DirectInboxConsumer(AsyncWebsocketConsumer):
+    """Инкапсулирует логику класса `DirectInboxConsumer`."""
     unread_ttl = int(getattr(settings, "DIRECT_INBOX_UNREAD_TTL", 30 * 24 * 60 * 60))
     active_ttl = int(getattr(settings, "DIRECT_INBOX_ACTIVE_TTL", 90))
     heartbeat_seconds = int(getattr(settings, "DIRECT_INBOX_HEARTBEAT", 20))
     idle_timeout = int(getattr(settings, "DIRECT_INBOX_IDLE_TIMEOUT", 90))
 
     async def connect(self):
+        """Выполняет логику `connect` с параметрами из сигнатуры."""
         user = self.scope.get("user")
         if not user or not user.is_authenticated:
             await self.close(code=4401)
@@ -365,6 +384,7 @@ class DirectInboxConsumer(AsyncWebsocketConsumer):
         await self._send_unread_state()
 
     async def disconnect(self, close_code):
+        """Выполняет логику `disconnect` с параметрами из сигнатуры."""
         for task_name in ("_heartbeat_task", "_idle_task"):
             task = getattr(self, task_name, None)
             if not task:
@@ -383,6 +403,7 @@ class DirectInboxConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data=None, bytes_data=None):
+        """Выполняет логику `receive` с параметрами из сигнатуры."""
         if not text_data:
             return
 
@@ -447,12 +468,14 @@ class DirectInboxConsumer(AsyncWebsocketConsumer):
             )
 
     async def direct_inbox_event(self, event):
+        """Выполняет логику `direct_inbox_event` с параметрами из сигнатуры."""
         payload = event.get("payload")
         if not isinstance(payload, dict):
             return
         await self.send(text_data=json.dumps(payload))
 
     async def _send_unread_state(self):
+        """Выполняет логику `_send_unread_state` с параметрами из сигнатуры."""
         unread = await self._get_unread_state()
         await self.send(
             text_data=json.dumps(
@@ -464,6 +487,7 @@ class DirectInboxConsumer(AsyncWebsocketConsumer):
         )
 
     async def _send_error(self, code: str):
+        """Выполняет логику `_send_error` с параметрами из сигнатуры."""
         await self.send(
             text_data=json.dumps(
                 {
@@ -474,6 +498,7 @@ class DirectInboxConsumer(AsyncWebsocketConsumer):
         )
 
     async def _heartbeat(self):
+        """Выполняет логику `_heartbeat` с параметрами из сигнатуры."""
         interval = max(5, self.heartbeat_seconds)
         while True:
             await asyncio.sleep(interval)
@@ -483,6 +508,7 @@ class DirectInboxConsumer(AsyncWebsocketConsumer):
                 break
 
     async def _idle_watchdog(self):
+        """Выполняет логику `_idle_watchdog` с параметрами из сигнатуры."""
         interval = max(5, min(self.heartbeat_seconds, self.idle_timeout))
         while True:
             await asyncio.sleep(interval)
@@ -493,34 +519,42 @@ class DirectInboxConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _load_room(self, room_slug: str):
+        """Выполняет логику `_load_room` с параметрами из сигнатуры."""
         return Room.objects.filter(slug=room_slug).first()
 
     @sync_to_async
     def _can_read(self, room: Room) -> bool:
+        """Выполняет логику `_can_read` с параметрами из сигнатуры."""
         return can_read(room, self.user)
 
     @sync_to_async
     def _get_unread_state(self):
+        """Выполняет логику `_get_unread_state` с параметрами из сигнатуры."""
         return get_unread_state(self.user.id)
 
     @sync_to_async
     def _mark_read(self, room_slug: str):
+        """Выполняет логику `_mark_read` с параметрами из сигнатуры."""
         return mark_read(self.user.id, room_slug, self.unread_ttl)
 
     @sync_to_async
     def _set_active_room(self, room_slug: str):
+        """Выполняет логику `_set_active_room` с параметрами из сигнатуры."""
         set_active_room(self.user.id, room_slug, self.conn_id, self.active_ttl)
 
     @sync_to_async
     def _clear_active_room(self, conn_only: bool = False):
+        """Выполняет логику `_clear_active_room` с параметрами из сигнатуры."""
         clear_active_room(self.user.id, self.conn_id if conn_only else None)
 
     @sync_to_async
     def _touch_active_room(self):
+        """Выполняет логику `_touch_active_room` с параметрами из сигнатуры."""
         touch_active_room(self.user.id, self.conn_id, self.active_ttl)
 
 
 class PresenceConsumer(AsyncWebsocketConsumer):
+    """Инкапсулирует логику класса `PresenceConsumer`."""
     group_name_auth = PRESENCE_GROUP_AUTH
     group_name_guest = PRESENCE_GROUP_GUEST
     cache_key = PRESENCE_CACHE_KEY_AUTH
@@ -533,6 +567,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
     presence_touch_interval = int(getattr(settings, "PRESENCE_TOUCH_INTERVAL", 30))
 
     async def connect(self):
+        """Выполняет логику `connect` с параметрами из сигнатуры."""
         user = self.scope.get("user")
         self.is_guest = not user or not user.is_authenticated
         self.group_name = self.group_name_guest if self.is_guest else self.group_name_auth
@@ -555,6 +590,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         await self._broadcast()
 
     async def disconnect(self, close_code):
+        """Выполняет логику `disconnect` с параметрами из сигнатуры."""
         for task_name in ("_heartbeat_task", "_idle_task"):
             task = getattr(self, task_name, None)
             if not task:
@@ -576,6 +612,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data=None, bytes_data=None):
+        """Выполняет логику `receive` с параметрами из сигнатуры."""
         if not text_data:
             return
         now = time.monotonic()
@@ -598,6 +635,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             await self._touch_user(user)
 
     async def _broadcast(self):
+        """Выполняет логику `_broadcast` с параметрами из сигнатуры."""
         online = await self._get_online()
         guests = await self._get_guest_count()
         await self.channel_layer.group_send(
@@ -610,6 +648,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         )
 
     async def presence_update(self, event):
+        """Выполняет логику `presence_update` с параметрами из сигнатуры."""
         payload = {}
         if "online" in event:
             payload["online"] = event["online"]
@@ -619,6 +658,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps(payload))
 
     async def _heartbeat(self):
+        """Выполняет логику `_heartbeat` с параметрами из сигнатуры."""
         interval = max(5, self.presence_heartbeat)
         while True:
             await asyncio.sleep(interval)
@@ -628,6 +668,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
                 break
 
     async def _idle_watchdog(self):
+        """Выполняет логику `_idle_watchdog` с параметрами из сигнатуры."""
         interval = max(5, min(self.presence_heartbeat, self.presence_idle_timeout))
         while True:
             await asyncio.sleep(interval)
@@ -638,6 +679,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _add_user(self, user):
+        """Выполняет логику `_add_user` с параметрами из сигнатуры."""
         data = cache.get(self.cache_key, {})
         current = data.get(user.username, {})
         count = current.get("count", 0) + 1
@@ -654,6 +696,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _remove_user(self, user, graceful: bool = False):
+        """Выполняет логику `_remove_user` с параметрами из сигнатуры."""
         data = cache.get(self.cache_key, {})
         if user.username in data:
             entry = data[user.username]
@@ -676,6 +719,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _get_online(self):
+        """Выполняет логику `_get_online` с параметрами из сигнатуры."""
         data = cache.get(self.cache_key, {})
         now = time.time()
         cleaned = {}
@@ -704,6 +748,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _add_guest(self, ip: str | None):
+        """Выполняет логику `_add_guest` с параметрами из сигнатуры."""
         if not ip:
             return
         data = cache.get(self.guest_cache_key, {}) or {}
@@ -717,6 +762,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _remove_guest(self, ip: str | None, graceful: bool = False):
+        """Выполняет логику `_remove_guest` с параметрами из сигнатуры."""
         if not ip:
             return
         data = cache.get(self.guest_cache_key, {}) or {}
@@ -741,6 +787,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _get_guest_count(self) -> int:
+        """Выполняет логику `_get_guest_count` с параметрами из сигнатуры."""
         data = cache.get(self.guest_cache_key, {}) or {}
         now = time.time()
         cleaned = {}
@@ -766,6 +813,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _touch_user(self, user):
+        """Выполняет логику `_touch_user` с параметрами из сигнатуры."""
         data = cache.get(self.cache_key, {})
         current = data.get(user.username)
         image_name = getattr(getattr(user, "profile", None), "image", None)
@@ -788,6 +836,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _touch_guest(self, ip: str | None):
+        """Выполняет логику `_touch_guest` с параметрами из сигнатуры."""
         if not ip:
             return
         data = cache.get(self.guest_cache_key, {}) or {}
@@ -803,6 +852,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         cache.set(self.guest_cache_key, data, timeout=self.cache_timeout_seconds)
 
     def _decode_header(self, value: bytes | None) -> str | None:
+        """Выполняет логику `_decode_header` с параметрами из сигнатуры."""
         if not value:
             return None
         try:
@@ -811,4 +861,5 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             return value.decode("latin-1", errors="ignore")
 
     def _get_client_ip(self) -> str | None:
+        """Выполняет логику `_get_client_ip` с параметрами из сигнатуры."""
         return get_client_ip_from_scope(self.scope)

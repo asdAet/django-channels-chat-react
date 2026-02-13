@@ -16,7 +16,17 @@ export type DirectInboxContextValue = {
   refresh: () => Promise<void>
 }
 
+/**
+ * Выполняет функцию `noop`.
+ * @returns Результат выполнения `noop`.
+ */
+
 const noop = () => {}
+/**
+ * Выполняет функцию `noopAsync`.
+ * @returns Результат выполнения `noopAsync`.
+ */
+
 const noopAsync = async () => {}
 
 export const FALLBACK_DIRECT_INBOX: DirectInboxContextValue = {

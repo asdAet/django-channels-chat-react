@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `urls` подсистемы `chat`."""
+
+
 from django.contrib import admin
 from django.urls import path, include
 from . import views as chat_views

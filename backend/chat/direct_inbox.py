@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `direct_inbox` подсистемы `chat`."""
+
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,18 +15,22 @@ USER_GROUP_PREFIX = "direct_inbox_user_"
 
 
 def user_group_name(user_id: int) -> str:
+    """Выполняет логику `user_group_name` с параметрами из сигнатуры."""
     return f"{USER_GROUP_PREFIX}{int(user_id)}"
 
 
 def unread_key(user_id: int) -> str:
+    """Выполняет логику `unread_key` с параметрами из сигнатуры."""
     return f"{UNREAD_KEY_PREFIX}:{int(user_id)}"
 
 
 def active_key(user_id: int) -> str:
+    """Выполняет логику `active_key` с параметрами из сигнатуры."""
     return f"{ACTIVE_KEY_PREFIX}:{int(user_id)}"
 
 
 def _normalize_slugs(value: Any) -> list[str]:
+    """Выполняет логику `_normalize_slugs` с параметрами из сигнатуры."""
     if not isinstance(value, list):
         return []
     seen: set[str] = set()
@@ -39,6 +47,7 @@ def _normalize_slugs(value: Any) -> list[str]:
 
 
 def _normalize_counts(value: Any) -> dict[str, int]:
+    """Выполняет логику `_normalize_counts` с параметрами из сигнатуры."""
     result: dict[str, int] = {}
     if isinstance(value, dict):
         for key, raw in value.items():
@@ -60,11 +69,13 @@ def _normalize_counts(value: Any) -> dict[str, int]:
 
 
 def get_unread_slugs(user_id: int) -> list[str]:
+    """Выполняет логику `get_unread_slugs` с параметрами из сигнатуры."""
     counts = _normalize_counts(cache.get(unread_key(user_id)))
     return list(counts.keys())
 
 
 def get_unread_state(user_id: int) -> dict[str, Any]:
+    """Выполняет логику `get_unread_state` с параметрами из сигнатуры."""
     counts = _normalize_counts(cache.get(unread_key(user_id)))
     slugs = list(counts.keys())
     return {
@@ -75,6 +86,7 @@ def get_unread_state(user_id: int) -> dict[str, Any]:
 
 
 def mark_unread(user_id: int, room_slug: str, ttl_seconds: int) -> dict[str, Any]:
+    """Выполняет логику `mark_unread` с параметрами из сигнатуры."""
     slug = str(room_slug or "").strip()
     if not slug:
         return get_unread_state(user_id)
@@ -90,6 +102,7 @@ def mark_unread(user_id: int, room_slug: str, ttl_seconds: int) -> dict[str, Any
 
 
 def mark_read(user_id: int, room_slug: str, ttl_seconds: int) -> dict[str, Any]:
+    """Выполняет логику `mark_read` с параметрами из сигнатуры."""
     slug = str(room_slug or "").strip()
     if not slug:
         return get_unread_state(user_id)
@@ -108,6 +121,7 @@ def mark_read(user_id: int, room_slug: str, ttl_seconds: int) -> dict[str, Any]:
 
 
 def set_active_room(user_id: int, room_slug: str, conn_id: str, ttl_seconds: int) -> None:
+    """Выполняет логику `set_active_room` с параметрами из сигнатуры."""
     cache.set(
         active_key(user_id),
         {
@@ -119,6 +133,7 @@ def set_active_room(user_id: int, room_slug: str, conn_id: str, ttl_seconds: int
 
 
 def touch_active_room(user_id: int, conn_id: str, ttl_seconds: int) -> None:
+    """Выполняет логику `touch_active_room` с параметрами из сигнатуры."""
     value = cache.get(active_key(user_id))
     if not isinstance(value, dict):
         return
@@ -128,6 +143,7 @@ def touch_active_room(user_id: int, conn_id: str, ttl_seconds: int) -> None:
 
 
 def clear_active_room(user_id: int, conn_id: str | None = None) -> None:
+    """Выполняет логику `clear_active_room` с параметрами из сигнатуры."""
     if conn_id is None:
         cache.delete(active_key(user_id))
         return
@@ -140,6 +156,7 @@ def clear_active_room(user_id: int, conn_id: str | None = None) -> None:
 
 
 def is_room_active(user_id: int, room_slug: str) -> bool:
+    """Выполняет логику `is_room_active` с параметрами из сигнатуры."""
     value = cache.get(active_key(user_id))
     if not isinstance(value, dict):
         return False

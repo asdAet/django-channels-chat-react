@@ -35,6 +35,11 @@ const user = {
 }
 
 describe('DirectChatsPage', () => {
+  /**
+   * Выполняет метод `beforeEach`.
+   * @returns Результат выполнения `beforeEach`.
+   */
+
   beforeEach(() => {
     inboxMock.items = []
     inboxMock.loading = false
@@ -44,21 +49,67 @@ describe('DirectChatsPage', () => {
     inboxMock.refresh.mockReset().mockResolvedValue(undefined)
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('shows auth prompt for guests', () => {
     const onNavigate = vi.fn()
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(<DirectChatsPage user={null} onNavigate={onNavigate} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Войти' }))
+    /**
+     * Выполняет метод `expect`.
+     * @param onNavigate Входной параметр `onNavigate`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(onNavigate).toHaveBeenCalledWith('/login')
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('shows empty state', () => {
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(<DirectChatsPage user={user} onNavigate={vi.fn()} />)
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByText('Пока нет личных сообщений')).toBeInTheDocument()
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(inboxMock.refresh).toHaveBeenCalledTimes(1)
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(inboxMock.setActiveRoom).toHaveBeenCalledWith(null)
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('navigates to direct chat item', () => {
     const onNavigate = vi.fn()
@@ -72,12 +123,28 @@ describe('DirectChatsPage', () => {
     ]
     inboxMock.unreadCounts = { dm_123: 2 }
 
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(<DirectChatsPage user={user} onNavigate={onNavigate} />)
 
     const button = screen.getByRole('button', { name: /alice/i })
     fireEvent.click(button)
 
+    /**
+     * Выполняет метод `expect`.
+     * @param onNavigate Входной параметр `onNavigate`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(onNavigate).toHaveBeenCalledWith('/direct/@alice')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByText('2')).toBeInTheDocument()
   })
 })

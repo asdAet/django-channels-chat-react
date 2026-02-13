@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `api` подсистемы `users`."""
+
+
 import json
 import time
 from datetime import timedelta
@@ -21,6 +25,7 @@ from .models import Profile
 
 
 def _serialize_user(request, user):
+    """Выполняет логику `_serialize_user` с параметрами из сигнатуры."""
     profile = getattr(user, "profile", None)
     profile_image = None
     if profile and getattr(profile, "image", None):
@@ -39,6 +44,7 @@ def _serialize_user(request, user):
 
 
 def _parse_body(request):
+    """Выполняет логику `_parse_body` с параметрами из сигнатуры."""
     content_type = request.META.get("CONTENT_TYPE", "")
     if content_type.startswith("multipart/form-data") or content_type.startswith("application/x-www-form-urlencoded"):
         return request.POST if request.POST else {}
@@ -60,6 +66,7 @@ def _parse_body(request):
 
 
 def _collect_errors(*errors):
+    """Выполняет логику `_collect_errors` с параметрами из сигнатуры."""
     combined = {}
     for error_dict in errors:
         for field, messages in error_dict.items():
@@ -68,10 +75,12 @@ def _collect_errors(*errors):
 
 
 def _get_client_ip(request) -> str:
+    """Выполняет логику `_get_client_ip` с параметрами из сигнатуры."""
     return get_client_ip_from_request(request) or ""
 
 
 def _rate_limited(request, action: str) -> bool:
+    """Выполняет логику `_rate_limited` с параметрами из сигнатуры."""
     limit = int(getattr(settings, "AUTH_RATE_LIMIT", 10))
     window = int(getattr(settings, "AUTH_RATE_WINDOW", 60))
     ip = _get_client_ip(request) or "unknown"
@@ -91,12 +100,14 @@ def _rate_limited(request, action: str) -> bool:
 @ensure_csrf_cookie
 @require_http_methods(["GET"])
 def csrf_token(request):
+    """Выполняет логику `csrf_token` с параметрами из сигнатуры."""
     return JsonResponse({"csrfToken": get_token(request)})
 
 
 @ensure_csrf_cookie
 @require_http_methods(["GET"])
 def session_view(request):
+    """Выполняет логику `session_view` с параметрами из сигнатуры."""
     if request.user.is_authenticated:
         return JsonResponse(
             {"authenticated": True, "user": _serialize_user(request, request.user)}
@@ -106,6 +117,7 @@ def session_view(request):
 
 @require_http_methods(["POST"])
 def login_view(request):
+    """Выполняет логику `login_view` с параметрами из сигнатуры."""
     if _rate_limited(request, "login"):
         return JsonResponse({"error": "Too many attempts"}, status=429)
     payload = _parse_body(request)
@@ -142,6 +154,7 @@ def login_view(request):
 
 @require_http_methods(["POST"])
 def logout_view(request):
+    """Выполняет логику `logout_view` с параметрами из сигнатуры."""
     user = getattr(request, "user", None)
     if user and user.is_authenticated:
         try:
@@ -157,6 +170,7 @@ def logout_view(request):
 
 @require_http_methods(["GET", "POST"])
 def register_view(request):
+    """Выполняет логику `register_view` с параметрами из сигнатуры."""
     if request.method == "GET":
         return JsonResponse(
             {"detail": "Используйте POST c полями username, password1, password2"},
@@ -231,11 +245,13 @@ def register_view(request):
 
 @require_http_methods(["GET"])
 def password_rules(request):
+    """Выполняет логику `password_rules` с параметрами из сигнатуры."""
     return JsonResponse({"rules": password_validation.password_validators_help_texts()})
 
 
 @require_http_methods(["GET"])
 def public_profile_view(request, username: str):
+    """Выполняет логику `public_profile_view` с параметрами из сигнатуры."""
     if not username:
         return JsonResponse({"error": "Not found"}, status=404)
 
@@ -270,6 +286,7 @@ def public_profile_view(request, username: str):
 @require_http_methods(["GET", "POST"])
 
 def profile_view(request):
+    """Выполняет логику `profile_view` с параметрами из сигнатуры."""
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Требуется авторизация"}, status=401)
 

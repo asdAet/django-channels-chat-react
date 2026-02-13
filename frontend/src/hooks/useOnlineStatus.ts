@@ -1,10 +1,21 @@
 ﻿import { useEffect, useState } from 'react'
 
+/**
+ * Управляет состоянием и эффектами хука `useOnlineStatus`.
+ * @returns Результат выполнения `useOnlineStatus`.
+ */
+
 export const useOnlineStatus = () => {
   const [online, setOnline] = useState(() => {
     if (typeof navigator === 'undefined') return true
     return navigator.onLine
   })
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     const handleOnline = () => setOnline(true)

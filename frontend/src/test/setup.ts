@@ -10,6 +10,11 @@ beforeAll(() => {
 })
 
 afterEach(() => {
+  /**
+   * Выполняет метод `cleanup`.
+   * @returns Результат выполнения `cleanup`.
+   */
+
   cleanup()
   server.resetHandlers()
 })

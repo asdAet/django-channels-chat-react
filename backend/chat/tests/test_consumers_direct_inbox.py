@@ -1,3 +1,6 @@
+"""Содержит тесты модуля `test_consumers_direct_inbox` подсистемы `chat`."""
+
+
 import json
 
 from asgiref.sync import async_to_sync
@@ -17,7 +20,9 @@ application = URLRouter(websocket_urlpatterns)
 
 
 class DirectInboxConsumerTests(TransactionTestCase):
+    """Группирует тестовые сценарии класса `DirectInboxConsumerTests`."""
     def setUp(self):
+        """Проверяет сценарий `setUp`."""
         cache.clear()
         self.owner = User.objects.create_user(username='owner_di', password='pass12345')
         self.member = User.objects.create_user(username='member_di', password='pass12345')
@@ -68,6 +73,7 @@ class DirectInboxConsumerTests(TransactionTestCase):
         )
 
     async def _connect_inbox(self, user=None):
+        """Проверяет сценарий `_connect_inbox`."""
         communicator = WebsocketCommunicator(
             application,
             '/ws/direct/inbox/',
@@ -79,6 +85,7 @@ class DirectInboxConsumerTests(TransactionTestCase):
         return communicator, connected, close_code
 
     async def _connect_chat(self, room_slug: str, user):
+        """Проверяет сценарий `_connect_chat`."""
         communicator = WebsocketCommunicator(
             application,
             f'/ws/chat/{room_slug}/',
@@ -90,7 +97,9 @@ class DirectInboxConsumerTests(TransactionTestCase):
         return communicator, connected, close_code
 
     def test_guest_connection_is_rejected(self):
+        """Проверяет сценарий `test_guest_connection_is_rejected`."""
         async def run():
+            """Проверяет сценарий `run`."""
             _communicator, connected, close_code = await self._connect_inbox()
             self.assertFalse(connected)
             self.assertEqual(close_code, 4401)
@@ -98,9 +107,11 @@ class DirectInboxConsumerTests(TransactionTestCase):
         async_to_sync(run)()
 
     def test_authenticated_user_receives_initial_unread_state(self):
+        """Проверяет сценарий `test_authenticated_user_receives_initial_unread_state`."""
         mark_unread(self.member.id, self.direct_room.slug, ttl_seconds=60)
 
         async def run():
+            """Проверяет сценарий `run`."""
             communicator, connected, _ = await self._connect_inbox(self.member)
             self.assertTrue(connected)
 
@@ -115,10 +126,12 @@ class DirectInboxConsumerTests(TransactionTestCase):
         async_to_sync(run)()
 
     def test_mark_read_decreases_unread_dialogs(self):
+        """Проверяет сценарий `test_mark_read_decreases_unread_dialogs`."""
         mark_unread(self.member.id, self.direct_room.slug, ttl_seconds=60)
         mark_unread(self.member.id, self.unrelated_room.slug, ttl_seconds=60)
 
         async def run():
+            """Проверяет сценарий `run`."""
             communicator, connected, _ = await self._connect_inbox(self.member)
             self.assertTrue(connected)
             await communicator.receive_from(timeout=2)
@@ -137,7 +150,9 @@ class DirectInboxConsumerTests(TransactionTestCase):
         async_to_sync(run)()
 
     def test_set_active_room_checks_acl(self):
+        """Проверяет сценарий `test_set_active_room_checks_acl`."""
         async def run():
+            """Проверяет сценарий `run`."""
             communicator, connected, _ = await self._connect_inbox(self.owner)
             self.assertTrue(connected)
             await communicator.receive_from(timeout=2)
@@ -154,7 +169,9 @@ class DirectInboxConsumerTests(TransactionTestCase):
         async_to_sync(run)()
 
     def test_active_room_does_not_become_unread_for_open_dialog(self):
+        """Проверяет сценарий `test_active_room_does_not_become_unread_for_open_dialog`."""
         async def run():
+            """Проверяет сценарий `run`."""
             inbox, connected, _ = await self._connect_inbox(self.member)
             self.assertTrue(connected)
             await inbox.receive_from(timeout=2)

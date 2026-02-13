@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `signals` подсистемы `users`."""
+
+
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.db.models.signals import post_save, pre_save
@@ -10,6 +14,7 @@ from .models import Profile
 
 @receiver(pre_save, sender=User)
 def remember_previous_username(sender, instance, **kwargs):
+    """Выполняет логику `remember_previous_username` с параметрами из сигнатуры."""
     if kwargs.get("raw", False):
         return
     if not instance.pk:
@@ -25,6 +30,7 @@ def remember_previous_username(sender, instance, **kwargs):
 
 @receiver(post_save, sender=User)
 def ensure_profile(sender, instance, **kwargs):
+    """Выполняет логику `ensure_profile` с параметрами из сигнатуры."""
     if kwargs.get("raw", False):
         return
     try:
@@ -36,6 +42,7 @@ def ensure_profile(sender, instance, **kwargs):
 
 @receiver(post_save, sender=User)
 def sync_chat_username_snapshots(sender, instance, **kwargs):
+    """Выполняет логику `sync_chat_username_snapshots` с параметрами из сигнатуры."""
     if kwargs.get("raw", False):
         return
     old_username = getattr(instance, "_old_username", None)

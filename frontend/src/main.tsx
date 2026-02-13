@@ -4,6 +4,11 @@ import { Workbox } from 'workbox-window'
 import './index.css'
 import App from './App'
 
+/**
+ * Выполняет функцию `registerServiceWorker`.
+ * @returns Результат выполнения `registerServiceWorker`.
+ */
+
 const registerServiceWorker = () => {
   if (!('serviceWorker' in navigator)) return
   window.addEventListener('load', () => {
@@ -13,6 +18,11 @@ const registerServiceWorker = () => {
 }
 
 if (import.meta.env.PROD) {
+  /**
+   * Выполняет метод `registerServiceWorker`.
+   * @returns Результат выполнения `registerServiceWorker`.
+   */
+
   registerServiceWorker()
 }
 

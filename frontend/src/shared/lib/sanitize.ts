@@ -1,5 +1,11 @@
 const TAGS = /<[^>]*>/g
 
+/**
+ * Выполняет функцию `stripControlChars`.
+ * @param value Входной параметр `value`.
+ * @returns Результат выполнения `stripControlChars`.
+ */
+
 const stripControlChars = (value: string) => {
   let cleaned = ''
   for (let i = 0; i < value.length; i += 1) {
@@ -17,6 +23,13 @@ const stripControlChars = (value: string) => {
   }
   return cleaned
 }
+
+/**
+ * Выполняет функцию `sanitizeText`.
+ * @param input Входной параметр `input`.
+ * @param maxLen Входной параметр `maxLen`.
+ * @returns Результат выполнения `sanitizeText`.
+ */
 
 export const sanitizeText = (input: string, maxLen = 1000) => {
   if (!input) return ''

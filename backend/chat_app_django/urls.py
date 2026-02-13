@@ -1,3 +1,7 @@
+
+"""Содержит логику модуля `urls` подсистемы `chat_app_django`."""
+
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -8,6 +12,7 @@ from . import health
 
 
 def api_root(_request):
+    """Выполняет логику `api_root` с параметрами из сигнатуры."""
     return JsonResponse({"status": "ok"})
 
 

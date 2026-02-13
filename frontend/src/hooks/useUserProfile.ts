@@ -16,6 +16,12 @@ export type UserProfileState = {
   error: string | null
 }
 
+/**
+ * Управляет состоянием и эффектами хука `useUserProfile`.
+ * @param username Входной параметр `username`.
+ * @returns Результат выполнения `useUserProfile`.
+ */
+
 export const useUserProfile = (username: string) => {
   const [state, setState] = useState<InternalState>({
     username: null,
@@ -24,6 +30,11 @@ export const useUserProfile = (username: string) => {
   })
 
   const hasUsername = Boolean(username)
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     if (!hasUsername) return
@@ -35,6 +46,12 @@ export const useUserProfile = (username: string) => {
       .then((payload) => {
         if (!active) return
         const user = payload.user
+        /**
+         * Выполняет метод `setState`.
+         * @param props Входной параметр `props`.
+         * @returns Результат выполнения `setState`.
+         */
+
         setState({
           username,
           user: {
@@ -49,8 +66,20 @@ export const useUserProfile = (username: string) => {
         })
       })
       .catch((err) => {
+        /**
+         * Выполняет метод `debugLog`.
+         * @param err Входной параметр `err`.
+         * @returns Результат выполнения `debugLog`.
+         */
+
         debugLog('User profile fetch failed', err)
         if (!active) return
+        /**
+         * Выполняет метод `setState`.
+         * @param props Входной параметр `props`.
+         * @returns Результат выполнения `setState`.
+         */
+
         setState({ username, user: null, error: 'not_found' })
       })
 

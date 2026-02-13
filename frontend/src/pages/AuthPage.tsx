@@ -11,6 +11,12 @@ type Props = {
   passwordRules?: string[]
 }
 
+/**
+ * Рендерит компонент `AuthPage` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `AuthPage`.
+ */
+
 export function AuthPage({
   title,
   submitLabel,
@@ -28,6 +34,13 @@ export function AuthPage({
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     if (!username.trim() || !password) return
+    /**
+     * Выполняет метод `onSubmit`.
+     * @param password Входной параметр `password`.
+     * @param confirm Входной параметр `confirm`.
+     * @returns Результат выполнения `onSubmit`.
+     */
+
     onSubmit(username.trim(), password, confirm)
   }
 

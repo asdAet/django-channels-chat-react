@@ -5,10 +5,20 @@ import { apiService, normalizeAxiosError } from './ApiService'
 import { server } from '../test/setup'
 
 describe('ApiService', () => {
+  /**
+   * Выполняет метод `beforeEach`.
+   * @returns Результат выполнения `beforeEach`.
+   */
+
   beforeEach(() => {
     sessionStorage.clear()
     document.cookie = 'csrftoken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('injects csrf token from cookie into write requests', async () => {
     document.cookie = 'csrftoken=cookie-token; path=/'
@@ -23,8 +33,19 @@ describe('ApiService', () => {
 
     await apiService.login('demo', 'pass12345')
 
+    /**
+     * Выполняет метод `expect`.
+     * @param receivedToken Входной параметр `receivedToken`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(receivedToken).toBe('cookie-token')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('stores csrf token in sessionStorage and uses it as fallback', async () => {
     server.use(
@@ -43,9 +64,25 @@ describe('ApiService', () => {
 
     await apiService.login('demo', 'pass12345')
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(sessionStorage.getItem('csrfToken')).toBe('stored-token')
+    /**
+     * Выполняет метод `expect`.
+     * @param receivedToken Входной параметр `receivedToken`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(receivedToken).toBe('stored-token')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('sends multipart form data for profile update', async () => {
     let contentType = ''
@@ -72,10 +109,32 @@ describe('ApiService', () => {
       bio: 'about me',
     })
 
+    /**
+     * Выполняет метод `expect`.
+     * @param contentType Входной параметр `contentType`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(contentType).toContain('multipart/form-data')
+    /**
+     * Выполняет метод `expect`.
+     * @param contentType Входной параметр `contentType`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(contentType).not.toContain('application/json')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(response.user.username).toBe('updated')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('normalizes axios errors to ApiError shape', async () => {
     server.use(
@@ -94,6 +153,11 @@ describe('ApiService', () => {
     })
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('normalizes string server errors', async () => {
     server.use(
       http.post('/api/auth/register/', () =>
@@ -106,6 +170,11 @@ describe('ApiService', () => {
       message: expect.stringContaining('fatal error'),
     })
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('normalizes detail payload errors', async () => {
     server.use(
@@ -120,6 +189,11 @@ describe('ApiService', () => {
       data: expect.objectContaining({ detail: 'forbidden' }),
     })
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('supports read endpoints and room query params', async () => {
     let beforeParam: string | null = null
@@ -169,26 +243,101 @@ describe('ApiService', () => {
     const profile = await apiService.getUserProfile('user name')
     const logout = await apiService.logout()
 
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(session.authenticated).toBe(false)
+    /**
+     * Выполняет метод `expect`.
+     * @param sessionCsrfHeader Входной параметр `sessionCsrfHeader`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(sessionCsrfHeader).toBeNull()
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(rules.rules).toEqual(['min length'])
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(publicRoom.slug).toBe('public')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(room.slug).toBe('public')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(roomMessages.messages).toEqual([])
+    /**
+     * Выполняет метод `expect`.
+     * @param beforeParam Входной параметр `beforeParam`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(beforeParam).toBe('123')
+    /**
+     * Выполняет метод `expect`.
+     * @param encodedUserPath Входной параметр `encodedUserPath`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(encodedUserPath).toBe('user name')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(profile.user.username).toBe('user name')
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(logout.ok).toBe(true)
   })
 
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('keeps already-normalized ApiError objects intact', () => {
     const normalized = normalizeAxiosError({ status: 418, message: 'teapot' })
+    /**
+     * Выполняет метод `expect`.
+     * @param normalized Входной параметр `normalized`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(normalized).toEqual({ status: 418, message: 'teapot' })
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('returns fallback for unknown error shapes', () => {
     const normalized = normalizeAxiosError(new Error('unknown'))
+    /**
+     * Выполняет метод `expect`.
+     * @param normalized Входной параметр `normalized`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(normalized).toEqual({ status: 0, message: 'Request failed' })
   })
 

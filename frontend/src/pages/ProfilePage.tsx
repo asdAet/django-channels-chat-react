@@ -23,6 +23,12 @@ type Props = {
   onLogout?: () => void;
 };
 
+/**
+ * Рендерит компонент `ProfilePage` и связанную разметку.
+ * @param props Входной параметр `props`.
+ * @returns Результат выполнения `ProfilePage`.
+ */
+
 export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
   const USERNAME_MAX_LENGTH = 13;
   const { online: presenceOnline, status: presenceStatus } = usePresence();
@@ -47,6 +53,11 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
   );
 
   const clearFieldError = (field: string) => {
+    /**
+     * Выполняет метод `setFieldErrors`.
+     * @returns Результат выполнения `setFieldErrors`.
+     */
+
     setFieldErrors((prev) => {
       if (!prev[field]) return prev;
       const next = { ...prev };
@@ -54,6 +65,12 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
       return next;
     });
   };
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     // Clean blob URLs on unmount or when preview changes
@@ -63,6 +80,12 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
       }
     };
   }, [previewUrl]);
+
+  /**
+   * Выполняет метод `useEffect`.
+   * @param props Входной параметр `props`.
+   * @returns Результат выполнения `useEffect`.
+   */
 
   useEffect(() => {
     if (!formError) return;
@@ -94,6 +117,12 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
   const genericError =
     formError || fieldErrors.non_field_errors?.[0] || fieldErrors.__all__?.[0];
   const isUserOnline =
+    /**
+     * Выполняет метод `Boolean`.
+     * @param user Входной параметр `user`.
+     * @returns Результат выполнения `Boolean`.
+     */
+
     Boolean(user) &&
     presenceStatus === "online" &&
     presenceOnline.some((entry) => entry.username === user?.username);
@@ -151,9 +180,31 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
           style={{ display: "none" }}
           onChange={(e) => {
             const file = e.target.files?.[0] || null;
+            /**
+             * Выполняет метод `setImage`.
+             * @param file Входной параметр `file`.
+             * @returns Результат выполнения `setImage`.
+             */
+
             setImage(file);
+            /**
+             * Выполняет метод `setFormError`.
+             * @param null Входной параметр `null`.
+             * @returns Результат выполнения `setFormError`.
+             */
+
             setFormError(null);
+            /**
+             * Выполняет метод `clearFieldError`.
+             * @returns Результат выполнения `clearFieldError`.
+             */
+
             clearFieldError("image");
+            /**
+             * Выполняет метод `setPreviewUrl`.
+             * @returns Результат выполнения `setPreviewUrl`.
+             */
+
             setPreviewUrl((prev) => {
               if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
               return file
@@ -169,18 +220,46 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
         className="form two-col"
         onSubmit={async (event) => {
           event.preventDefault();
+          /**
+           * Выполняет метод `setFormError`.
+           * @param null Входной параметр `null`.
+           * @returns Результат выполнения `setFormError`.
+           */
+
           setFormError(null);
           const result = await onSave({ ...form, image, bio: form.bio });
           if (result.ok) {
+            /**
+             * Выполняет метод `setFieldErrors`.
+             * @param props Входной параметр `props`.
+             * @returns Результат выполнения `setFieldErrors`.
+             */
+
             setFieldErrors({});
             return;
           }
           if (result.errors) {
+            /**
+             * Выполняет метод `setFieldErrors`.
+             * @returns Результат выполнения `setFieldErrors`.
+             */
+
             setFieldErrors(result.errors);
           } else {
+            /**
+             * Выполняет метод `setFieldErrors`.
+             * @param props Входной параметр `props`.
+             * @returns Результат выполнения `setFieldErrors`.
+             */
+
             setFieldErrors({});
           }
           if (result.message) {
+            /**
+             * Выполняет метод `setFormError`.
+             * @returns Результат выполнения `setFormError`.
+             */
+
             setFormError(result.message);
           }
         }}
@@ -192,8 +271,25 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
             value={form.username}
             maxLength={USERNAME_MAX_LENGTH}
             onChange={(e) => {
+              /**
+               * Выполняет метод `setForm`.
+               * @param props Входной параметр `props`.
+               * @returns Результат выполнения `setForm`.
+               */
+
               setForm({ ...form, username: e.target.value });
+              /**
+               * Выполняет метод `setFormError`.
+               * @param null Входной параметр `null`.
+               * @returns Результат выполнения `setFormError`.
+               */
+
               setFormError(null);
+              /**
+               * Выполняет метод `clearFieldError`.
+               * @returns Результат выполнения `clearFieldError`.
+               */
+
               clearFieldError("username");
             }}
           />
@@ -210,8 +306,25 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
             type="email"
             value={form.email}
             onChange={(e) => {
+              /**
+               * Выполняет метод `setForm`.
+               * @param props Входной параметр `props`.
+               * @returns Результат выполнения `setForm`.
+               */
+
               setForm({ ...form, email: e.target.value });
+              /**
+               * Выполняет метод `setFormError`.
+               * @param null Входной параметр `null`.
+               * @returns Результат выполнения `setFormError`.
+               */
+
               setFormError(null);
+              /**
+               * Выполняет метод `clearFieldError`.
+               * @returns Результат выполнения `clearFieldError`.
+               */
+
               clearFieldError("email");
             }}
           />
@@ -222,8 +335,25 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
           <textarea
             value={form.bio}
             onChange={(e) => {
+              /**
+               * Выполняет метод `setForm`.
+               * @param props Входной параметр `props`.
+               * @returns Результат выполнения `setForm`.
+               */
+
               setForm({ ...form, bio: e.target.value });
+              /**
+               * Выполняет метод `setFormError`.
+               * @param null Входной параметр `null`.
+               * @returns Результат выполнения `setFormError`.
+               */
+
               setFormError(null);
+              /**
+               * Выполняет метод `clearFieldError`.
+               * @returns Результат выполнения `clearFieldError`.
+               */
+
               clearFieldError("bio");
             }}
             placeholder="Расскажите пару слов о себе"

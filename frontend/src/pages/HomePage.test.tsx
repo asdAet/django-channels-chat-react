@@ -55,6 +55,11 @@ const user = {
 }
 
 describe('HomePage', () => {
+  /**
+   * Выполняет метод `beforeEach`.
+   * @returns Результат выполнения `beforeEach`.
+   */
+
   beforeEach(() => {
     publicRoomMock.room = { slug: 'public', name: 'Public', kind: 'public', created: false, createdBy: null }
     publicRoomMock.loading = false
@@ -71,28 +76,73 @@ describe('HomePage', () => {
     presenceMock.lastError = null
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('shows guest info prompt for unauthenticated user', async () => {
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(<HomePage user={null} onNavigate={vi.fn()} />)
 
     await waitFor(() =>
+      /**
+       * Выполняет метод `expect`.
+       * @returns Результат выполнения `expect`.
+       */
+
       expect(screen.getByText('Войдите, чтобы видеть участников онлайн.')).toBeInTheDocument(),
     )
+    /**
+     * Выполняет метод `expect`.
+     * @returns Результат выполнения `expect`.
+     */
+
     expect(screen.getByText('Гостей онлайн')).toBeInTheDocument()
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
 
   it('shows presence loading for authenticated user while ws connecting', async () => {
     presenceMock.status = 'connecting'
 
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
+
     render(<HomePage user={user} onNavigate={vi.fn()} />)
 
     await waitFor(() =>
+      /**
+       * Выполняет метод `expect`.
+       * @returns Результат выполнения `expect`.
+       */
+
       expect(screen.getByText('Загружаем список онлайн...')).toBeInTheDocument(),
     )
   })
 
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
   it('opens user profile from online list', async () => {
     const onNavigate = vi.fn()
     presenceMock.online = [{ username: 'alice', profileImage: null }]
+
+    /**
+     * Выполняет метод `render`.
+     * @returns Результат выполнения `render`.
+     */
 
     render(<HomePage user={user} onNavigate={onNavigate} />)
 
@@ -100,6 +150,12 @@ describe('HomePage', () => {
       name: 'Открыть профиль пользователя alice',
     })
     fireEvent.click(button)
+
+    /**
+     * Выполняет метод `expect`.
+     * @param onNavigate Входной параметр `onNavigate`.
+     * @returns Результат выполнения `expect`.
+     */
 
     expect(onNavigate).toHaveBeenCalledWith('/users/alice')
   })

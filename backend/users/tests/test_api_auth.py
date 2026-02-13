@@ -1,4 +1,7 @@
-﻿import json
+"""Содержит тесты модуля `test_api_auth` подсистемы `users`."""
+
+
+import json
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -8,17 +11,21 @@ User = get_user_model()
 
 
 class AuthApiTests(TestCase):
+    """Группирует тестовые сценарии класса `AuthApiTests`."""
     def setUp(self):
+        """Проверяет сценарий `setUp`."""
         cache.clear()
         self.client = Client(enforce_csrf_checks=True)
 
     def _csrf(self) -> str:
+        """Проверяет сценарий `_csrf`."""
         response = self.client.get('/api/auth/csrf/')
         self.assertEqual(response.status_code, 200)
         self.assertIn('csrftoken', response.cookies)
         return response.cookies['csrftoken'].value
 
     def test_csrf_endpoint_returns_token(self):
+        """Проверяет сценарий `test_csrf_endpoint_returns_token`."""
         response = self.client.get('/api/auth/csrf/')
         self.assertEqual(response.status_code, 200)
         payload = response.json()
@@ -26,6 +33,7 @@ class AuthApiTests(TestCase):
         self.assertTrue(payload['csrfToken'])
 
     def test_register_success(self):
+        """Проверяет сценарий `test_register_success`."""
         csrf = self._csrf()
         response = self.client.post(
             '/api/auth/register/',
@@ -45,6 +53,7 @@ class AuthApiTests(TestCase):
         self.assertEqual(payload.get('user', {}).get('username'), 'new_user')
 
     def test_register_duplicate_username_returns_field_error(self):
+        """Проверяет сценарий `test_register_duplicate_username_returns_field_error`."""
         User.objects.create_user(username='taken_name', password='pass12345')
         csrf = self._csrf()
         response = self.client.post(
@@ -65,6 +74,7 @@ class AuthApiTests(TestCase):
         self.assertIn('username', payload['errors'])
 
     def test_register_rejects_long_username(self):
+        """Проверяет сценарий `test_register_rejects_long_username`."""
         csrf = self._csrf()
         response = self.client.post(
             '/api/auth/register/',
@@ -92,6 +102,7 @@ class AuthApiTests(TestCase):
         ]
     )
     def test_register_weak_password_returns_password_error(self):
+        """Проверяет сценарий `test_register_weak_password_returns_password_error`."""
         csrf = self._csrf()
         response = self.client.post(
             '/api/auth/register/',
@@ -111,6 +122,7 @@ class AuthApiTests(TestCase):
         self.assertIn('password', payload['errors'])
 
     def test_login_invalid_credentials(self):
+        """Проверяет сценарий `test_login_invalid_credentials`."""
         csrf = self._csrf()
         response = self.client.post(
             '/api/auth/login/',
@@ -124,6 +136,7 @@ class AuthApiTests(TestCase):
         self.assertIn('credentials', payload['errors'])
 
     def test_login_success_and_session(self):
+        """Проверяет сценарий `test_login_success_and_session`."""
         User.objects.create_user(username='login_user', password='pass12345')
 
         csrf = self._csrf()
@@ -144,6 +157,7 @@ class AuthApiTests(TestCase):
 
     @override_settings(AUTH_RATE_LIMIT=1, AUTH_RATE_WINDOW=60)
     def test_login_rate_limit(self):
+        """Проверяет сценарий `test_login_rate_limit`."""
         csrf = self._csrf()
         first = self.client.post(
             '/api/auth/login/',
@@ -163,6 +177,7 @@ class AuthApiTests(TestCase):
         self.assertEqual(second.status_code, 429)
 
     def test_password_rules_endpoint(self):
+        """Проверяет сценарий `test_password_rules_endpoint`."""
         response = self.client.get('/api/auth/password-rules/')
         self.assertEqual(response.status_code, 200)
         payload = response.json()
