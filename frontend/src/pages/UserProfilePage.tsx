@@ -349,7 +349,7 @@ export function UserProfilePage({
         <p className="eyebrow_profile">Профиль пользователя</p>
       </div>
 
-      <div className="profile_avatar_wrapper">
+      <div className={`profile_avatar_wrapper${isUserOnline ? " is-online" : ""}`}>
         <div
           className={`profile_avatar readonly${hasProfileImage ? " clickable" : ""}`}
           role={hasProfileImage ? "button" : undefined}

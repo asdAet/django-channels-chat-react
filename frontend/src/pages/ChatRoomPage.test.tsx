@@ -276,4 +276,52 @@ describe('ChatRoomPage', () => {
 
     expect(container.textContent).toContain('Последний раз в сети:')
   })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
+  it('shows online badge on message avatar for online user', () => {
+    chatRoomMock.messages = [
+      {
+        id: 1,
+        username: 'alice',
+        content: 'hi',
+        profilePic: null,
+        createdAt: '2026-02-13T10:00:00.000Z',
+      },
+    ]
+    presenceMock.online = [{ username: 'alice', profileImage: null }]
+
+    const { container } = render(
+      <ChatRoomPage slug="public" user={user} onNavigate={vi.fn()} />,
+    )
+
+    expect(container.querySelector('.message .avatar.small.is-online')).not.toBeNull()
+  })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
+  it('does not show online badge on message avatar for offline user', () => {
+    chatRoomMock.messages = [
+      {
+        id: 2,
+        username: 'bob',
+        content: 'offline',
+        profilePic: null,
+        createdAt: '2026-02-13T11:00:00.000Z',
+      },
+    ]
+    presenceMock.online = []
+
+    const { container } = render(
+      <ChatRoomPage slug="public" user={user} onNavigate={vi.fn()} />,
+    )
+
+    expect(container.querySelector('.message .avatar.small.is-online')).toBeNull()
+  })
 })

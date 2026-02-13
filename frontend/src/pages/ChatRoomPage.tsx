@@ -47,6 +47,15 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
   const isOnline = useOnlineStatus();
   const { setActiveRoom, markRead } = useDirectInbox();
   const { online: presenceOnline, status: presenceStatus } = usePresence();
+  const onlineUsernames = useMemo(
+    () =>
+      new Set(
+        presenceStatus === "online"
+          ? presenceOnline.map((entry) => entry.username)
+          : [],
+      ),
+    [presenceOnline, presenceStatus],
+  );
   const [draft, setDraft] = useState("");
   const [roomError, setRoomError] = useState<string | null>(null);
   const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
@@ -470,9 +479,8 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
           <h2>{(details?.kind === "direct" && details?.peer?.username) || details?.createdBy || details?.name || slug}</h2>
           {details?.kind === "direct" && (
             <p className="muted">
-              {presenceStatus === "online" &&
-              details?.peer?.username &&
-              presenceOnline.some((entry) => entry.username === details.peer?.username)
+              {details?.peer?.username &&
+              onlineUsernames.has(details.peer.username)
                 ? "В сети"
                 : `Последний раз в сети: ${formatLastSeen(details?.peer?.lastSeen ?? null) || "—"}`}
             </p>
@@ -541,7 +549,9 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
                     aria-label={`Открыть профиль пользователя ${item.message.username}`}
                     onClick={() => openUserProfile(item.message.username)}
                   >
-                    <div className="avatar small">
+                    <div
+                      className={`avatar small${onlineUsernames.has(item.message.username) ? " is-online" : ""}`}
+                    >
                       {item.message.profilePic ? (
                         <img
                           src={item.message.profilePic}

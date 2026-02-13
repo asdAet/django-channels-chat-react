@@ -151,7 +151,7 @@ export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
         </div>
       )}
 
-      <div className="profile_avatar_wrapper">
+      <div className={`profile_avatar_wrapper${isUserOnline ? " is-online" : ""}`}>
         <div
           className="profile_avatar"
           role="button"

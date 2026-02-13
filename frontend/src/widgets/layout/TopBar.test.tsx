@@ -6,8 +6,19 @@ const directInboxMock = vi.hoisted(() => ({
   unreadCounts: {} as Record<string, number>,
 }))
 
+const presenceMock = vi.hoisted(() => ({
+  online: [] as Array<{ username: string; profileImage: string | null }>,
+  guests: 0,
+  status: 'online' as const,
+  lastError: null as string | null,
+}))
+
 vi.mock('../../shared/directInbox', () => ({
   useDirectInbox: () => directInboxMock,
+}))
+
+vi.mock('../../shared/presence', () => ({
+  usePresence: () => presenceMock,
 }))
 
 import { TopBar } from './TopBar'
@@ -29,6 +40,9 @@ describe('TopBar', () => {
 
   beforeEach(() => {
     directInboxMock.unreadDialogsCount = 0
+    presenceMock.online = []
+    presenceMock.status = 'online'
+    presenceMock.lastError = null
   })
 
   /**
@@ -53,6 +67,7 @@ describe('TopBar', () => {
 
   it('shows unread badge only for authenticated users', () => {
     directInboxMock.unreadDialogsCount = 2
+    presenceMock.online = [{ username: 'demo', profileImage: null }]
     const { container } = render(<TopBar user={user} onNavigate={vi.fn()} onLogout={vi.fn()} />)
 
     const link = container.querySelector('.link-with-badge')
@@ -71,6 +86,7 @@ describe('TopBar', () => {
      */
 
     expect(badge?.textContent).toBe('2')
+    expect(container.querySelector('.topbar .avatar.is-online')).not.toBeNull()
   })
 
   /**

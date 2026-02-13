@@ -41,6 +41,13 @@ export function HomePage({ user, onNavigate }: Props) {
   const { online, guests, status } = usePresence();
 
   const presenceLoading = Boolean(user && status !== "online");
+  const onlineUsernames = useMemo(
+    () =>
+      new Set(
+        status === "online" ? online.map((entry) => entry.username) : [],
+      ),
+    [online, status],
+  );
 
   const visiblePublicRoom = useMemo(() => publicRoom, [publicRoom]);
   const isLoading = useMemo(() => loading, [loading]);
@@ -431,7 +438,9 @@ export function HomePage({ user, onNavigate }: Props) {
                     aria-label={`Открыть профиль пользователя ${u.username}`}
                     onClick={() => openUserProfile(u.username)}
                   >
-                    <div className="avatar tiny">
+                    <div
+                      className={`avatar tiny${onlineUsernames.has(u.username) ? " is-online" : ""}`}
+                    >
                       {u.profileImage ? (
                         <img
                           src={u.profileImage}

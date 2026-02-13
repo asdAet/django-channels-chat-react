@@ -144,7 +144,7 @@ describe('HomePage', () => {
      * @returns Результат выполнения `render`.
      */
 
-    render(<HomePage user={user} onNavigate={onNavigate} />)
+    const { container } = render(<HomePage user={user} onNavigate={onNavigate} />)
 
     const button = await screen.findByRole('button', {
       name: 'Открыть профиль пользователя alice',
@@ -158,5 +158,6 @@ describe('HomePage', () => {
      */
 
     expect(onNavigate).toHaveBeenCalledWith('/users/alice')
+    expect(container.querySelector('.online-item .avatar.is-online')).not.toBeNull()
   })
 })

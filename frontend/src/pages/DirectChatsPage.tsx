@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import type { UserProfile } from '../entities/user/types'
 import { avatarFallback, formatTimestamp } from '../shared/lib/format'
 import { useDirectInbox } from '../shared/directInbox'
+import { usePresence } from '../shared/presence'
 
 type Props = {
   user: UserProfile | null
@@ -29,6 +30,14 @@ export function DirectChatsList({
   className,
 }: ListProps) {
   const { items, loading, error, setActiveRoom, refresh, unreadCounts } = useDirectInbox()
+  const { online: presenceOnline, status: presenceStatus } = usePresence()
+  const onlineUsernames = useMemo(
+    () =>
+      new Set(
+        presenceStatus === 'online' ? presenceOnline.map((entry) => entry.username) : [],
+      ),
+    [presenceOnline, presenceStatus],
+  )
 
   /**
    * Выполняет метод `useEffect`.
@@ -96,6 +105,7 @@ export function DirectChatsList({
         <div className="direct-chat-list">
           {items.map((item) => {
             const isActive = Boolean(activeUsername && item.peer.username === activeUsername)
+            const isPeerOnline = onlineUsernames.has(item.peer.username)
             return (
               <button
                 key={item.slug}
@@ -103,7 +113,7 @@ export function DirectChatsList({
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => onNavigate(`/direct/@${encodeURIComponent(item.peer.username)}`)}
               >
-                <div className="avatar tiny">
+                <div className={`avatar tiny${isPeerOnline ? ' is-online' : ''}`}>
                   {item.peer.profileImage ? (
                     <img src={item.peer.profileImage} alt={item.peer.username} loading="lazy" decoding="async" />
                   ) : (

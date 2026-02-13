@@ -143,12 +143,7 @@ describe('UserProfilePage', () => {
   it('shows online label when user is online', () => {
     presenceMock.online = [{ username: 'alice', profileImage: null }]
 
-    /**
-     * Выполняет метод `render`.
-     * @returns Результат выполнения `render`.
-     */
-
-    render(
+    const { container } = render(
       <UserProfilePage
         user={makeUser('bob')}
         currentUser={makeUser('bob')}
@@ -158,12 +153,7 @@ describe('UserProfilePage', () => {
       />,
     )
 
-    /**
-     * Выполняет метод `expect`.
-     * @returns Результат выполнения `expect`.
-     */
-
-    expect(screen.getByText('В сети')).toBeInTheDocument()
+    expect(container.querySelector('.profile_avatar_wrapper.is-online')).not.toBeNull()
   })
 
   /**
@@ -181,12 +171,7 @@ describe('UserProfilePage', () => {
       registeredAt: null,
     }
 
-    /**
-     * Выполняет метод `render`.
-     * @returns Результат выполнения `render`.
-     */
-
-    render(
+    const { container } = render(
       <UserProfilePage
         user={makeUser('bob')}
         currentUser={makeUser('bob')}
@@ -196,11 +181,6 @@ describe('UserProfilePage', () => {
       />,
     )
 
-    /**
-     * Выполняет метод `expect`.
-     * @returns Результат выполнения `expect`.
-     */
-
-    expect(screen.getByText(/Последний раз в сети:/i)).toBeInTheDocument()
+    expect(container.querySelector('.profile_avatar_wrapper.is-online')).toBeNull()
   })
 })

@@ -1,6 +1,7 @@
 import type { UserProfile } from '../../entities/user/types'
 import { avatarFallback } from '../../shared/lib/format'
 import { useDirectInbox } from '../../shared/directInbox'
+import { usePresence } from '../../shared/presence'
 
 type Props = {
   user: UserProfile | null
@@ -15,6 +16,11 @@ type Props = {
 
 export function TopBar({ user, onNavigate }: Props) {
   const { unreadDialogsCount } = useDirectInbox()
+  const { online: presenceOnline, status: presenceStatus } = usePresence()
+  const isCurrentUserOnline =
+    Boolean(user) &&
+    presenceStatus === 'online' &&
+    presenceOnline.some((entry) => entry.username === user?.username)
 
   return (
     <header className="topbar">
@@ -44,7 +50,7 @@ export function TopBar({ user, onNavigate }: Props) {
             aria-label="Открыть профиль"
             onClick={() => onNavigate(`/users/${encodeURIComponent(user.username)}`)}
           >
-            <div className="avatar tiny">
+            <div className={`avatar tiny${isCurrentUserOnline ? ' is-online' : ''}`}>
               {user.profileImage ? (
                 <img src={user.profileImage} alt={user.username} decoding="async" />
               ) : (

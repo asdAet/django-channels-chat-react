@@ -153,7 +153,7 @@ describe('ProfilePage', () => {
      * @returns Результат выполнения `render`.
      */
 
-    render(
+    const { container } = render(
       <ProfilePage
         user={user}
         onSave={vi.fn(async () => ({ ok: true }))}
@@ -167,6 +167,7 @@ describe('ProfilePage', () => {
      */
 
     expect(screen.getByText('В сети')).toBeInTheDocument()
+    expect(container.querySelector('.profile_avatar_wrapper.is-online')).not.toBeNull()
   })
 
   /**
@@ -180,7 +181,7 @@ describe('ProfilePage', () => {
      * @returns Результат выполнения `render`.
      */
 
-    render(
+    const { container } = render(
       <ProfilePage
         user={{ ...user, lastSeen: '2026-02-13T10:00:00.000Z' }}
         onSave={vi.fn(async () => ({ ok: true }))}
@@ -194,5 +195,6 @@ describe('ProfilePage', () => {
      */
 
     expect(screen.getByText(/Последний раз в сети:/i)).toBeInTheDocument()
+    expect(container.querySelector('.profile_avatar_wrapper.is-online')).toBeNull()
   })
 })

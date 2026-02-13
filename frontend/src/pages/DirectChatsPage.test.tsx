@@ -19,8 +19,19 @@ const inboxMock = vi.hoisted(() => ({
   refresh: vi.fn<() => Promise<void>>(),
 }))
 
+const presenceMock = vi.hoisted(() => ({
+  online: [] as Array<{ username: string; profileImage: string | null }>,
+  guests: 0,
+  status: 'online' as const,
+  lastError: null as string | null,
+}))
+
 vi.mock('../shared/directInbox', () => ({
   useDirectInbox: () => inboxMock,
+}))
+
+vi.mock('../shared/presence', () => ({
+  usePresence: () => presenceMock,
 }))
 
 import { DirectChatsPage } from './DirectChatsPage'
@@ -47,6 +58,9 @@ describe('DirectChatsPage', () => {
     inboxMock.unreadCounts = {}
     inboxMock.setActiveRoom.mockReset()
     inboxMock.refresh.mockReset().mockResolvedValue(undefined)
+    presenceMock.online = []
+    presenceMock.status = 'online'
+    presenceMock.lastError = null
   })
 
   /**
@@ -122,13 +136,14 @@ describe('DirectChatsPage', () => {
       },
     ]
     inboxMock.unreadCounts = { dm_123: 2 }
+    presenceMock.online = [{ username: 'alice', profileImage: null }]
 
     /**
      * Выполняет метод `render`.
      * @returns Результат выполнения `render`.
      */
 
-    render(<DirectChatsPage user={user} onNavigate={onNavigate} />)
+    const { container } = render(<DirectChatsPage user={user} onNavigate={onNavigate} />)
 
     const button = screen.getByRole('button', { name: /alice/i })
     fireEvent.click(button)
@@ -146,5 +161,27 @@ describe('DirectChatsPage', () => {
      */
 
     expect(screen.getByText('2')).toBeInTheDocument()
+    expect(container.querySelector('.direct-chat-item .avatar.is-online')).not.toBeNull()
+  })
+
+  /**
+   * Выполняет метод `it`.
+   * @returns Результат выполнения `it`.
+   */
+
+  it('does not show online badge for offline peer', () => {
+    inboxMock.items = [
+      {
+        slug: 'dm_321',
+        peer: { username: 'bob', profileImage: null },
+        lastMessage: 'offline',
+        lastMessageAt: '2026-01-01T10:00:00.000Z',
+      },
+    ]
+    presenceMock.online = []
+
+    const { container } = render(<DirectChatsPage user={user} onNavigate={vi.fn()} />)
+
+    expect(container.querySelector('.direct-chat-item .avatar.is-online')).toBeNull()
   })
 })
