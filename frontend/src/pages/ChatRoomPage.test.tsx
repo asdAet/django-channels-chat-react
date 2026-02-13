@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Message } from '../entities/message/types'
+import type { RoomDetails } from '../entities/room/types'
 
 const wsState = vi.hoisted(() => ({
   status: 'online' as 'online' | 'connecting' | 'offline' | 'error' | 'closed',
@@ -15,7 +16,7 @@ const wsState = vi.hoisted(() => ({
 }))
 
 const chatRoomMock = vi.hoisted(() => ({
-  details: { slug: 'public', name: 'Public', kind: 'public', created: false, createdBy: null },
+  details: { slug: 'public', name: 'Public', kind: 'public', created: false, createdBy: null } as RoomDetails,
   messages: [] as Message[],
   loading: false,
   loadingMore: false,
@@ -74,7 +75,7 @@ describe('ChatRoomPage', () => {
     wsState.send.mockReset().mockReturnValue(true)
     wsState.options = null
 
-    chatRoomMock.details = { slug: 'public', name: 'Public', kind: 'public', created: false, createdBy: null }
+    chatRoomMock.details = { slug: 'public', name: 'Public', kind: 'public', created: false, createdBy: null } as RoomDetails
     chatRoomMock.messages = []
     chatRoomMock.loading = false
     chatRoomMock.loadingMore = false
@@ -158,7 +159,7 @@ describe('ChatRoomPage', () => {
       created: false,
       createdBy: null,
       peer: { username: 'alice', profileImage: null, lastSeen: '2026-02-13T10:00:00.000Z' },
-    }
+    } as RoomDetails
     presenceMock.online = [{ username: 'alice', profileImage: null }]
 
     const { container } = render(
@@ -176,7 +177,7 @@ describe('ChatRoomPage', () => {
       created: false,
       createdBy: null,
       peer: { username: 'bob', profileImage: null, lastSeen: '2026-02-13T10:00:00.000Z' },
-    }
+    } as RoomDetails
     presenceMock.online = []
 
     const { container } = render(

@@ -1,15 +1,18 @@
 ﻿import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { UpdateProfileDto } from '../dto/auth'
+import type { UserProfile } from '../entities/user/types'
+
 const authControllerMock = vi.hoisted(() => ({
   ensureCsrf: vi.fn<() => Promise<{ csrfToken: string }>>(),
-  getSession: vi.fn<() => Promise<{ authenticated: boolean; user: any }>>(),
-  login: vi.fn<(dto: { username: string; password: string }) => Promise<{ authenticated: boolean; user: any }>>(),
+  getSession: vi.fn<() => Promise<{ authenticated: boolean; user: UserProfile | null }>>(),
+  login: vi.fn<(dto: { username: string; password: string }) => Promise<{ authenticated: boolean; user: UserProfile | null }>>(),
   register: vi.fn<
-    (dto: { username: string; password1: string; password2: string }) => Promise<{ authenticated: boolean; user: any }>
+    (dto: { username: string; password1: string; password2: string }) => Promise<{ authenticated: boolean; user: UserProfile | null }>
   >(),
   logout: vi.fn<() => Promise<{ ok: boolean }>>(),
-  updateProfile: vi.fn<(dto: any) => Promise<{ user: any }>>(),
+  updateProfile: vi.fn<(dto: UpdateProfileDto) => Promise<{ user: UserProfile }>>(),
 }))
 
 vi.mock('../controllers/AuthController', () => ({

@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const SEND_DM_LABEL = '\u041e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435'
+import type { UserProfile } from '../entities/user/types'
+
+const SEND_DM_LABEL = 'Отправить сообщение'
 
 const profileMock = vi.hoisted(() => ({
   user: {
@@ -9,9 +11,9 @@ const profileMock = vi.hoisted(() => ({
     email: '',
     profileImage: null,
     bio: '',
-    lastSeen: null,
+    lastSeen: null as string | null,
     registeredAt: null,
-  },
+  } as UserProfile,
   loading: false,
   error: null as string | null,
 }))
@@ -38,9 +40,9 @@ const makeUser = (username: string) => ({
   email: `${username}@example.com`,
   profileImage: null,
   bio: '',
-  lastSeen: null,
+  lastSeen: null as string | null,
   registeredAt: null,
-})
+}) as UserProfile
 
 describe('UserProfilePage', () => {
   beforeEach(() => {
@@ -49,7 +51,7 @@ describe('UserProfilePage', () => {
       email: '',
       profileImage: null,
       bio: '',
-      lastSeen: null,
+      lastSeen: null as string | null,
       registeredAt: null,
     }
     profileMock.loading = false
