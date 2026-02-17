@@ -324,7 +324,6 @@ export function App() {
             user={auth.user}
             onSave={handleProfileSave}
             onNavigate={handleNavigate}
-            onLogout={handleLogout}
           />
         )
       case 'directInbox':
