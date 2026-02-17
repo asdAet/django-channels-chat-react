@@ -21,7 +21,6 @@ type Props = {
     bio?: string;
   }) => Promise<SaveResult>;
   onNavigate: (path: string) => void;
-  onLogout?: () => void;
 };
 
 /**
@@ -30,7 +29,7 @@ type Props = {
  * @returns Результат выполнения `ProfilePage`.
  */
 
-export function ProfilePage({ user, onSave, onNavigate, onLogout }: Props) {
+export function ProfilePage({ user, onSave, onNavigate }: Props) {
   const { online: presenceOnline, status: presenceStatus } = usePresence();
   const [form, setForm] = useState({
     username: user?.username || "",
