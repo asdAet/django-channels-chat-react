@@ -198,7 +198,9 @@ export function UserProfilePage({
     if (dragState.current && event.touches.length === 1) {
       const touch = event.touches.item(0);
       if (!touch) return;
-      event.preventDefault();
+      if (event.cancelable) {
+        event.preventDefault();
+      }
       const nextX =
         dragState.current.panX + (touch.clientX - dragState.current.x);
       const nextY =
@@ -215,7 +217,9 @@ export function UserProfilePage({
     if (!pinchState.current) return;
     const nextDistance = getTouchDistance(event.touches);
     if (!nextDistance) return;
-    event.preventDefault();
+    if (event.cancelable) {
+      event.preventDefault();
+    }
     const first = event.touches.item(0);
     const second = event.touches.item(1);
     const scale = nextDistance / pinchState.current.distance;
