@@ -1,30 +1,32 @@
-import type { AxiosInstance } from 'axios'
+﻿import type { AxiosInstance } from 'axios'
 
+import { buildUpdateProfileRequestDto, decodeProfileEnvelopeResponse } from '../../dto'
 import type { UpdateProfileInput } from '../../domain/interfaces/IApiService'
 import type { UserProfile } from '../../entities/user/types'
 
 /**
- * Выполняет функцию `updateProfile`.
- * @param apiClient Входной параметр `apiClient`.
- * @param fields Входной параметр `fields`.
- * @returns Результат выполнения `updateProfile`.
+ * Обновляет профиль пользователя.
+ * @param apiClient HTTP-клиент.
+ * @param fields Поля формы профиля.
+ * @returns Нормализованный профиль пользователя.
  */
-
 export async function updateProfile(
   apiClient: AxiosInstance,
   fields: UpdateProfileInput,
 ): Promise<{ user: UserProfile }> {
+  const dto = buildUpdateProfileRequestDto(fields)
+
   const form = new FormData()
-  form.append('username', fields.username)
-  form.append('email', fields.email)
-  if (fields.image) {
-    form.append('image', fields.image)
+  form.append('username', dto.username)
+  form.append('email', dto.email)
+  if (dto.image) {
+    form.append('image', dto.image)
+  }
+  if (dto.bio !== undefined) {
+    form.append('bio', dto.bio)
   }
 
-  if (fields.bio !== undefined) {
-    form.append('bio', fields.bio)
-  }
-
-  const response = await apiClient.post<{ user: UserProfile }>('/auth/profile/', form)
-  return response.data
+  const response = await apiClient.post<unknown>('/auth/profile/', form)
+  return decodeProfileEnvelopeResponse(response.data)
 }
+

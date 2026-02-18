@@ -1,6 +1,6 @@
-import { createContext } from 'react'
+﻿import { createContext } from 'react'
 
-import type { DirectChatListItemDto } from '../../dto/chat'
+import type { DirectChatListItem as DirectChatListItemDto } from '../../entities/room/types'
 import type { WebSocketStatus } from '../../hooks/useReconnectingWebSocket'
 
 export type DirectInboxContextValue = {

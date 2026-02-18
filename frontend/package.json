@@ -11,13 +11,15 @@
         "test": "npm run test:unit",
         "test:unit": "vitest run",
         "test:coverage": "vitest run --coverage",
-        "test:e2e": "playwright test"
+        "test:e2e": "playwright test",
+        "check:dto-boundary": "node ./scripts/check-dto-boundary.mjs"
     },
     "dependencies": {
         "axios": "^1.13.5",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
-        "react-router-dom": "^6.30.3"
+        "react-router-dom": "^6.30.3",
+        "zod": "^4.3.6"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.1",

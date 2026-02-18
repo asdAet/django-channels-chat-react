@@ -1,20 +1,22 @@
-import type { AxiosInstance } from 'axios'
+﻿import type { AxiosInstance } from 'axios'
 
-import type { SessionResponse } from '../../shared/api/types'
+import { buildLoginRequestDto, decodeSessionResponse } from '../../dto'
+import type { SessionResponse } from '../../domain/interfaces/IApiService'
 
 /**
- * Выполняет функцию `login`.
- * @param apiClient Входной параметр `apiClient`.
- * @param username Входной параметр `username`.
- * @param password Входной параметр `password`.
- * @returns Результат выполнения `login`.
+ * Выполняет логин пользователя.
+ * @param apiClient HTTP-клиент.
+ * @param username Логин.
+ * @param password Пароль.
+ * @returns Декодированное состояние сессии.
  */
-
 export async function login(
   apiClient: AxiosInstance,
   username: string,
   password: string,
 ): Promise<SessionResponse> {
-  const response = await apiClient.post<SessionResponse>('/auth/login/', { username, password })
-  return response.data
+  const body = buildLoginRequestDto({ username, password })
+  const response = await apiClient.post<unknown>('/auth/login/', body)
+  return decodeSessionResponse(response.data)
 }
+

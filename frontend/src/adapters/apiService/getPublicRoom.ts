@@ -1,14 +1,15 @@
-import type { AxiosInstance } from 'axios'
+﻿import type { AxiosInstance } from 'axios'
 
+import { decodePublicRoomResponse } from '../../dto'
 import type { RoomDetails } from '../../entities/room/types'
 
 /**
- * Выполняет функцию `getPublicRoom`.
- * @param apiClient Входной параметр `apiClient`.
- * @returns Результат выполнения `getPublicRoom`.
+ * Загружает данные публичной комнаты.
+ * @param apiClient HTTP-клиент.
+ * @returns Нормализованные данные комнаты.
  */
-
 export async function getPublicRoom(apiClient: AxiosInstance): Promise<RoomDetails> {
-  const response = await apiClient.get<RoomDetails>('/chat/public-room/')
-  return response.data
+  const response = await apiClient.get<unknown>('/chat/public-room/')
+  return decodePublicRoomResponse(response.data)
 }
+

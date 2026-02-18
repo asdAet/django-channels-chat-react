@@ -1,127 +1,68 @@
-type InvalidateMessage =
-  | { type: 'invalidate'; key: 'roomMessages'; slug: string }
-  | { type: 'invalidate'; key: 'roomDetails'; slug: string }
-  | { type: 'invalidate'; key: 'directChats' }
-  | { type: 'invalidate'; key: 'userProfile'; username: string }
-  | { type: 'invalidate'; key: 'selfProfile' }
+﻿import { encodeSwCacheMessage, type SwCacheMessage } from '../../dto'
 
-type ClearMessage = { type: 'clearUserCaches' }
-
-/**
- * Выполняет функцию `postMessage`.
- * @param message Входной параметр `message`.
- * @returns Результат выполнения `postMessage`.
- */
-
-const postMessage = (message: InvalidateMessage | ClearMessage) => {
+const postMessage = (message: SwCacheMessage): void => {
   if (typeof navigator === 'undefined') return
   if (!navigator.serviceWorker) return
 
+  const payload = encodeSwCacheMessage(message)
   const controller = navigator.serviceWorker.controller
   if (controller) {
-    controller.postMessage(message)
+    controller.postMessage(payload)
     return
   }
 
   navigator.serviceWorker.ready
     .then((registration) => {
-      registration.active?.postMessage(message)
+      registration.active?.postMessage(payload)
     })
     .catch(() => {})
 }
 
 /**
- * Выполняет функцию `invalidateRoomMessages`.
- * @param slug Входной параметр `slug`.
- * @returns Результат выполнения `invalidateRoomMessages`.
+ * Инвалидирует кэш сообщений комнаты.
+ * @param slug Идентификатор комнаты.
  */
-
 export const invalidateRoomMessages = (slug: string) => {
   if (!slug) return
-  /**
-   * Выполняет метод `postMessage`.
-   * @param props Входной параметр `props`.
-   * @returns Результат выполнения `postMessage`.
-   */
-
   postMessage({ type: 'invalidate', key: 'roomMessages', slug })
 }
 
 /**
- * Выполняет функцию `invalidateRoomDetails`.
- * @param slug Входной параметр `slug`.
- * @returns Результат выполнения `invalidateRoomDetails`.
+ * Инвалидирует кэш деталей комнаты.
+ * @param slug Идентификатор комнаты.
  */
-
 export const invalidateRoomDetails = (slug: string) => {
   if (!slug) return
-  /**
-   * Выполняет метод `postMessage`.
-   * @param props Входной параметр `props`.
-   * @returns Результат выполнения `postMessage`.
-   */
-
   postMessage({ type: 'invalidate', key: 'roomDetails', slug })
 }
 
 /**
- * Выполняет функцию `invalidateDirectChats`.
- * @returns Результат выполнения `invalidateDirectChats`.
+ * Инвалидирует кэш списка direct-чатов.
  */
-
 export const invalidateDirectChats = () => {
-  /**
-   * Выполняет метод `postMessage`.
-   * @param props Входной параметр `props`.
-   * @returns Результат выполнения `postMessage`.
-   */
-
   postMessage({ type: 'invalidate', key: 'directChats' })
 }
 
 /**
- * Выполняет функцию `invalidateUserProfile`.
- * @param username Входной параметр `username`.
- * @returns Результат выполнения `invalidateUserProfile`.
+ * Инвалидирует кэш публичного профиля пользователя.
+ * @param username Имя пользователя.
  */
-
 export const invalidateUserProfile = (username: string) => {
   if (!username) return
-  /**
-   * Выполняет метод `postMessage`.
-   * @param props Входной параметр `props`.
-   * @returns Результат выполнения `postMessage`.
-   */
-
   postMessage({ type: 'invalidate', key: 'userProfile', username })
 }
 
 /**
- * Выполняет функцию `invalidateSelfProfile`.
- * @returns Результат выполнения `invalidateSelfProfile`.
+ * Инвалидирует кэш собственного профиля.
  */
-
 export const invalidateSelfProfile = () => {
-  /**
-   * Выполняет метод `postMessage`.
-   * @param props Входной параметр `props`.
-   * @returns Результат выполнения `postMessage`.
-   */
-
   postMessage({ type: 'invalidate', key: 'selfProfile' })
 }
 
 /**
- * Выполняет функцию `clearAllUserCaches`.
- * @returns Результат выполнения `clearAllUserCaches`.
+ * Очищает все пользовательские API-кэши.
  */
-
 export const clearAllUserCaches = () => {
-  /**
-   * Выполняет метод `postMessage`.
-   * @param props Входной параметр `props`.
-   * @returns Результат выполнения `postMessage`.
-   */
-
   postMessage({ type: 'clearUserCaches' })
 }
+

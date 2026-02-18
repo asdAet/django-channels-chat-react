@@ -1,8 +1,8 @@
 ﻿import { useEffect, useState } from 'react'
 
 import { chatController } from '../controllers/ChatController'
-import type { RoomDetailsDto } from '../dto/chat'
-import type { UserProfileDto } from '../dto/auth'
+import type { RoomDetails as RoomDetailsDto } from '../entities/room/types'
+import type { UserProfile as UserProfileDto } from '../entities/user/types'
 import { debugLog } from '../shared/lib/debug'
 
 /**

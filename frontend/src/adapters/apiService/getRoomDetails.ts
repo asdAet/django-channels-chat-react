@@ -1,16 +1,17 @@
-import type { AxiosInstance } from 'axios'
+﻿import type { AxiosInstance } from 'axios'
 
+import { decodeRoomDetailsResponse } from '../../dto'
 import type { RoomDetails } from '../../entities/room/types'
 
 /**
- * Выполняет функцию `getRoomDetails`.
- * @param apiClient Входной параметр `apiClient`.
- * @param slug Входной параметр `slug`.
- * @returns Результат выполнения `getRoomDetails`.
+ * Загружает детали комнаты по slug.
+ * @param apiClient HTTP-клиент.
+ * @param slug Идентификатор комнаты.
+ * @returns Нормализованные данные комнаты.
  */
-
 export async function getRoomDetails(apiClient: AxiosInstance, slug: string): Promise<RoomDetails> {
   const encodedSlug = encodeURIComponent(slug)
-  const response = await apiClient.get<RoomDetails>(`/chat/rooms/${encodedSlug}/`)
-  return response.data
+  const response = await apiClient.get<unknown>(`/chat/rooms/${encodedSlug}/`)
+  return decodeRoomDetailsResponse(response.data)
 }
+

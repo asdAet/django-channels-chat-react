@@ -1,7 +1,8 @@
 ﻿import { useCallback, useEffect, useState } from 'react'
 
 import { authController } from '../controllers/AuthController'
-import type { LoginDto, RegisterDto, UpdateProfileDto, UserProfileDto } from '../dto/auth'
+import type { LoginRequestDto as LoginDto, RegisterRequestDto as RegisterDto, UpdateProfileRequestDto as UpdateProfileDto } from '../dto'
+import type { UserProfile as UserProfileDto } from '../entities/user/types'
 import { debugLog } from '../shared/lib/debug'
 import type { ApiError } from '../shared/api/types'
 import { clearAllUserCaches, invalidateSelfProfile, invalidateUserProfile } from '../shared/cache/cacheManager'

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { chatController } from '../controllers/ChatController'
-import type { RoomDetailsDto, RoomMessagesDto } from '../dto/chat'
+import type { RoomDetails as RoomDetailsDto } from '../entities/room/types'
+import type { RoomMessagesDto } from '../dto'
 import type { Message } from '../entities/message/types'
-import type { UserProfileDto } from '../dto/auth'
+import type { UserProfile as UserProfileDto } from '../entities/user/types'
 import { debugLog } from '../shared/lib/debug'
 import { sanitizeText } from '../shared/lib/sanitize'
 

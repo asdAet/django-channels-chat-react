@@ -1,23 +1,15 @@
-import type { AxiosInstance } from 'axios'
+﻿import type { AxiosInstance } from 'axios'
 
-import type { Message } from '../../entities/message/types'
-
-type RoomMessagesResponse = {
-  messages: Message[]
-  pagination?: {
-    limit: number
-    hasMore: boolean
-    nextBefore: number | null
-  }
-}
+import { decodeRoomMessagesResponse } from '../../dto'
+import type { RoomMessagesResponse } from '../../domain/interfaces/IApiService'
 
 /**
- * Выполняет функцию `getRoomMessages`.
- * @param apiClient Входной параметр `apiClient`.
- * @param slug Входной параметр `slug`.
- * @returns Результат выполнения `getRoomMessages`.
+ * Загружает сообщения комнаты с пагинацией.
+ * @param apiClient HTTP-клиент.
+ * @param slug Идентификатор комнаты.
+ * @param params Параметры пагинации.
+ * @returns Нормализованный список сообщений.
  */
-
 export async function getRoomMessages(
   apiClient: AxiosInstance,
   slug: string,
@@ -31,8 +23,10 @@ export async function getRoomMessages(
   if (params?.beforeId) {
     query.set('before', String(params.beforeId))
   }
+
   const suffix = query.toString()
   const url = `/chat/rooms/${encodedSlug}/messages/${suffix ? `?${suffix}` : ''}`
-  const response = await apiClient.get<RoomMessagesResponse>(url)
-  return response.data
+  const response = await apiClient.get<unknown>(url)
+  return decodeRoomMessagesResponse(response.data)
 }
+

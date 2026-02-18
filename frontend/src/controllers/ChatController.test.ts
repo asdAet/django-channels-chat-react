@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type {
   DirectChatsResponseDto,
   DirectStartResponseDto,
-  RoomDetailsDto,
   RoomMessagesDto,
-} from '../dto/chat'
+} from '../dto'
+import type { RoomDetails as RoomDetailsDto } from '../entities/room/types'
 
 const apiMocks = vi.hoisted(() => ({
   getPublicRoom: vi.fn<() => Promise<RoomDetailsDto>>(),

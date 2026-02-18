@@ -1,7 +1,7 @@
-import { useCallback } from 'react'
+﻿import { useCallback } from 'react'
 
 import { chatController } from '../controllers/ChatController'
-import type { RoomMessagesParams } from '../dto/chat'
+import type { RoomMessagesParams } from '../dto'
 
 /**
  * Управляет состоянием и эффектами хука `useChatActions`.

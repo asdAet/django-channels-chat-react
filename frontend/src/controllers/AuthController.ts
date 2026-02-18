@@ -1,6 +1,6 @@
 ﻿import { apiService } from '../adapters/ApiService'
-import type { LoginDto, RegisterDto, UpdateProfileDto } from '../dto/auth'
-import type { SessionDto, UserProfileDto } from '../dto/auth'
+import type { LoginRequestDto as LoginDto, RegisterRequestDto as RegisterDto, UpdateProfileRequestDto as UpdateProfileDto, SessionResponseDto as SessionDto } from '../dto'
+import type { UserProfile as UserProfileDto } from '../entities/user/types'
 
 /**
  * Описывает назначение класса AuthController.

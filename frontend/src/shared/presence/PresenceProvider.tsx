@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { apiService } from '../../adapters/ApiService'
-import { useReconnectingWebSocket } from '../../hooks/useReconnectingWebSocket'
+import { decodePresenceWsEvent } from '../../dto'
 import type { UserProfile } from '../../entities/user/types'
+import { useReconnectingWebSocket } from '../../hooks/useReconnectingWebSocket'
 import type { OnlineUser } from '../api/users'
 import { debugLog } from '../lib/debug'
 import { getWebSocketBase } from '../lib/ws'
@@ -17,6 +18,11 @@ type ProviderProps = {
   children: ReactNode
 }
 
+/**
+ * Провайдер presence-состояния (онлайн-пользователи и гости).
+ * @param props Пользователь, флаг готовности и дочерние компоненты.
+ * @returns React context provider presence.
+ */
 export function PresenceProvider({ user, children, ready = true }: ProviderProps) {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([])
   const [guestCount, setGuestCount] = useState(0)
@@ -24,6 +30,7 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
 
   useEffect(() => {
     let active = true
+
     if (!ready) {
       setGuestSessionReady(false)
       return () => {
@@ -65,30 +72,26 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
 
   const handlePresence = useCallback(
     (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data)
-        if (Array.isArray(data?.online)) {
-          const incoming = data.online
-          if (user) {
-            const nextImage = user.profileImage || null
-            setOnlineUsers(
-              incoming.map((entry: OnlineUser) =>
-                entry.username === user.username ? { ...entry, profileImage: nextImage } : entry,
-              ),
-            )
-          } else {
-            setOnlineUsers(incoming)
-          }
-        }
+      const decoded = decodePresenceWsEvent(event.data)
+      if (decoded.type !== 'state') {
+        return
+      }
 
-        const rawGuests = data?.guests
-        const parsedGuests =
-          typeof rawGuests === 'number' ? rawGuests : Number.isFinite(Number(rawGuests)) ? Number(rawGuests) : null
-        if (parsedGuests !== null) {
-          setGuestCount(parsedGuests)
+      if (decoded.online) {
+        if (user) {
+          const nextImage = user.profileImage || null
+          setOnlineUsers(
+            decoded.online.map((entry) =>
+              entry.username === user.username ? { ...entry, profileImage: nextImage } : entry,
+            ),
+          )
+        } else {
+          setOnlineUsers(decoded.online)
         }
-      } catch (err) {
-        debugLog('Presence WS parse failed', err)
+      }
+
+      if (decoded.guests !== null) {
+        setGuestCount(decoded.guests)
       }
     },
     [user],
@@ -103,6 +106,7 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
 
   useEffect(() => {
     if (!user) return
+
     setOnlineUsers((prev) => {
       let changed = false
       const updated = prev.map((entry) => {
@@ -124,6 +128,7 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
 
   useEffect(() => {
     if (status !== 'online') return
+
     const sendPing = () => {
       send(JSON.stringify({ type: 'ping', ts: Date.now() }))
     }
@@ -145,3 +150,4 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
 
   return <PresenceContext.Provider value={value}>{children}</PresenceContext.Provider>
 }
+

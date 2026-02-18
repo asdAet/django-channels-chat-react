@@ -1,14 +1,15 @@
-import type { AxiosInstance } from 'axios'
+﻿import type { AxiosInstance } from 'axios'
 
+import { decodeDirectChatsResponse } from '../../dto'
 import type { DirectChatsResponse } from '../../domain/interfaces/IApiService'
 
 /**
- * Выполняет функцию `getDirectChats`.
- * @param apiClient Входной параметр `apiClient`.
- * @returns Результат выполнения `getDirectChats`.
+ * Загружает список direct-чатов текущего пользователя.
+ * @param apiClient HTTP-клиент.
+ * @returns Нормализованный список direct-чатов.
  */
-
 export const getDirectChats = async (apiClient: AxiosInstance): Promise<DirectChatsResponse> => {
-  const { data } = await apiClient.get('/chat/direct/chats/')
-  return data as DirectChatsResponse
+  const response = await apiClient.get<unknown>('/chat/direct/chats/')
+  return decodeDirectChatsResponse(response.data)
 }
+

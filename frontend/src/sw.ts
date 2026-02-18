@@ -1,307 +1,604 @@
-/// <reference lib="webworker" />
+﻿/// <reference lib="webworker" />
+
+
 
 import { clientsClaim } from 'workbox-core'
+
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
+
 import { ExpirationPlugin } from 'workbox-expiration'
+
 import { precacheAndRoute } from 'workbox-precaching'
+
 import { registerRoute } from 'workbox-routing'
+
 import { CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies'
 import { CACHE_LIMITS, CACHE_NAMES, CACHE_TTLS } from './shared/cache/cacheConfig'
+import { decodeSwCacheMessage } from './dto'
+
 
 declare const self: ServiceWorkerGlobalScope & {
+
   __WB_MANIFEST: Array<{ url: string; revision: string | null }>
+
 }
 
+
+
 self.skipWaiting()
+
 clientsClaim()
+
+
 
 precacheAndRoute(self.__WB_MANIFEST)
 
+
+
 /**
+
  * Выполняет функцию `isSameOrigin`.
+
  * @param url Входной параметр `url`.
+
  * @returns Результат выполнения `isSameOrigin`.
+
  */
+
+
 
 const isSameOrigin = (url: URL) => url.origin === self.location.origin
 
-registerRoute(
-  ({ request, url }) =>
-    isSameOrigin(url) &&
-    request.method === 'GET' &&
-    (url.pathname.startsWith('/assets/') ||
-      url.pathname.startsWith('/static/') ||
-      ['script', 'style', 'font'].includes(request.destination)),
-  new CacheFirst({
-    cacheName: CACHE_NAMES.assets,
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({
-        maxEntries: CACHE_LIMITS.assets,
-        maxAgeSeconds: CACHE_TTLS.assets,
-        purgeOnQuotaError: true,
-      }),
-    ],
-  }),
-)
+
 
 registerRoute(
+
   ({ request, url }) =>
+
     isSameOrigin(url) &&
+
     request.method === 'GET' &&
-    (url.pathname.startsWith('/media/') || request.destination === 'image'),
+
+    (url.pathname.startsWith('/assets/') ||
+
+      url.pathname.startsWith('/static/') ||
+
+      ['script', 'style', 'font'].includes(request.destination)),
+
   new CacheFirst({
-    cacheName: CACHE_NAMES.media,
+
+    cacheName: CACHE_NAMES.assets,
+
     plugins: [
+
       new CacheableResponsePlugin({ statuses: [0, 200] }),
+
       new ExpirationPlugin({
-        maxEntries: CACHE_LIMITS.media,
-        maxAgeSeconds: CACHE_TTLS.media,
+
+        maxEntries: CACHE_LIMITS.assets,
+
+        maxAgeSeconds: CACHE_TTLS.assets,
+
         purgeOnQuotaError: true,
+
       }),
+
     ],
+
   }),
+
 )
+
+
+
+registerRoute(
+
+  ({ request, url }) =>
+
+    isSameOrigin(url) &&
+
+    request.method === 'GET' &&
+
+    (url.pathname.startsWith('/media/') || request.destination === 'image'),
+
+  new CacheFirst({
+
+    cacheName: CACHE_NAMES.media,
+
+    plugins: [
+
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+
+      new ExpirationPlugin({
+
+        maxEntries: CACHE_LIMITS.media,
+
+        maxAgeSeconds: CACHE_TTLS.media,
+
+        purgeOnQuotaError: true,
+
+      }),
+
+    ],
+
+  }),
+
+)
+
+
 
 /**
+
  * Выполняет функцию `matchRoomMessages`.
+
  * @param url Входной параметр `url`.
+
  * @returns Результат выполнения `matchRoomMessages`.
+
  */
+
+
 
 const matchRoomMessages = (url: URL) =>
+
   url.pathname.startsWith('/api/chat/rooms/') && url.pathname.endsWith('/messages/')
 
+
+
 /**
+
  * Выполняет функцию `matchRoomDetails`.
+
  * @param url Входной параметр `url`.
+
  * @returns Результат выполнения `matchRoomDetails`.
+
  */
+
+
 
 const matchRoomDetails = (url: URL) =>
+
   url.pathname.startsWith('/api/chat/rooms/') && !url.pathname.endsWith('/messages/')
 
+
+
 /**
+
  * Выполняет функцию `matchPublicRoom`.
+
  * @param url Входной параметр `url`.
+
  * @returns Результат выполнения `matchPublicRoom`.
+
  */
+
+
 
 const matchPublicRoom = (url: URL) => url.pathname === '/api/chat/public-room/'
 
+
+
 /**
+
  * Выполняет функцию `matchDirectChats`.
+
  * @param url Входной параметр `url`.
+
  * @returns Результат выполнения `matchDirectChats`.
+
  */
+
+
 
 const matchDirectChats = (url: URL) => url.pathname === '/api/chat/direct/chats/'
 
+
+
 /**
+
  * Выполняет функцию `matchUserProfile`.
+
  * @param url Входной параметр `url`.
+
  * @returns Результат выполнения `matchUserProfile`.
+
  */
+
+
 
 const matchUserProfile = (url: URL) => url.pathname.startsWith('/api/auth/users/')
 
+
+
 /**
+
  * Выполняет функцию `matchSelfProfile`.
+
  * @param url Входной параметр `url`.
+
  * @returns Результат выполнения `matchSelfProfile`.
+
  */
+
+
 
 const matchSelfProfile = (url: URL) => url.pathname === '/api/auth/profile/'
 
+
+
 /**
+
  * Выполняет функцию `matchAuthNoCache`.
+
  * @param url Входной параметр `url`.
+
  * @returns Результат выполнения `matchAuthNoCache`.
+
  */
+
+
 
 const matchAuthNoCache = (url: URL) =>
+
   url.pathname === '/api/auth/login/' ||
+
   url.pathname === '/api/auth/register/' ||
+
   url.pathname === '/api/auth/logout/' ||
+
   url.pathname === '/api/auth/csrf/'
 
+
+
 registerRoute(
+
   ({ url, request }) => isSameOrigin(url) && request.method === 'GET' && matchAuthNoCache(url),
+
   new NetworkOnly(),
+
 )
 
+
+
 registerRoute(
+
   ({ url, request }) => isSameOrigin(url) && request.method === 'GET' && matchRoomMessages(url),
+
   new NetworkFirst({
+
     cacheName: CACHE_NAMES.apiMessages,
+
     networkTimeoutSeconds: 5,
+
     plugins: [
+
       new CacheableResponsePlugin({ statuses: [0, 200] }),
+
       new ExpirationPlugin({
+
         maxEntries: CACHE_LIMITS.messages,
+
         maxAgeSeconds: CACHE_TTLS.messages,
+
         purgeOnQuotaError: true,
+
       }),
+
     ],
+
   }),
+
 )
 
+
+
 registerRoute(
+
   ({ url, request }) =>
+
     isSameOrigin(url) && request.method === 'GET' && (matchRoomDetails(url) || matchPublicRoom(url)),
+
   new StaleWhileRevalidate({
+
     cacheName: CACHE_NAMES.apiRooms,
+
     plugins: [
+
       new CacheableResponsePlugin({ statuses: [0, 200] }),
+
       new ExpirationPlugin({
+
         maxEntries: CACHE_LIMITS.rooms,
+
         maxAgeSeconds: CACHE_TTLS.rooms,
+
         purgeOnQuotaError: true,
+
       }),
+
     ],
+
   }),
+
 )
 
+
+
 registerRoute(
+
   ({ url, request }) => isSameOrigin(url) && request.method === 'GET' && matchDirectChats(url),
+
   new StaleWhileRevalidate({
+
     cacheName: CACHE_NAMES.apiDirect,
+
     plugins: [
+
       new CacheableResponsePlugin({ statuses: [0, 200] }),
+
       new ExpirationPlugin({
+
         maxEntries: CACHE_LIMITS.direct,
+
         maxAgeSeconds: CACHE_TTLS.direct,
+
         purgeOnQuotaError: true,
+
       }),
+
     ],
+
   }),
+
 )
 
+
+
 registerRoute(
+
   ({ url, request }) => isSameOrigin(url) && request.method === 'GET' && (matchUserProfile(url) || matchSelfProfile(url)),
+
   new StaleWhileRevalidate({
+
     cacheName: CACHE_NAMES.apiProfiles,
+
     plugins: [
+
       new CacheableResponsePlugin({ statuses: [0, 200] }),
+
       new ExpirationPlugin({
+
         maxEntries: CACHE_LIMITS.profiles,
+
         maxAgeSeconds: CACHE_TTLS.profiles,
+
         purgeOnQuotaError: true,
+
       }),
+
     ],
+
   }),
+
 )
+
+
 
 /**
+
  * Выполняет функцию `deleteMatching`.
+
  * @param cacheName Входной параметр `cacheName`.
+
  * @param predicate Входной параметр `predicate`.
+
  * @returns Результат выполнения `deleteMatching`.
+
  */
+
+
 
 const deleteMatching = async (cacheName: string, predicate: (url: URL) => boolean) => {
+
   const cache = await caches.open(cacheName)
+
   const keys = await cache.keys()
+
   await Promise.all(
+
     keys.map((request) => {
+
       const url = new URL(request.url)
+
       if (!predicate(url)) return Promise.resolve(false)
+
       return cache.delete(request)
+
     }),
+
   )
+
 }
+
+
 
 /**
+
  * Выполняет функцию `clearUserCaches`.
+
  * @returns Результат выполнения `clearUserCaches`.
+
  */
 
+
+
 const clearUserCaches = async () => {
+
   await Promise.all([
+
     caches.delete(CACHE_NAMES.apiMessages),
+
     caches.delete(CACHE_NAMES.apiRooms),
+
     caches.delete(CACHE_NAMES.apiDirect),
+
     caches.delete(CACHE_NAMES.apiProfiles),
+
   ])
+
 }
 
-self.addEventListener('message', (event) => {
-  const payload = event.data as
-    | { type: 'invalidate'; key: string; slug?: string; username?: string }
-    | { type: 'clearUserCaches' }
 
-  if (!payload || typeof payload !== 'object') return
+
+self.addEventListener('message', (event) => {
+  const payload = decodeSwCacheMessage(event.data)
+  if (!payload) return
+
 
   if (payload.type === 'clearUserCaches') {
+
     event.waitUntil(clearUserCaches())
+
     return
+
   }
+
+
 
   if (payload.type !== 'invalidate') return
 
+
+
   switch (payload.key) {
+
     case 'roomMessages': {
+
       const slug = payload.slug?.trim()
+
       if (!slug) return
+
       event.waitUntil(
+
         /**
+
          * Выполняет метод `deleteMatching`.
+
          * @returns Результат выполнения `deleteMatching`.
+
          */
+
+
 
         deleteMatching(CACHE_NAMES.apiMessages, (url) => url.pathname === `/api/chat/rooms/${slug}/messages/`),
+
       )
+
       return
+
     }
+
     case 'roomDetails': {
+
       const slug = payload.slug?.trim()
+
       if (!slug) return
+
       event.waitUntil(
+
         /**
+
          * Выполняет метод `deleteMatching`.
+
          * @returns Результат выполнения `deleteMatching`.
+
          */
+
+
 
         deleteMatching(CACHE_NAMES.apiRooms, (url) => url.pathname === `/api/chat/rooms/${slug}/`),
+
       )
+
       return
+
     }
+
     case 'directChats': {
+
       event.waitUntil(
+
         /**
+
          * Выполняет метод `deleteMatching`.
+
          * @returns Результат выполнения `deleteMatching`.
+
          */
+
+
 
         deleteMatching(CACHE_NAMES.apiDirect, (url) => url.pathname === '/api/chat/direct/chats/'),
+
       )
+
       return
+
     }
+
     case 'userProfile': {
+
       const username = payload.username?.trim()
+
       if (!username) return
+
       event.waitUntil(
+
         /**
+
          * Выполняет метод `deleteMatching`.
+
          * @returns Результат выполнения `deleteMatching`.
+
          */
+
+
 
         deleteMatching(CACHE_NAMES.apiProfiles, (url) => url.pathname === `/api/auth/users/${username}/`),
+
       )
+
       return
+
     }
+
     case 'selfProfile': {
+
       event.waitUntil(
+
         /**
+
          * Выполняет метод `deleteMatching`.
+
          * @returns Результат выполнения `deleteMatching`.
+
          */
 
+
+
         deleteMatching(CACHE_NAMES.apiProfiles, (url) => url.pathname === '/api/auth/profile/'),
+
       )
+
       return
+
     }
+
     default:
+
       return
+
   }
+
 })
+

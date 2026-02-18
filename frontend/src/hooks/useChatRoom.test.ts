@@ -1,7 +1,8 @@
 ﻿import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { RoomDetailsDto, RoomMessagesDto } from '../dto/chat'
+import type { RoomMessagesDto } from '../dto'
+import type { RoomDetails as RoomDetailsDto } from '../entities/room/types'
 
 const controllerMocks = vi.hoisted(() => ({
   getRoomDetails: vi.fn<(slug: string) => Promise<RoomDetailsDto>>(),

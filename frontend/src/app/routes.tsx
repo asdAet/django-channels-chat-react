@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+﻿import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 
+import { decodeRoomSlugParam, decodeUsernameParam } from '../dto'
 import type { UserProfile } from '../entities/user/types'
 import { ChatRoomPage } from '../pages/ChatRoomPage'
 import { DirectLayout } from '../pages/DirectLayout'
@@ -8,8 +9,6 @@ import { LoginPage } from '../pages/LoginPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { RegisterPage } from '../pages/RegisterPage'
 import { UserProfilePage } from '../pages/UserProfilePage'
-
-const ROOM_SLUG_RE = /^[A-Za-z0-9_-]{3,50}$/
 
 type ProfileFieldErrors = Record<string, string[]>
 type ProfileSaveResult =
@@ -43,7 +42,7 @@ function UserProfileRoute({
   onLogout,
 }: Pick<AppRoutesProps, 'user' | 'onNavigate' | 'onLogout'>) {
   const params = useParams<{ username: string }>()
-  const username = params.username ?? ''
+  const username = decodeUsernameParam(params.username)
   if (!username) {
     return <Navigate to="/" replace />
   }
@@ -69,8 +68,7 @@ function DirectByUsernameRoute({
   onNavigate,
 }: Pick<AppRoutesProps, 'user' | 'onNavigate'>) {
   const params = useParams<{ username: string }>()
-  const rawUsername = params.username ?? ''
-  const username = rawUsername.startsWith('@') ? rawUsername.slice(1) : rawUsername
+  const username = decodeUsernameParam(params.username)
   if (!username) {
     return <Navigate to="/direct" replace />
   }
@@ -84,8 +82,8 @@ function DirectByUsernameRoute({
  */
 function RoomRoute({ user, onNavigate }: Pick<AppRoutesProps, 'user' | 'onNavigate'>) {
   const params = useParams<{ slug: string }>()
-  const slug = params.slug ?? ''
-  if (!ROOM_SLUG_RE.test(slug)) {
+  const slug = decodeRoomSlugParam(params.slug)
+  if (!slug) {
     return <Navigate to="/" replace />
   }
   return <ChatRoomPage key={slug} slug={slug} user={user} onNavigate={onNavigate} />

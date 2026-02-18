@@ -1,11 +1,11 @@
-import { apiService } from '../adapters/ApiService'
+﻿import { apiService } from '../adapters/ApiService'
 import type {
   DirectChatsResponseDto,
   DirectStartResponseDto,
-  RoomDetailsDto,
   RoomMessagesDto,
   RoomMessagesParams,
-} from '../dto/chat'
+} from '../dto'
+import type { RoomDetails as RoomDetailsDto } from '../entities/room/types'
 
 let publicRoomInFlight: Promise<RoomDetailsDto> | null = null
 let directChatsInFlight: Promise<DirectChatsResponseDto> | null = null
