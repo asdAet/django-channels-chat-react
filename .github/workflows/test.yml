@@ -38,8 +38,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install frontend deps
         run: npm ci
+      - name: Lint frontend
+        run: npm run lint
+      - name: Check DTO boundary
+        run: npm run check:dto-boundary
       - name: Run frontend coverage
         run: npm run test:coverage
+      - name: Build frontend
+        run: npm run build
 
   e2e:
     runs-on: ubuntu-latest

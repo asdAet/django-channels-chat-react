@@ -7,6 +7,7 @@ import type { ApiError } from '../shared/api/types'
 import { debugLog } from '../shared/lib/debug'
 import { PresenceProvider } from '../shared/presence'
 import { DirectInboxProvider } from '../shared/directInbox'
+import { RuntimeConfigProvider } from '../shared/config/RuntimeConfigProvider'
 import { Toast } from '../shared/ui'
 import { TopBar } from '../widgets/layout/TopBar'
 import { AppRoutes } from './routes'
@@ -230,7 +231,9 @@ function AppShell() {
 export function App() {
   return (
     <BrowserRouter>
-      <AppShell />
+      <RuntimeConfigProvider>
+        <AppShell />
+      </RuntimeConfigProvider>
     </BrowserRouter>
   )
 }

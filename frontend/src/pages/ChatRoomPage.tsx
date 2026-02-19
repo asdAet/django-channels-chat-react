@@ -17,6 +17,7 @@ import { useReconnectingWebSocket } from '../hooks/useReconnectingWebSocket'
 import { invalidateDirectChats, invalidateRoomMessages } from '../shared/cache/cacheManager'
 
 import { useDirectInbox } from '../shared/directInbox'
+import { useChatMessageMaxLength } from '../shared/config/limits'
 
 import { formatDayLabel, formatLastSeen, formatTimestamp } from '../shared/lib/format'
 
@@ -45,8 +46,6 @@ type Props = {
 }
 
 
-
-const MAX_MESSAGE_LENGTH = 1000
 
 const RATE_LIMIT_COOLDOWN_MS = 10_000
 
@@ -91,6 +90,7 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
   const { setActiveRoom, markRead } = useDirectInbox()
 
   const { online: presenceOnline, status: presenceStatus } = usePresence()
+  const maxMessageLength = useChatMessageMaxLength()
 
   const onlineUsernames = useMemo(
 
@@ -194,7 +194,7 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
 
       case 'message_too_long': {
 
-        setRoomError(`????????? ??????? ??????? (???? ${MAX_MESSAGE_LENGTH} ????????)`)
+        setRoomError(`Сообщение слишком длинное (макс ${maxMessageLength} символов)`)
 
         break
 
@@ -202,7 +202,7 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
 
       case 'forbidden': {
 
-        setRoomError('???????????? ???? ??? ????? ????')
+        setRoomError('Недостаточно прав для отправки сообщения')
 
         break
 
@@ -210,7 +210,7 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
 
       case 'chat_message': {
 
-        const content = sanitizeText(decoded.message.content, MAX_MESSAGE_LENGTH)
+        const content = sanitizeText(decoded.message.content, maxMessageLength)
 
         if (!content) return
 
@@ -452,9 +452,9 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
 
     }
 
-    if (raw.length > MAX_MESSAGE_LENGTH) {
+    if (raw.length > maxMessageLength) {
 
-      setRoomError(`Сообщение слишком длинное (макс ${MAX_MESSAGE_LENGTH} символов)`)
+      setRoomError(`Сообщение слишком длинное (макс ${maxMessageLength} символов)`)
 
       return
 
@@ -470,7 +470,7 @@ export function ChatRoomPage({ slug, user, onNavigate }: Props) {
 
 
 
-    const cleaned = sanitizeText(raw, MAX_MESSAGE_LENGTH)
+    const cleaned = sanitizeText(raw, maxMessageLength)
 
     const payload = JSON.stringify({
 

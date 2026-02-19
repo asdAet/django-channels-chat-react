@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const roomSlugSchema = z.string().regex(/^[A-Za-z0-9_-]{3,50}$/)
+import { getChatRoomSlugRegExp } from '../../shared/config/limits'
 
 const usernameSchema = z
   .string()
@@ -14,6 +14,7 @@ const usernameSchema = z
  * @returns Валидный slug или null.
  */
 export const decodeRoomSlugParam = (value: unknown): string | null => {
+  const roomSlugSchema = z.string().regex(getChatRoomSlugRegExp())
   const parsed = roomSlugSchema.safeParse(value)
   return parsed.success ? parsed.data : null
 }
@@ -26,4 +27,4 @@ export const decodeRoomSlugParam = (value: unknown): string | null => {
 export const decodeUsernameParam = (value: unknown): string | null => {
   const parsed = usernameSchema.safeParse(value)
   return parsed.success ? parsed.data : null
-}
+}

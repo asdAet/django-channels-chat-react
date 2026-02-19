@@ -1,4 +1,4 @@
-﻿import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 
 import { decodeRoomSlugParam, decodeUsernameParam } from '../dto'
 import type { UserProfile } from '../entities/user/types'
@@ -33,8 +33,6 @@ type AppRoutesProps = {
 
 /**
  * Обертка для пользовательского профиля с получением username из URL.
- * @param props Данные пользователя и обработчики навигации.
- * @returns JSX-страница пользовательского профиля.
  */
 function UserProfileRoute({
   user,
@@ -46,6 +44,7 @@ function UserProfileRoute({
   if (!username) {
     return <Navigate to="/" replace />
   }
+
   return (
     <UserProfilePage
       key={username}
@@ -60,25 +59,27 @@ function UserProfileRoute({
 
 /**
  * Обертка для direct-чата по username из URL.
- * @param props Данные пользователя и обработчики навигации.
- * @returns JSX-страница direct-чата.
  */
 function DirectByUsernameRoute({
   user,
   onNavigate,
 }: Pick<AppRoutesProps, 'user' | 'onNavigate'>) {
   const params = useParams<{ username: string }>()
-  const username = decodeUsernameParam(params.username)
+  const rawUsername = params.username || ''
+  const username = decodeUsernameParam(rawUsername)
   if (!username) {
     return <Navigate to="/direct" replace />
   }
+
+  if (!rawUsername.startsWith('@')) {
+    return <Navigate to={`/direct/@${encodeURIComponent(username)}`} replace />
+  }
+
   return <DirectLayout user={user} username={username} onNavigate={onNavigate} />
 }
 
 /**
  * Обертка для комнаты с валидацией slug.
- * @param props Данные пользователя и обработчики навигации.
- * @returns JSX-страница комнаты либо redirect на главную.
  */
 function RoomRoute({ user, onNavigate }: Pick<AppRoutesProps, 'user' | 'onNavigate'>) {
   const params = useParams<{ slug: string }>()
@@ -86,13 +87,12 @@ function RoomRoute({ user, onNavigate }: Pick<AppRoutesProps, 'user' | 'onNaviga
   if (!slug) {
     return <Navigate to="/" replace />
   }
+
   return <ChatRoomPage key={slug} slug={slug} user={user} onNavigate={onNavigate} />
 }
 
 /**
  * Декларация всех frontend-маршрутов приложения.
- * @param props Состояние сессии и обработчики действий страниц.
- * @returns Набор Route-компонентов для BrowserRouter.
  */
 export function AppRoutes({
   user,
@@ -124,7 +124,14 @@ export function AppRoutes({
       />
       <Route
         path="/profile"
-        element={<ProfilePage key={user?.username || 'guest'} user={user} onSave={onProfileSave} onNavigate={onNavigate} />}
+        element={
+          <ProfilePage
+            key={user?.username || 'guest'}
+            user={user}
+            onSave={onProfileSave}
+            onNavigate={onNavigate}
+          />
+        }
       />
       <Route path="/direct" element={<DirectLayout user={user} onNavigate={onNavigate} />} />
       <Route path="/direct/:username" element={<DirectByUsernameRoute user={user} onNavigate={onNavigate} />} />

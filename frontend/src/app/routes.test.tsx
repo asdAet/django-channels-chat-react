@@ -70,6 +70,15 @@ describe('AppRoutes', () => {
     expect(screen.getByText('DIRECT_PAGE:alice')).toBeInTheDocument()
   })
 
+  it('canonicalizes legacy direct username route', () => {
+    render(
+      <MemoryRouter initialEntries={['/direct/alice']}>
+        <AppRoutes user={null} error={null} passwordRules={[]} {...handlers} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('DIRECT_PAGE:alice')).toBeInTheDocument()
+  })
+
   it('renders room route for valid slug', () => {
     render(
       <MemoryRouter initialEntries={['/rooms/public']}>

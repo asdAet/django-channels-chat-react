@@ -1,10 +1,9 @@
-
+﻿
 """Содержит логику модуля `api` подсистемы `chat`."""
 
 
 import hashlib
 import hmac
-import json
 import re
 import time
 
@@ -13,6 +12,8 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError, OperationalError, ProgrammingError, transaction
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_http_methods
+
+from chat_app_django.http_utils import parse_request_payload
 
 from .access import READ_ROLES, ensure_can_read_or_404
 from .constants import PUBLIC_ROOM_NAME, PUBLIC_ROOM_SLUG
@@ -50,24 +51,6 @@ def _serialize_peer(request, user):
         "profileImage": profile_pic,
         "lastSeen": last_seen.isoformat() if last_seen else None,
     }
-
-
-def _parse_json_body(request):
-    """Выполняет логику `_parse_json_body` с параметрами из сигнатуры."""
-    if request.POST:
-        return request.POST
-
-    if not request.body:
-        return {}
-
-    try:
-        payload = json.loads(request.body)
-    except json.JSONDecodeError:
-        return {}
-
-    if isinstance(payload, dict):
-        return payload
-    return {}
 
 
 def _normalize_username(raw_username):
@@ -298,7 +281,7 @@ def direct_start(request):
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required"}, status=401)
 
-    payload = _parse_json_body(request)
+    payload = parse_request_payload(request)
     target_username = _normalize_username(payload.get("username"))
     if not target_username:
         return JsonResponse({"error": "username is required"}, status=400)

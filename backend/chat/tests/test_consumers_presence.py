@@ -1,4 +1,4 @@
-"""????? PresenceConsumer."""
+"""Тесты PresenceConsumer."""
 
 import json
 from types import SimpleNamespace
@@ -17,7 +17,7 @@ application = URLRouter(websocket_urlpatterns)
 
 
 class PresenceConsumerTests(TransactionTestCase):
-    """????????? ????????? presence websocket ??? ?????? ? ??????????????."""
+    """Проверяет поведение presence websocket для гостей и авторизованных."""
 
     def setUp(self):
         self.user = User.objects.create_user(username='presence_user', password='pass12345')

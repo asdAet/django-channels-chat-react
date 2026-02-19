@@ -3,6 +3,7 @@ export * from './core/errors'
 
 export * from './http/auth'
 export * from './http/chat'
+export * from './http/meta'
 
 export * from './ws/chat'
 export * from './ws/directInbox'

@@ -58,7 +58,7 @@ def _is_valid_room_slug(value: str) -> bool:
 
 
 def _ws_connect_rate_limited(scope, endpoint: str) -> bool:
-    """????????? ????? ??????????? WebSocket ????? ????????????? DB-??????."""
+    """Checks websocket connect rate limit per endpoint and IP."""
     limit = int(getattr(settings, "WS_CONNECT_RATE_LIMIT", 60))
     window = int(getattr(settings, "WS_CONNECT_RATE_WINDOW", 60))
     ip = get_client_ip_from_scope(scope) or "unknown"
@@ -274,7 +274,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def _rate_limited(self, user) -> bool:
-        """????????? message rate-limit ????? ????????????? DB-??????."""
+        """Checks chat message rate limit for the current user."""
         limit = int(getattr(settings, "CHAT_MESSAGE_RATE_LIMIT", 20))
         window = int(getattr(settings, "CHAT_MESSAGE_RATE_WINDOW", 10))
         scope_key = f"rl:chat:message:{user.id}"
@@ -883,17 +883,8 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             }
         cache.set(self.guest_cache_key, data, timeout=self.cache_timeout_seconds)
 
-    def _decode_header(self, value: bytes | None) -> str | None:
-        """Выполняет логику `_decode_header` с параметрами из сигнатуры."""
-        if not value:
-            return None
-        try:
-            return value.decode("utf-8")
-        except UnicodeDecodeError:
-            return value.decode("latin-1", errors="ignore")
-
     def _get_guest_session_key(self) -> str | None:
-        """?????????? session_key ?????, ???? ?????? ????????????????."""
+        """Returns guest session key from scope when session is initialized."""
         session = self.scope.get("session")
         if not session:
             return None
@@ -901,7 +892,3 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         if not key:
             return None
         return str(key)
-
-    def _get_client_ip(self) -> str | None:
-        """Выполняет логику `_get_client_ip` с параметрами из сигнатуры."""
-        return get_client_ip_from_scope(self.scope)

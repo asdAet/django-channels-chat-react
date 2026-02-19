@@ -251,17 +251,11 @@ class PresenceConsumerInternalTests(TestCase):
         consumer.guest_key = 'session-presence-helper'
         return consumer
 
-    def test_decode_header_handles_utf8_and_latin1(self):
-        """Проверяет сценарий `test_decode_header_handles_utf8_and_latin1`."""
-        consumer = self._consumer()
-        self.assertEqual(consumer._decode_header('test'.encode('utf-8')), 'test')
-        self.assertEqual(consumer._decode_header(b'\xff'), '\xff'.encode('latin-1').decode('latin-1'))
-
-    def test_get_client_ip_uses_ip_utils(self):
-        """Проверяет сценарий `test_get_client_ip_uses_ip_utils`."""
+    def test_get_guest_session_key_returns_none_without_session(self):
+        """Проверяет отсутствие session_key у гостя без сессии."""
         consumer = self._consumer(user=AnonymousUser())
-        with patch('chat.consumers.get_client_ip_from_scope', return_value='198.51.100.7'):
-            self.assertEqual(consumer._get_client_ip(), '198.51.100.7')
+        consumer.scope['session'] = None
+        self.assertIsNone(consumer._get_guest_session_key())
 
     def test_receive_ignores_invalid_payload_and_throttles_guest_ping(self):
         """Проверяет сценарий `test_receive_ignores_invalid_payload_and_throttles_guest_ping`."""

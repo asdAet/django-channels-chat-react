@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 
-import { USERNAME_MAX_LENGTH } from '../../shared/config/limits'
+import { useUsernameMaxLength } from '../../shared/config/limits'
 import { Button, Card, Toast } from '../../shared/ui'
 import styles from './AuthForm.module.css'
 
@@ -31,6 +31,7 @@ export function AuthForm({
   passwordRules = [],
   className,
 }: AuthFormProps) {
+  const usernameMaxLength = useUsernameMaxLength()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -58,7 +59,7 @@ export function AuthForm({
               type="text"
               autoComplete="username"
               value={username}
-              maxLength={USERNAME_MAX_LENGTH}
+              maxLength={usernameMaxLength}
               onChange={(e) => setUsername(e.target.value)}
             />
           </label>

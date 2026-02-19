@@ -11,6 +11,7 @@ from django.db import OperationalError
 from django.http.request import RawPostDataException
 from django.test import Client, RequestFactory, SimpleTestCase, TestCase
 
+from chat_app_django.http_utils import parse_request_payload
 from users import api
 
 User = get_user_model()
@@ -57,17 +58,17 @@ class UsersApiHelpersTests(SimpleTestCase):
             META={'CONTENT_TYPE': 'multipart/form-data'},
             POST={'username': 'form-user'},
         )
-        self.assertEqual(api._parse_body(request), {'username': 'form-user'})
+        self.assertEqual(parse_request_payload(request), {'username': 'form-user'})
 
     def test_parse_body_handles_raw_post_data_exception(self):
         """Проверяет сценарий `test_parse_body_handles_raw_post_data_exception`."""
         request = _BodyRaisesRequest(post={'username': 'fallback'})
-        self.assertEqual(api._parse_body(request), {'username': 'fallback'})
+        self.assertEqual(parse_request_payload(request), {'username': 'fallback'})
 
     def test_parse_body_invalid_json_falls_back_to_empty_dict(self):
         """Проверяет сценарий `test_parse_body_invalid_json_falls_back_to_empty_dict`."""
         request = _InvalidJsonRequest(body=b'{bad-json', post={})
-        self.assertEqual(api._parse_body(request), {})
+        self.assertEqual(parse_request_payload(request), {})
 
     def test_collect_errors_merges_dicts(self):
         """Проверяет сценарий `test_collect_errors_merges_dicts`."""
@@ -210,7 +211,7 @@ class AuthApiEdgeTests(TestCase):
         self.client.force_login(self.user)
         csrf = self._csrf()
 
-        with patch('users.api.Profile.save', side_effect=OperationalError):
+        with patch.object(type(self.user.profile), 'save', side_effect=OperationalError):
             response = self.client.post('/api/auth/logout/', HTTP_X_CSRFTOKEN=csrf)
 
         self.assertEqual(response.status_code, 200)

@@ -26,26 +26,13 @@ type ProviderProps = {
 export function PresenceProvider({ user, children, ready = true }: ProviderProps) {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([])
   const [guestCount, setGuestCount] = useState(0)
-  const [guestSessionReady, setGuestSessionReady] = useState<boolean>(Boolean(user))
+  const [guestSessionReady, setGuestSessionReady] = useState(false)
+  const needsGuestSessionBootstrap = ready && !user && !guestSessionReady
 
   useEffect(() => {
+    if (!needsGuestSessionBootstrap) return
+
     let active = true
-
-    if (!ready) {
-      setGuestSessionReady(false)
-      return () => {
-        active = false
-      }
-    }
-
-    if (user) {
-      setGuestSessionReady(true)
-      return () => {
-        active = false
-      }
-    }
-
-    setGuestSessionReady(false)
     apiService
       .ensurePresenceSession()
       .then(() => {
@@ -61,7 +48,7 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
     return () => {
       active = false
     }
-  }, [ready, user])
+  }, [needsGuestSessionBootstrap])
 
   const presenceUrl = useMemo(() => {
     if (!ready) return null
@@ -97,29 +84,6 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
     [user],
   )
 
-  useEffect(() => {
-    if (!ready) {
-      setOnlineUsers([])
-      setGuestCount(0)
-    }
-  }, [ready])
-
-  useEffect(() => {
-    if (!user) return
-
-    setOnlineUsers((prev) => {
-      let changed = false
-      const updated = prev.map((entry) => {
-        if (entry.username !== user.username) return entry
-        const nextImage = user.profileImage || null
-        if (entry.profileImage === nextImage) return entry
-        changed = true
-        return { ...entry, profileImage: nextImage }
-      })
-      return changed ? updated : prev
-    })
-  }, [user])
-
   const { status, lastError, send } = useReconnectingWebSocket({
     url: presenceUrl,
     onMessage: handlePresence,
@@ -138,14 +102,23 @@ export function PresenceProvider({ user, children, ready = true }: ProviderProps
     return () => window.clearInterval(id)
   }, [send, status])
 
+  const visibleOnline = useMemo(() => {
+    if (!user) return []
+
+    const nextImage = user.profileImage || null
+    return onlineUsers.map((entry) =>
+      entry.username === user.username ? { ...entry, profileImage: nextImage } : entry,
+    )
+  }, [onlineUsers, user])
+
   const value = useMemo(
     () => ({
-      online: user ? onlineUsers : [],
-      guests: guestCount,
+      online: ready ? visibleOnline : [],
+      guests: ready ? guestCount : 0,
       status,
       lastError,
     }),
-    [onlineUsers, guestCount, status, lastError, user],
+    [visibleOnline, guestCount, ready, status, lastError],
   )
 
   return <PresenceContext.Provider value={value}>{children}</PresenceContext.Provider>

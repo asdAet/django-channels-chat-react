@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { UserProfile } from '../entities/user/types'
 import { usePresence } from '../shared/presence'
 import { avatarFallback, formatLastSeen, formatRegistrationDate } from '../shared/lib/format'
-import { USERNAME_MAX_LENGTH } from '../shared/config/limits'
+import { useUsernameMaxLength } from '../shared/config/limits'
 import { Button, Card, Toast, Panel } from '../shared/ui'
 import styles from '../styles/pages/ProfilePage.module.css'
 
@@ -28,6 +28,7 @@ type Props = {
  * @returns JSX-страница профиля.
  */
 export function ProfilePage({ user, onSave, onNavigate }: Props) {
+  const usernameMaxLength = useUsernameMaxLength()
   const { online: presenceOnline, status: presenceStatus } = usePresence()
   const [form, setForm] = useState({
     username: user?.username || '',
@@ -38,9 +39,9 @@ export function ProfilePage({ user, onSave, onNavigate }: Props) {
   const [formError, setFormError] = useState<string | null>(null)
 
   const trimmedUsername = form.username.trim()
-  const isUsernameTooLong = trimmedUsername.length > USERNAME_MAX_LENGTH
+  const isUsernameTooLong = trimmedUsername.length > usernameMaxLength
   const isUsernameValid =
-    trimmedUsername.length > 0 && trimmedUsername.length <= USERNAME_MAX_LENGTH
+    trimmedUsername.length > 0 && trimmedUsername.length <= usernameMaxLength
   const isBioValid = form.bio.length <= 1000
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -187,7 +188,7 @@ export function ProfilePage({ user, onSave, onNavigate }: Props) {
           <input
             type="text"
             value={form.username}
-            maxLength={USERNAME_MAX_LENGTH}
+            maxLength={usernameMaxLength}
             onChange={(event) => {
               setForm({ ...form, username: event.target.value })
               setFormError(null)
@@ -196,7 +197,7 @@ export function ProfilePage({ user, onSave, onNavigate }: Props) {
           />
           {isUsernameTooLong && (
             <span className={[styles.note, styles.warningNote].join(' ')}>
-              Максимум {USERNAME_MAX_LENGTH} символов.
+              Максимум {usernameMaxLength} символов.
             </span>
           )}
           {usernameError && <span className={[styles.note, styles.errorNote].join(' ')}>{usernameError}</span>}

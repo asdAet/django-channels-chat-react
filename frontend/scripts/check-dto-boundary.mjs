@@ -1,5 +1,5 @@
 ﻿import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, relative, sep } from 'node:path'
 
 const projectRoot = process.cwd()
 const srcRoot = join(projectRoot, 'src')
@@ -31,7 +31,7 @@ const walk = (dir) => {
   return output
 }
 
-const files = walk(srcRoot).filter((file) => !file.startsWith(dtoRoot + '\\') && file !== dtoRoot)
+const files = walk(srcRoot).filter((file) => !file.startsWith(`${dtoRoot}${sep}`) && file !== dtoRoot)
 
 const violations = []
 for (const file of files) {

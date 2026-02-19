@@ -477,27 +477,23 @@ class ChatApiExtraCoverageTests(TestCase):
             content_type='application/json',
         )
 
-    def test_parse_json_body_handles_form_and_invalid_payloads(self):
-        """Проверяет сценарий `test_parse_json_body_handles_form_and_invalid_payloads`."""
-        form_request = self.factory.post('/api/chat/direct/start/', {'username': 'alice'})
-        payload = api._parse_json_body(form_request)
-        self.assertEqual(payload['username'], 'alice')
+    def test_direct_start_accepts_form_payload(self):
+        """Проверяет, что direct/start принимает данные form payload."""
+        self.client.force_login(self.owner)
+        response = self.client.post('/api/chat/direct/start/', data={'username': self.peer.username})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['peer']['username'], self.peer.username)
 
-        invalid_request = self.factory.generic(
-            'POST',
+    def test_direct_start_invalid_json_returns_400(self):
+        """Проверяет, что direct/start возвращает 400 на битый JSON."""
+        self.client.force_login(self.owner)
+        response = self.client.post(
             '/api/chat/direct/start/',
             data='{',
             content_type='application/json',
         )
-        self.assertEqual(api._parse_json_body(invalid_request), {})
-
-        list_request = self.factory.generic(
-            'POST',
-            '/api/chat/direct/start/',
-            data='["value"]',
-            content_type='application/json',
-        )
-        self.assertEqual(api._parse_json_body(list_request), {})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['error'], 'username is required')
 
     def test_normalize_username_and_parse_pair_key_guards(self):
         """Проверяет сценарий `test_normalize_username_and_parse_pair_key_guards`."""

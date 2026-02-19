@@ -13,6 +13,7 @@ import type { IApiService, UpdateProfileInput } from '../domain/interfaces/IApiS
 
 import { ensureCsrf as ensureCsrfRequest } from './apiService/ensureCsrf'
 import { ensurePresenceSession } from './apiService/ensurePresenceSession'
+import { getClientConfig } from './apiService/getClientConfig'
 import { getSession } from './apiService/getSession'
 import { login } from './apiService/login'
 import { register } from './apiService/register'
@@ -156,6 +157,10 @@ class ApiService implements IApiService {
 
   public async ensurePresenceSession(): Promise<{ ok: boolean }> {
     return this.runWithDecode(async () => ensurePresenceSession(this.apiClient))
+  }
+
+  public async getClientConfig() {
+    return this.runWithDecode(async () => getClientConfig(this.apiClient))
   }
 
   public async getSession() {

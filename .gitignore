@@ -9,12 +9,6 @@ __pycache__/
 # vscod
 .vscode
 
-#image
-*.png
-*.jpeg
-*.jpg
-*.gif
-
 # Distribution / packaging
 .Python
 build/
@@ -176,4 +170,12 @@ deploy/certs/
 frontend/coverage/
 frontend/playwright-report/
 frontend/test-results/
+
+# Frontend build and deps
+frontend/node_modules/
+frontend/dist/
+
+# Backend runtime artifacts
+backend/media/profile_pics/
+backend/.venv_fresh/
 
