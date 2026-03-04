@@ -180,10 +180,12 @@
 .chatInput {
   position: sticky;
   bottom: 0;
-  z-index: 3;
+  z-index: 20;
   display: flex;
   gap: 10px;
   padding: 20px;
+  background: #202020;
+  
 }
 
 .chatInput input {

@@ -1,7 +1,7 @@
 .root {
   position: sticky;
-  /* top: 0; */
-  /* z-index: 20; */
+  top: 0;
+  z-index: 20;
   width: calc(100% + 64px);
   margin-left: -32px;
   margin-right: -32px;
@@ -10,22 +10,25 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0);
+  background: #202020;
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
   border: none;
-  background: linear-gradient(120deg, #8ae6ff, #7c5bff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-weight: 800;
-  font-size: 18px;
-  letter-spacing: 0.3px;
+  background: none;
   cursor: pointer;
   transition:
     opacity 0.2s ease,
     transform 0.2s ease;
+}
+
+.brandLogo {
+  display: block;
+  width: auto;
+  height: 42px;
 }
 
 .brand:hover {
@@ -94,7 +97,9 @@
 
 @media (max-width: 881px) {
   .root {
-    top: env(safe-area-inset-top, 0);
+    /* top: env(safe-area-inset-top, 0); */
+    top: 0;
+    z-index: 0;
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-areas:
@@ -110,6 +115,10 @@
   .brand {
     grid-area: brand;
     justify-self: start;
+  }
+
+  .brandLogo {
+    height: 36px;
   }
 
   .nav {

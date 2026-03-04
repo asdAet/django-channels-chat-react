@@ -25,8 +25,8 @@ export function TopBar({ user, onNavigate }: Props) {
 
   return (
     <header className={styles.root} data-testid="topbar">
-      <button className={styles.brand} onClick={() => onNavigate('/')} type="button">
-        EchoChat
+      <button className={styles.brand} onClick={() => onNavigate('/')} type="button" aria-label="На главную">
+        <img src="/echochat.svg" alt="EchoChat" className={styles.brandLogo} />
       </button>
 
       <nav className={styles.nav} aria-label="Главная навигация">
