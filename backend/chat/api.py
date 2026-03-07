@@ -273,14 +273,17 @@ def room_details(request, room_slug):
             ensure_role(room, request.user, "Owner", granted_by=request.user)
             created = True
         else:
-            if room.kind in {Room.Kind.PRIVATE, Room.Kind.DIRECT}:
+            if room.kind in {Room.Kind.PRIVATE, Room.Kind.DIRECT, Room.Kind.GROUP}:
                 try:
                     ensure_can_read_or_404(room, request.user)
                 except Http404:
-                    ensure_room_owner_role(room)
-                    try:
-                        ensure_can_read_or_404(room, request.user)
-                    except Http404:
+                    if room.kind not in {Room.Kind.GROUP}:
+                        ensure_room_owner_role(room)
+                        try:
+                            ensure_can_read_or_404(room, request.user)
+                        except Http404:
+                            return Response({"error": "Not found"}, status=http_status.HTTP_404_NOT_FOUND)
+                    else:
                         return Response({"error": "Not found"}, status=http_status.HTTP_404_NOT_FOUND)
 
         return Response(_serialize_room_details(request, room, created=created))
@@ -307,7 +310,7 @@ def room_messages(request, room_slug):
     if room is None:
         return Response({"error": "Not found"}, status=http_status.HTTP_404_NOT_FOUND)
 
-    if room.kind in {Room.Kind.PRIVATE, Room.Kind.DIRECT}:
+    if room.kind in {Room.Kind.PRIVATE, Room.Kind.DIRECT, Room.Kind.GROUP}:
         try:
             ensure_can_read_or_404(room, request.user)
         except Http404:

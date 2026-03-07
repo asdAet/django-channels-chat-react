@@ -8,10 +8,13 @@ Direct chats have no roles — access is based on Room.direct_pair_key.
 
 from django.conf import settings
 from django.db import models
+from typing import Optional
 
 from rooms.models import Room
 
 from .permissions import (
+    EVERYONE_GROUP_PRIVATE,
+    EVERYONE_GROUP_PUBLIC,
     EVERYONE_PRIVATE,
     EVERYONE_PUBLIC,
     PRESET_ADMIN,
@@ -76,7 +79,12 @@ class Role(models.Model):
             {"@everyone": ..., "Viewer": ..., "Member": ...,
              "Moderator": ..., "Admin": ..., "Owner": ...}
         """
-        if room.kind == Room.Kind.PUBLIC:
+        if room.kind == Room.Kind.GROUP:
+            if room.is_public:
+                everyone_perms = int(EVERYONE_GROUP_PUBLIC)
+            else:
+                everyone_perms = int(EVERYONE_GROUP_PRIVATE)
+        elif room.kind == Room.Kind.PUBLIC:
             everyone_perms = int(EVERYONE_PUBLIC)
         else:
             everyone_perms = int(EVERYONE_PRIVATE)
@@ -142,7 +150,23 @@ class Membership(models.Model):
         on_delete=models.SET_NULL,
         related_name="bans_issued",
     )
+    muted_until = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Muted until this time (null = not muted).",
+    )
+    muted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="mutes_issued",
+    )
     joined_at = models.DateTimeField(auto_now_add=True)
+    room_id: int
+    user_id: int
+    banned_by_id: Optional[int]
+    muted_by_id: Optional[int]
 
     class Meta:
         db_table = "roles_membership"
@@ -163,6 +187,13 @@ class Membership(models.Model):
     def display_name(self) -> str:
         """Returns nickname if set, otherwise username."""
         return self.nickname or self.user.username
+
+    @property
+    def is_muted(self) -> bool:
+        if self.muted_until is None:
+            return False
+        from django.utils import timezone
+        return self.muted_until > timezone.now()
 
 
 class PermissionOverride(models.Model):

@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from . import health
 from . import meta_api
+from groups.interfaces.urls import invite_urlpatterns as _group_invite_urls
 
 
 def _absolute(request, raw_path: str) -> str:
@@ -79,6 +80,13 @@ def api_index(request):
             "outgoingRequests": _link(request, "api-friends-outgoing"),
             "block": _link(request, "api-friends-block"),
         },
+        "groups": {
+            "create": _absolute(request, "/api/groups/"),
+            "publicList": _absolute(request, "/api/groups/public/"),
+            "detailTemplate": _absolute(request, "/api/groups/<slug>/"),
+            "invitePreviewTemplate": _absolute(request, "/api/invite/<code>/"),
+            "inviteJoinTemplate": _absolute(request, "/api/invite/<code>/join/"),
+        },
         "audit": {
             "events": _link(request, "api-admin-audit-events"),
             "actions": _link(request, "api-admin-audit-actions"),
@@ -138,6 +146,8 @@ urlpatterns = [
     path("api/auth/", include("users.urls")),
     path("api/chat/", include("chat.api_urls")),
     path("api/friends/", include("friends.interfaces.urls")),
+    path("api/groups/", include("groups.interfaces.urls")),
+    path("api/", include((_group_invite_urls, "groups-invite"))),
     path("api/admin/audit/", include("auditlog.interfaces.urls")),
     path("", api_root, name="api-root"),
 ]

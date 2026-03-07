@@ -8,7 +8,13 @@ from django.http import Http404
 
 from roles.domain import rules
 from roles.infrastructure import repositories
-from roles.permissions import DM_PARTICIPANT, EVERYONE_PUBLIC, Perm
+from roles.permissions import (
+    DM_PARTICIPANT,
+    EVERYONE_GROUP_PRIVATE,
+    EVERYONE_GROUP_PUBLIC,
+    EVERYONE_PUBLIC,
+    Perm,
+)
 from rooms.models import Room
 
 
@@ -91,10 +97,23 @@ def _compute_direct_permissions(room: Room, user) -> Perm:
     return Perm(0)
 
 
+def _get_default_everyone_permissions(room: Room) -> int:
+    """Determine fallback @everyone permissions when no default role exists."""
+    if room.kind == Room.Kind.GROUP:
+        if getattr(room, "is_public", False):
+            return int(EVERYONE_GROUP_PUBLIC)
+        return int(EVERYONE_GROUP_PRIVATE)
+    if room.kind == Room.Kind.PUBLIC:
+        return int(EVERYONE_PUBLIC)
+    return 0
+
+
 def compute_permissions(room: Room, user) -> Perm:
     """Computes effective permissions for a user in a room."""
     if not user or not getattr(user, "is_authenticated", False):
-        if room.kind == Room.Kind.PUBLIC:
+        if room.kind in {Room.Kind.PUBLIC, Room.Kind.GROUP}:
+            if room.kind == Room.Kind.GROUP and not getattr(room, "is_public", False):
+                return Perm(0)
             return Perm.READ_MESSAGES
         return Perm(0)
 
@@ -104,13 +123,13 @@ def compute_permissions(room: Room, user) -> Perm:
     default_permissions = repositories.get_default_role_permissions(room)
     if default_permissions is not None:
         everyone_permissions = int(default_permissions)
-    elif room.kind == Room.Kind.PUBLIC:
-        everyone_permissions = int(EVERYONE_PUBLIC)
     else:
-        everyone_permissions = 0
+        everyone_permissions = _get_default_everyone_permissions(room)
 
     membership = repositories.get_membership(room, user)
     if not membership:
+        if room.kind == Room.Kind.GROUP and not getattr(room, "is_public", False):
+            return Perm(0)
         return Perm(everyone_permissions)
     if membership.is_banned:
         return Perm(0)
@@ -137,12 +156,18 @@ def compute_permissions(room: Room, user) -> Perm:
         if target_user_id and target_user_id == int(user_id):
             user_overrides.append((int(override.allow), int(override.deny)))
 
-    return rules.resolve_permissions(
+    effective = rules.resolve_permissions(
         everyone_permissions=everyone_permissions,
         role_permissions=role_permissions,
         role_overrides=role_overrides,
         user_overrides=user_overrides,
     )
+
+    # Strip SEND_MESSAGES if member is muted (unless ADMINISTRATOR)
+    if membership.is_muted and not (int(effective) & Perm.ADMINISTRATOR):
+        effective = Perm(int(effective) & ~int(Perm.SEND_MESSAGES))
+
+    return effective
 
 
 def has_permission(room: Room, user, perm: Perm) -> bool:

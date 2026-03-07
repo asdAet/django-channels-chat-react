@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     "presence.apps.PresenceConfig",
     "direct_inbox.apps.DirectInboxConfig",
     "friends.apps.FriendsConfig",
+    "groups.apps.GroupsConfig",
     "chat.apps.ChatConfig",
     "users.apps.UsersConfig",
     "django.contrib.admin",
@@ -313,7 +314,7 @@ CHAT_MESSAGE_RATE_WINDOW = int(os.getenv("CHAT_MESSAGE_RATE_WINDOW", "10"))
 CHAT_MESSAGES_PAGE_SIZE = int(os.getenv("CHAT_MESSAGES_PAGE_SIZE", "50"))
 CHAT_MESSAGES_MAX_PAGE_SIZE = int(os.getenv("CHAT_MESSAGES_MAX_PAGE_SIZE", "200"))
 CHAT_WS_IDLE_TIMEOUT = int(os.getenv("CHAT_WS_IDLE_TIMEOUT", "600"))
-CHAT_ROOM_SLUG_REGEX = os.getenv("CHAT_ROOM_SLUG_REGEX", r"^[A-Za-z0-9_-]{3,50}$")
+CHAT_ROOM_SLUG_REGEX = os.getenv("CHAT_ROOM_SLUG_REGEX", r"^[A-Za-z0-9_-]{3,60}$")
 CHAT_DIRECT_SLUG_SALT = os.getenv("CHAT_DIRECT_SLUG_SALT", "").strip() or SECRET_KEY
 WS_CONNECT_RATE_LIMIT = env_int("WS_CONNECT_RATE_LIMIT", 60, minimum=1)
 WS_CONNECT_RATE_WINDOW = env_int("WS_CONNECT_RATE_WINDOW", 60, minimum=1)
@@ -327,6 +328,12 @@ DIRECT_INBOX_UNREAD_TTL = int(os.getenv("DIRECT_INBOX_UNREAD_TTL", str(30 * 24 *
 DIRECT_INBOX_ACTIVE_TTL = int(os.getenv("DIRECT_INBOX_ACTIVE_TTL", "90"))
 DIRECT_INBOX_HEARTBEAT = int(os.getenv("DIRECT_INBOX_HEARTBEAT", "20"))
 DIRECT_INBOX_IDLE_TIMEOUT = int(os.getenv("DIRECT_INBOX_IDLE_TIMEOUT", "90"))
+
+# ── Groups ─────────────────────────────────────────────────────────────
+GROUP_INVITE_CODE_LENGTH = env_int("GROUP_INVITE_CODE_LENGTH", 12, minimum=8)
+GROUP_MAX_INVITES_PER_ROOM = env_int("GROUP_MAX_INVITES_PER_ROOM", 50, minimum=1)
+GROUP_MAX_PINNED_MESSAGES = env_int("GROUP_MAX_PINNED_MESSAGES", 100, minimum=1)
+GROUP_DEFAULT_MAX_MEMBERS = env_int("GROUP_DEFAULT_MAX_MEMBERS", 200000, minimum=1)
 
 AUDIT_RETENTION_DAYS = env_int("AUDIT_RETENTION_DAYS", 180, minimum=1)
 AUDIT_API_DEFAULT_LIMIT = env_int("AUDIT_API_DEFAULT_LIMIT", 50, minimum=1)

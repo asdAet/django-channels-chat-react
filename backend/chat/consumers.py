@@ -186,6 +186,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"error": "rate_limited"}))
             return
 
+        if await self._slow_mode_limited(user):
+            await self.send(text_data=json.dumps({"error": "slow_mode"}))
+            return
+
         username = getattr(user, "username", "")
         if not username:
             audit_ws_event("ws.message.rejected", self.scope, endpoint="chat", reason="invalid_user")
@@ -316,6 +320,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
         window = int(getattr(settings, "CHAT_MESSAGE_RATE_WINDOW", 10))
         scope_key = f"rl:chat:message:{user.pk}"
         policy = RateLimitPolicy(limit=limit, window_seconds=window)
+        return DbRateLimiter.is_limited(scope_key=scope_key, policy=policy)
+
+    @sync_to_async
+    def _slow_mode_limited(self, user) -> bool:
+        """Checks group slow mode: 1 message per slow_mode_seconds per user."""
+        room = getattr(self, "room", None)
+        if not room or room.kind != Room.Kind.GROUP:
+            return False
+        slow = getattr(room, "slow_mode_seconds", 0) or 0
+        if slow <= 0:
+            return False
+        scope_key = f"rl:slow:{room.pk}:{user.pk}"
+        policy = RateLimitPolicy(limit=1, window_seconds=slow)
         return DbRateLimiter.is_limited(scope_key=scope_key, policy=policy)
 
     @sync_to_async
