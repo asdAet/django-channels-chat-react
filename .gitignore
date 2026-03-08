@@ -181,3 +181,4 @@ backend/.venv_fresh/
 
 trash/
 .claude/
+.ruff_cache/
