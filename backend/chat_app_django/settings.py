@@ -64,6 +64,7 @@ if not DEBUG and not ALLOWED_HOSTS:
 
 
 INSTALLED_APPS = [
+    "django.contrib.postgres",
     "channels",
     "corsheaders",
     "crispy_forms",
@@ -307,6 +308,7 @@ AUTH_RATE_WINDOW = int(os.getenv("AUTH_RATE_WINDOW", "60"))
 USERNAME_MAX_LENGTH = env_int("USERNAME_MAX_LENGTH", 30, minimum=1)
 if USERNAME_MAX_LENGTH > 150:
     raise ImproperlyConfigured("USERNAME_MAX_LENGTH must be <= 150.")
+CHAT_MESSAGE_EDIT_WINDOW_SECONDS = env_int("CHAT_MESSAGE_EDIT_WINDOW_SECONDS", 900, minimum=0)
 CHAT_MESSAGE_MAX_LENGTH = int(os.getenv("CHAT_MESSAGE_MAX_LENGTH", "1000"))
 CHAT_MESSAGE_RATE_LIMIT = int(os.getenv("CHAT_MESSAGE_RATE_LIMIT", "20"))
 CHAT_MESSAGE_RATE_WINDOW = int(os.getenv("CHAT_MESSAGE_RATE_WINDOW", "10"))
@@ -314,6 +316,15 @@ CHAT_MESSAGES_PAGE_SIZE = int(os.getenv("CHAT_MESSAGES_PAGE_SIZE", "50"))
 CHAT_MESSAGES_MAX_PAGE_SIZE = int(os.getenv("CHAT_MESSAGES_MAX_PAGE_SIZE", "200"))
 CHAT_WS_IDLE_TIMEOUT = int(os.getenv("CHAT_WS_IDLE_TIMEOUT", "600"))
 CHAT_ROOM_SLUG_REGEX = os.getenv("CHAT_ROOM_SLUG_REGEX", r"^[A-Za-z0-9_-]{3,60}$")
+
+# ── Attachments ────────────────────────────────────────────────────────
+CHAT_ATTACHMENT_MAX_SIZE_MB = env_int("CHAT_ATTACHMENT_MAX_SIZE_MB", 10, minimum=1)
+CHAT_ATTACHMENT_MAX_PER_MESSAGE = env_int("CHAT_ATTACHMENT_MAX_PER_MESSAGE", 5, minimum=1)
+CHAT_ATTACHMENT_ALLOWED_TYPES = env_list("CHAT_ATTACHMENT_ALLOWED_TYPES", [
+    "image/jpeg", "image/png", "image/gif", "image/webp",
+    "application/pdf", "text/plain", "video/mp4", "audio/mpeg", "audio/webm",
+])
+CHAT_THUMBNAIL_MAX_SIDE = env_int("CHAT_THUMBNAIL_MAX_SIDE", 400, minimum=50)
 CHAT_DIRECT_SLUG_SALT = os.getenv("CHAT_DIRECT_SLUG_SALT", "").strip() or SECRET_KEY
 WS_CONNECT_RATE_LIMIT = env_int("WS_CONNECT_RATE_LIMIT", 60, minimum=1)
 WS_CONNECT_RATE_WINDOW = env_int("WS_CONNECT_RATE_WINDOW", 60, minimum=1)

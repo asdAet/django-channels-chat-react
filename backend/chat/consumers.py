@@ -96,6 +96,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         audit_ws_event("ws.connect.accepted", self.scope, endpoint="chat", room_slug=self.room_name)
 
         self._last_activity = time.monotonic()
+        self._last_typing_broadcast = 0.0
         self._idle_task = None
         if self.chat_idle_timeout > 0:
             self._idle_task = asyncio.create_task(self._idle_watchdog())
@@ -133,6 +134,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             text_data_json = json.loads(text_data)
         except json.JSONDecodeError:
             audit_ws_event("ws.message.rejected", self.scope, endpoint="chat", reason="invalid_json")
+            return
+
+        event_type = text_data_json.get("type")
+
+        if event_type == "typing":
+            await self._handle_typing()
+            return
+
+        if event_type == "mark_read":
+            await self._handle_mark_read(text_data_json)
             return
 
         message = text_data_json.get("message", "")
@@ -191,7 +202,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         profile_name, avatar_crop = await self._get_profile_avatar_state(user)
         profile_url = build_profile_url(self.scope, profile_name)
 
-        saved_message = await self.save_message(message, user, username, profile_name, self.room)
+        reply_to_id = text_data_json.get("replyTo")
+        if reply_to_id is not None:
+            try:
+                reply_to_id = int(reply_to_id)
+            except (TypeError, ValueError):
+                reply_to_id = None
+
+        saved_message = await self.save_message(message, user, username, profile_name, self.room, reply_to_id)
         created_at = saved_message.date_added.isoformat()
         audit_ws_event(
             "ws.message.sent",
@@ -200,6 +218,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             room_slug=self.room.slug,
             message_length=len(message),
         )
+
+        reply_to_data = await self._get_reply_data(saved_message) if reply_to_id else None
 
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -210,6 +230,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "profile_pic": profile_url,
                 "avatar_crop": avatar_crop,
                 "room": room_slug,
+                "id": saved_message.pk,
+                "createdAt": created_at,
+                "replyTo": reply_to_data,
             },
         )
 
@@ -286,14 +309,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return can_write(room, user)
 
     @sync_to_async
-    def save_message(self, message, user, username, profile_pic, room):
-        return Message.objects.create(
-            message_content=message,
-            username=username,
-            user=user,
-            profile_pic=profile_pic,
-            room=room,
-        )
+    def save_message(self, message, user, username, profile_pic, room, reply_to_id=None):
+        kwargs = {
+            "message_content": message,
+            "username": username,
+            "user": user,
+            "profile_pic": profile_pic,
+            "room": room,
+        }
+        if reply_to_id is not None:
+            exists = Message.objects.filter(
+                pk=reply_to_id, room=room, is_deleted=False,
+            ).exists()
+            if exists:
+                kwargs["reply_to_id"] = reply_to_id
+        return Message.objects.create(**kwargs)
 
     @sync_to_async
     def _get_profile_avatar_state(self, user):
@@ -326,6 +356,135 @@ class ChatConsumer(AsyncWebsocketConsumer):
         scope_key = f"rl:slow:{room.pk}:{user.pk}"
         policy = RateLimitPolicy(limit=1, window_seconds=slow)
         return DbRateLimiter.is_limited(scope_key=scope_key, policy=policy)
+
+    # ── Typing indicator ────────────────────────────────────────────────
+
+    async def _handle_typing(self):
+        user = self.scope.get("user")
+        if user is None or not getattr(user, "is_authenticated", False):
+            return
+        if not await self._can_write(self.room, user):
+            return
+        now = time.monotonic()
+        if now - self._last_typing_broadcast < 3.0:
+            return
+        self._last_typing_broadcast = now
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "chat_typing",
+                "username": user.username,
+                "userId": user.pk,
+                "sender_channel": self.channel_name,
+            },
+        )
+
+    async def chat_typing(self, event):
+        if event.get("sender_channel") == self.channel_name:
+            return
+        await self.send(text_data=json.dumps({
+            "type": "typing",
+            "username": event["username"],
+            "userId": event["userId"],
+        }))
+
+    # ── Reply data helper ─────────────────────────────────────────────
+
+    @sync_to_async
+    def _get_reply_data(self, saved_message):
+        reply = saved_message.reply_to
+        if not reply:
+            return None
+        if reply.is_deleted:
+            return {"id": reply.pk, "username": None, "content": "[deleted]"}
+        return {
+            "id": reply.pk,
+            "username": reply.user.username if reply.user else reply.username,
+            "content": reply.message_content[:150],
+        }
+
+    # ── Edit / Delete / Reaction / Read receipt handlers ──────────────
+
+    async def chat_message_edit(self, event):
+        self._last_activity = time.monotonic()
+        await self.send(text_data=json.dumps({
+            "type": "message_edit",
+            "messageId": event["messageId"],
+            "content": event["content"],
+            "editedAt": event["editedAt"],
+            "editedBy": event["editedBy"],
+        }))
+
+    async def chat_message_delete(self, event):
+        self._last_activity = time.monotonic()
+        await self.send(text_data=json.dumps({
+            "type": "message_delete",
+            "messageId": event["messageId"],
+            "deletedBy": event["deletedBy"],
+        }))
+
+    async def chat_reaction_add(self, event):
+        self._last_activity = time.monotonic()
+        await self.send(text_data=json.dumps({
+            "type": "reaction_add",
+            "messageId": event["messageId"],
+            "emoji": event["emoji"],
+            "userId": event["userId"],
+            "username": event["username"],
+        }))
+
+    async def chat_reaction_remove(self, event):
+        self._last_activity = time.monotonic()
+        await self.send(text_data=json.dumps({
+            "type": "reaction_remove",
+            "messageId": event["messageId"],
+            "emoji": event["emoji"],
+            "userId": event["userId"],
+            "username": event["username"],
+        }))
+
+    async def chat_read_receipt(self, event):
+        self._last_activity = time.monotonic()
+        await self.send(text_data=json.dumps({
+            "type": "read_receipt",
+            "userId": event["userId"],
+            "username": event["username"],
+            "lastReadMessageId": event["lastReadMessageId"],
+            "roomSlug": event["roomSlug"],
+        }))
+
+    # ── Mark read via WS ──────────────────────────────────────────────
+
+    async def _handle_mark_read(self, data):
+        user = self.scope.get("user")
+        if user is None or not getattr(user, "is_authenticated", False):
+            return
+        last_read_id = data.get("lastReadMessageId")
+        if not isinstance(last_read_id, int) or last_read_id < 1:
+            return
+        await self._do_mark_read(user, self.room, last_read_id)
+
+    @sync_to_async
+    def _do_mark_read(self, user, room, last_read_id):
+        from .services import mark_read as service_mark_read
+        try:
+            state = service_mark_read(user, room, last_read_id)
+        except Exception:
+            return
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+        channel_layer = get_channel_layer()
+        if channel_layer is None:
+            return
+        room_identifier = room.pk if getattr(room, "pk", None) else room.slug
+        group_name = f"chat_room_{room_identifier}"
+        async_to_sync(channel_layer.group_send)(group_name, {
+            "type": "chat_read_receipt",
+            "userId": user.pk,
+            "username": user.username,
+            "lastReadMessageId": state.last_read_message_id,
+            "roomSlug": room.slug,
+        })
 
     @sync_to_async
     def _build_direct_inbox_targets(self, room_id: int, sender_id: int, message: str, created_at: str):
