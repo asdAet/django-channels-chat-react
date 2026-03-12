@@ -1,7 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+﻿import { expect, test, type Page } from "@playwright/test";
 
 async function register(page: Page, username: string, password: string) {
   await page.goto("/register");
+  await page.getByTestId("auth-name-input").fill("Test");
+  await page.getByTestId("auth-last-name-input").fill("User");
   await page.getByTestId("auth-username-input").fill(username);
   await page.getByTestId("auth-password-input").fill(password);
   await page.getByTestId("auth-confirm-input").fill(password);
@@ -31,7 +33,9 @@ test("public chat allows authenticated send and keeps guest read-only mode", asy
   await page.goto("/rooms/public");
   const joinCallout = page.getByTestId("group-join-callout");
   if (await joinCallout.isVisible()) {
-    await joinCallout.getByRole("button", { name: "Присоединиться" }).click();
+    await joinCallout
+      .getByRole("button", { name: "РџСЂРёСЃРѕРµРґРёРЅРёС‚СЊСЃСЏ" })
+      .click();
   }
 
   const input = page.getByTestId("chat-message-input");

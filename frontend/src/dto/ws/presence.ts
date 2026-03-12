@@ -1,7 +1,7 @@
-import { z } from 'zod'
+import { z } from "zod";
 
-import type { OnlineUser } from '../../shared/api/users'
-import { parseJson, safeDecode } from '../core/codec'
+import type { OnlineUser } from "../../shared/api/users";
+import { parseJson, safeDecode } from "../core/codec";
 
 const avatarCropSchema = z
   .object({
@@ -10,7 +10,7 @@ const avatarCropSchema = z
     width: z.number(),
     height: z.number(),
   })
-  .passthrough()
+  .passthrough();
 
 const onlineUserSchema = z
   .object({
@@ -18,34 +18,34 @@ const onlineUserSchema = z
     profileImage: z.string().nullable().optional(),
     avatarCrop: avatarCropSchema.nullable().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const presenceStateSchema = z
   .object({
     online: z.array(onlineUserSchema).optional(),
     guests: z.union([z.number(), z.string()]).optional(),
   })
-  .passthrough()
+  .passthrough();
 
-const pingSchema = z.object({ type: z.literal('ping') }).passthrough()
+const pingSchema = z.object({ type: z.literal("ping") }).passthrough();
 
 const toGuests = (value: unknown): number | null => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string') {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : null
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
   }
-  return null
-}
+  return null;
+};
 
 export type PresenceWsEvent =
   | {
-      type: 'state'
-      online: OnlineUser[] | null
-      guests: number | null
+      type: "state";
+      online: OnlineUser[] | null;
+      guests: number | null;
     }
-  | { type: 'ping' }
-  | { type: 'unknown' }
+  | { type: "ping" }
+  | { type: "unknown" };
 
 /**
  * Декодирует входящее WS-сообщение presence.
@@ -53,23 +53,23 @@ export type PresenceWsEvent =
  * @returns Нормализованное WS-событие.
  */
 export const decodePresenceWsEvent = (raw: string): PresenceWsEvent => {
-  const payload = parseJson(raw)
-  if (!payload || typeof payload !== 'object') {
-    return { type: 'unknown' }
+  const payload = parseJson(raw);
+  if (!payload || typeof payload !== "object") {
+    return { type: "unknown" };
   }
 
   if (safeDecode(pingSchema, payload)) {
-    return { type: 'ping' }
+    return { type: "ping" };
   }
 
-  const state = safeDecode(presenceStateSchema, payload)
+  const state = safeDecode(presenceStateSchema, payload);
   if (!state) {
-    return { type: 'unknown' }
+    return { type: "unknown" };
   }
 
   return {
-    type: 'state',
-        online: state.online
+    type: "state",
+    online: state.online
       ? state.online.map((entry) => ({
           username: entry.username,
           profileImage: entry.profileImage ?? null,
@@ -77,5 +77,5 @@ export const decodePresenceWsEvent = (raw: string): PresenceWsEvent => {
         }))
       : null,
     guests: toGuests(state.guests),
-  }
-}
+  };
+};

@@ -63,9 +63,12 @@ def list_blocked_by_user(user) -> QuerySet:
     )
 
 
-def delete_friendship_pair(user_a, user_b) -> int:
-    """Delete both directions of a friendship."""
-    deleted, _ = Friendship.objects.filter(
+def delete_friendship_pair(user_a, user_b, *, status: str | None = None) -> int:
+    """Delete both directions of a friendship with optional status filter."""
+    queryset = Friendship.objects.filter(
         Q(from_user=user_a, to_user=user_b) | Q(from_user=user_b, to_user=user_a)
-    ).delete()
+    )
+    if status is not None:
+        queryset = queryset.filter(status=status)
+    deleted, _ = queryset.delete()
     return deleted

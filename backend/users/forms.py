@@ -1,7 +1,6 @@
+"""Forms for users auth/profile flows."""
 
-"""Содержит логику модуля `forms` подсистемы `users`."""
-
-
+import re
 import warnings
 
 from django import forms
@@ -15,47 +14,76 @@ from .models import MAX_PROFILE_IMAGE_PIXELS, MAX_PROFILE_IMAGE_SIDE, Profile
 
 
 USERNAME_MAX_LENGTH = max(1, min(int(getattr(settings, "USERNAME_MAX_LENGTH", 30)), 150))
+USERNAME_ALLOWED_RE = re.compile(r"^[A-Za-z]+$")
+USERNAME_ALLOWED_HINT = "Используйте только латинские буквы (A-Z, a-z)."
+
+
+def _validate_username_symbols(username: str) -> None:
+    if username and not USERNAME_ALLOWED_RE.fullmatch(username):
+        raise forms.ValidationError(USERNAME_ALLOWED_HINT)
 
 
 class UserRegisterForm(UserCreationForm):
-    """Инкапсулирует логику класса `UserRegisterForm`."""
+    name = forms.CharField(required=True, max_length=150)
+    last_name = forms.CharField(required=False, max_length=150)
+
     class Meta:
-        """Инкапсулирует логику класса `Meta`."""
         model = User
-        fields = ["username", "password1", "password2"]
+        fields = ["username", "password1", "password2", "name", "last_name"]
 
     def clean_username(self):
-        """Выполняет логику `clean_username` с параметрами из сигнатуры."""
         username = (self.cleaned_data.get("username") or "").strip()
         if not username:
             return username
         if len(username) > USERNAME_MAX_LENGTH:
-            raise forms.ValidationError(
-                f"Максимум {USERNAME_MAX_LENGTH} символов."
-            )
+            raise forms.ValidationError(f"Максимум {USERNAME_MAX_LENGTH} символов.")
+        _validate_username_symbols(username)
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError("Имя пользователя уже занято")
         return username
 
+    def clean_name(self):
+        return (self.cleaned_data.get("name") or "").strip()
+
+    def clean_last_name(self):
+        return (self.cleaned_data.get("last_name") or "").strip()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.first_name = self.cleaned_data.get("name", "")
+        instance.last_name = self.cleaned_data.get("last_name", "")
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
 
 class UserUpdateForm(forms.ModelForm):
-    """Инкапсулирует логику класса `UserUpdateForm`."""
     email = forms.EmailField(required=False)
+    name = forms.CharField(required=False, max_length=150)
+    last_name = forms.CharField(required=False, max_length=150)
 
     class Meta:
-        """Инкапсулирует логику класса `Meta`."""
         model = User
-        fields = ["username", "email"]
+        fields = ["username", "email", "first_name", "last_name"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields.pop("first_name", None)
+        self.fields.pop("last_name", None)
+        if self.instance and self.instance.pk:
+            if "name" not in self.initial:
+                self.initial["name"] = (self.instance.first_name or "").strip()
+            if "last_name" not in self.initial:
+                self.initial["last_name"] = (self.instance.last_name or "").strip()
 
     def clean_username(self):
-        """Выполняет логику `clean_username` с параметрами из сигнатуры."""
         username = self.cleaned_data.get("username", "").strip()
         if not username:
             return username
         if len(username) > USERNAME_MAX_LENGTH:
-            raise forms.ValidationError(
-                f"Максимум {USERNAME_MAX_LENGTH} символов."
-            )
+            raise forms.ValidationError(f"Максимум {USERNAME_MAX_LENGTH} символов.")
+        _validate_username_symbols(username)
         qs = User.objects.filter(username=username)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
@@ -64,7 +92,6 @@ class UserUpdateForm(forms.ModelForm):
         return username
 
     def clean_email(self):
-        """Выполняет логику `clean_email` с параметрами из сигнатуры."""
         email = (self.cleaned_data.get("email") or "").strip()
         if not email:
             return ""
@@ -75,11 +102,24 @@ class UserUpdateForm(forms.ModelForm):
             raise forms.ValidationError("Email уже используется")
         return email
 
+    def clean_name(self):
+        return (self.cleaned_data.get("name") or "").strip()
+
+    def clean_last_name(self):
+        return (self.cleaned_data.get("last_name") or "").strip()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.first_name = self.cleaned_data.get("name", "")
+        instance.last_name = self.cleaned_data.get("last_name", "")
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
 
 class ProfileUpdateForm(forms.ModelForm):
-    """Инкапсулирует логику класса `ProfileUpdateForm`."""
     class Meta:
-        """Инкапсулирует логику класса `Meta`."""
         model = Profile
         fields = ["image", "bio"]
         widgets = {
@@ -87,12 +127,10 @@ class ProfileUpdateForm(forms.ModelForm):
         }
 
     def clean_bio(self):
-        """Выполняет логику `clean_bio` с параметрами из сигнатуры."""
         bio = self.cleaned_data.get("bio") or ""
         return strip_tags(bio).strip()
 
     def clean(self):
-        """Валидирует набор crop-параметров аватарки и подготавливает обновление модели."""
         cleaned = super().clean()
         crop_field_map = {
             "avatarCropX": "avatar_crop_x",
@@ -125,10 +163,14 @@ class ProfileUpdateForm(forms.ModelForm):
             height = parsed["avatar_crop_height"]
 
             if not (0 <= x < 1 and 0 <= y < 1 and 0 < width <= 1 and 0 < height <= 1):
-                raise forms.ValidationError({"image": ["Параметры обрезки аватарки выходят за допустимые границы."]})
+                raise forms.ValidationError(
+                    {"image": ["Параметры обрезки аватарки выходят за допустимые границы."]}
+                )
 
             if (x + width) > 1.000001 or (y + height) > 1.000001:
-                raise forms.ValidationError({"image": ["Параметры обрезки аватарки выходят за границы изображения."]})
+                raise forms.ValidationError(
+                    {"image": ["Параметры обрезки аватарки выходят за границы изображения."]}
+                )
 
             crop_update = parsed
         elif cleaned.get("image"):
@@ -143,7 +185,6 @@ class ProfileUpdateForm(forms.ModelForm):
         return cleaned
 
     def clean_image(self):
-        """Проверяет формат и размеры аватара до сохранения."""
         image = self.cleaned_data.get("image")
         if not image:
             return image
@@ -175,7 +216,6 @@ class ProfileUpdateForm(forms.ModelForm):
         return image
 
     def save(self, commit=True):
-        """Сохраняет профиль и при необходимости обновляет crop-метаданные аватарки."""
         instance = super().save(commit=False)
         crop_update = getattr(self, "_avatar_crop_update", None)
         if crop_update is not None:

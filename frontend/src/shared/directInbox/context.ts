@@ -1,45 +1,47 @@
-﻿import { createContext } from 'react'
+﻿import { createContext } from "react";
 
-import type { DirectChatListItem as DirectChatListItemDto } from '../../entities/room/types'
-import type { WebSocketStatus } from '../../hooks/useReconnectingWebSocket'
+import type { DirectChatListItem as DirectChatListItemDto } from "../../entities/room/types";
+import type { WebSocketStatus } from "../../hooks/useReconnectingWebSocket";
 
 export type DirectInboxContextValue = {
-  items: DirectChatListItemDto[]
-  loading: boolean
-  error: string | null
-  status: WebSocketStatus
-  unreadSlugs: string[]
-  unreadCounts: Record<string, number>
-  unreadDialogsCount: number
-  setActiveRoom: (roomSlug: string | null) => void
-  markRead: (roomSlug: string) => void
-  refresh: () => Promise<void>
-}
+  items: DirectChatListItemDto[];
+  loading: boolean;
+  error: string | null;
+  status: WebSocketStatus;
+  unreadSlugs: string[];
+  unreadCounts: Record<string, number>;
+  unreadDialogsCount: number;
+  setActiveRoom: (roomSlug: string | null) => void;
+  markRead: (roomSlug: string) => void;
+  refresh: () => Promise<void>;
+};
 
 /**
  * Выполняет функцию `noop`.
  * @returns Результат выполнения `noop`.
  */
 
-const noop = () => {}
+const noop = () => {};
 /**
  * Выполняет функцию `noopAsync`.
  * @returns Результат выполнения `noopAsync`.
  */
 
-const noopAsync = async () => {}
+const noopAsync = async () => {};
 
 export const FALLBACK_DIRECT_INBOX: DirectInboxContextValue = {
   items: [],
   loading: false,
   error: null,
-  status: 'idle',
+  status: "idle",
   unreadSlugs: [],
   unreadCounts: {},
   unreadDialogsCount: 0,
   setActiveRoom: noop,
   markRead: noop,
   refresh: noopAsync,
-}
+};
 
-export const DirectInboxContext = createContext<DirectInboxContextValue>(FALLBACK_DIRECT_INBOX)
+export const DirectInboxContext = createContext<DirectInboxContextValue>(
+  FALLBACK_DIRECT_INBOX,
+);

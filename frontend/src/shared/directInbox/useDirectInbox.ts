@@ -1,10 +1,10 @@
-import { useContext } from 'react'
+import { useContext } from "react";
 
-import { DirectInboxContext } from './context'
+import { DirectInboxContext } from "./context";
 
 /**
  * Управляет состоянием и эффектами хука `useDirectInbox`.
  * @returns Результат выполнения `useDirectInbox`.
  */
 
-export const useDirectInbox = () => useContext(DirectInboxContext)
+export const useDirectInbox = () => useContext(DirectInboxContext);

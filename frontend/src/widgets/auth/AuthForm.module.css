@@ -69,6 +69,10 @@
   margin: 4px 0 0;
 }
 
+.errorNote {
+  color: #ff9b9b;
+}
+
 .authSwitch {
   margin-top: 12px;
   color: #b7c2d6;

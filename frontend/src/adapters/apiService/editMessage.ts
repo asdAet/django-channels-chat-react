@@ -1,7 +1,7 @@
-import type { AxiosInstance } from 'axios'
+import type { AxiosInstance } from "axios";
 
-import { decodeEditMessageResponse } from '../../dto'
-import type { EditMessageResult } from '../../domain/interfaces/IApiService'
+import { decodeEditMessageResponse } from "../../dto";
+import type { EditMessageResult } from "../../domain/interfaces/IApiService";
 
 export async function editMessage(
   apiClient: AxiosInstance,
@@ -9,10 +9,10 @@ export async function editMessage(
   messageId: number,
   content: string,
 ): Promise<EditMessageResult> {
-  const encodedSlug = encodeURIComponent(slug)
+  const encodedSlug = encodeURIComponent(slug);
   const response = await apiClient.patch<unknown>(
     `/chat/rooms/${encodedSlug}/messages/${messageId}/`,
     { content },
-  )
-  return decodeEditMessageResponse(response.data)
+  );
+  return decodeEditMessageResponse(response.data);
 }

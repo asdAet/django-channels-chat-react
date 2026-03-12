@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
-import { authController } from '../controllers/AuthController'
-import { debugLog } from '../shared/lib/debug'
+import { authController } from "../controllers/AuthController";
+import { debugLog } from "../shared/lib/debug";
 
 /**
  * Управляет состоянием и эффектами хука `usePasswordRules`.
@@ -10,8 +10,8 @@ import { debugLog } from '../shared/lib/debug'
  */
 
 export const usePasswordRules = (enabled: boolean) => {
-  const [rules, setRules] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
+  const [rules, setRules] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   /**
    * Выполняет метод `useEffect`.
@@ -20,24 +20,24 @@ export const usePasswordRules = (enabled: boolean) => {
    */
 
   useEffect(() => {
-    if (!enabled) return
-    let active = true
+    if (!enabled) return;
+    let active = true;
     /**
      * Выполняет метод `queueMicrotask`.
      * @returns Результат выполнения `queueMicrotask`.
      */
 
-    queueMicrotask(() => setLoading(true))
+    queueMicrotask(() => setLoading(true));
     authController
       .getPasswordRules()
       .then((data) => {
-        if (!active) return
+        if (!active) return;
         /**
          * Выполняет метод `setRules`.
          * @returns Результат выполнения `setRules`.
          */
 
-        setRules(Array.isArray(data.rules) ? data.rules : [])
+        setRules(Array.isArray(data.rules) ? data.rules : []);
       })
       .catch((err) => {
         /**
@@ -46,16 +46,16 @@ export const usePasswordRules = (enabled: boolean) => {
          * @returns Результат выполнения `debugLog`.
          */
 
-        debugLog('Password rules fetch failed', err)
+        debugLog("Password rules fetch failed", err);
       })
       .finally(() => {
-        if (active) setLoading(false)
-      })
+        if (active) setLoading(false);
+      });
 
     return () => {
-      active = false
-    }
-  }, [enabled])
+      active = false;
+    };
+  }, [enabled]);
 
-  return { rules, loading }
-}
+  return { rules, loading };
+};

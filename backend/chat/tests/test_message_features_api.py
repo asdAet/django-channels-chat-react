@@ -62,6 +62,7 @@ class ChatMessageFeatureApiTests(TestCase):
             name="scope visible group",
             kind=Room.Kind.GROUP,
             is_public=False,
+            username="scope_visible_group",
             created_by=self.owner,
         )
         ensure_membership(visible_group, self.owner, role_name="Owner")
@@ -74,6 +75,7 @@ class ChatMessageFeatureApiTests(TestCase):
             name="scope hidden group",
             kind=Room.Kind.GROUP,
             is_public=False,
+            username="scope_hidden_group",
             created_by=self.outsider,
         )
         ensure_membership(hidden_group, self.outsider, role_name="Owner")
@@ -95,7 +97,7 @@ class ChatMessageFeatureApiTests(TestCase):
         )
 
         self.client.force_login(self.owner)
-        response = self.client.get("/api/chat/search/global/?q=scope")
+        response = self.client.get("/api/chat/search/global/?q=@scope")
         self.assertEqual(response.status_code, 200)
 
         payload = response.json()
@@ -115,6 +117,33 @@ class ChatMessageFeatureApiTests(TestCase):
         self.assertIn(visible_msg.pk, found_message_ids)
         self.assertNotIn(hidden_msg.pk, found_message_ids)
         self.assertFalse(any("hidden" in item["content"] for item in payload["messages"]))
+
+    def test_global_search_plain_text_returns_messages_only(self):
+        visible_group = Room.objects.create(
+            slug="group_plain_text_scope",
+            name="plain text scope group",
+            kind=Room.Kind.GROUP,
+            is_public=True,
+            username="plain_scope_group",
+            created_by=self.owner,
+        )
+        ensure_membership(visible_group, self.owner, role_name="Owner")
+
+        visible_msg = Message.objects.create(
+            username=self.peer.username,
+            user=self.peer,
+            room=self.direct_room,
+            message_content="plain_scope message",
+        )
+
+        self.client.force_login(self.owner)
+        response = self.client.get("/api/chat/search/global/?q=plain_scope")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+
+        self.assertEqual(payload["users"], [])
+        self.assertEqual(payload["groups"], [])
+        self.assertIn(visible_msg.pk, {item["id"] for item in payload["messages"]})
 
     def test_global_search_includes_any_matching_public_groups_without_interaction(self):
         public_group_one = Room.objects.create(
@@ -148,7 +177,7 @@ class ChatMessageFeatureApiTests(TestCase):
         ensure_membership(private_group, self.outsider, role_name="Owner")
 
         self.client.force_login(self.owner)
-        response = self.client.get("/api/chat/search/global/?q=catalog")
+        response = self.client.get("/api/chat/search/global/?q=@catalog")
         self.assertEqual(response.status_code, 200)
 
         payload = response.json()
@@ -156,6 +185,23 @@ class ChatMessageFeatureApiTests(TestCase):
         self.assertIn(public_group_one.slug, found_group_slugs)
         self.assertIn(public_group_two.slug, found_group_slugs)
         self.assertNotIn(private_group.slug, found_group_slugs)
+
+    def test_global_search_handle_excludes_public_group_without_username(self):
+        public_group = Room.objects.create(
+            slug="group_public_without_username",
+            name="Catalog Group No Handle",
+            kind=Room.Kind.GROUP,
+            is_public=True,
+            created_by=self.outsider,
+        )
+        ensure_membership(public_group, self.outsider, role_name="Owner")
+
+        self.client.force_login(self.owner)
+        response = self.client.get("/api/chat/search/global/?q=@catalog")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        found_group_slugs = {item["slug"] for item in payload["groups"]}
+        self.assertNotIn(public_group.slug, found_group_slugs)
 
     def test_global_search_supports_handle_query_for_group_username(self):
         group_username = "public_handle_group"
@@ -176,6 +222,17 @@ class ChatMessageFeatureApiTests(TestCase):
         payload = response.json()
         found_group_slugs = {item["slug"] for item in payload["groups"]}
         self.assertIn(public_group.slug, found_group_slugs)
+
+    def test_global_search_supports_handle_query_for_updated_username(self):
+        self.peer.username = "peer_feature_updated"
+        self.peer.save(update_fields=["username"])
+
+        self.client.force_login(self.owner)
+        response = self.client.get("/api/chat/search/global/?q=@peer_feature_updated")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        found_usernames = {item["username"] for item in payload["users"]}
+        self.assertIn("peer_feature_updated", found_usernames)
 
     def test_attachment_upload_accepts_reply_to_and_get_lists_items(self):
         reply_target = Message.objects.create(
@@ -331,3 +388,54 @@ class ChatMessageFeatureApiTests(TestCase):
         self.assertEqual(response.status_code, 201)
         payload = response.json()
         self.assertEqual(payload["attachments"][0]["contentType"], "audio/mpeg")
+
+    def test_mark_read_is_monotonic_and_persisted_in_room_details(self):
+        first_message = Message.objects.create(
+            username=self.peer.username,
+            user=self.peer,
+            room=self.direct_room,
+            message_content="first unread",
+        )
+        second_message = Message.objects.create(
+            username=self.peer.username,
+            user=self.peer,
+            room=self.direct_room,
+            message_content="second unread",
+        )
+        self.client.force_login(self.owner)
+
+        first_read_response = self.client.post(
+            f"/api/chat/rooms/{self.direct_room.slug}/read/",
+            data=json.dumps({"lastReadMessageId": second_message.pk}),
+            content_type="application/json",
+        )
+        self.assertEqual(first_read_response.status_code, 200)
+        self.assertEqual(first_read_response.json()["lastReadMessageId"], second_message.pk)
+
+        backward_response = self.client.post(
+            f"/api/chat/rooms/{self.direct_room.slug}/read/",
+            data=json.dumps({"lastReadMessageId": first_message.pk}),
+            content_type="application/json",
+        )
+        self.assertEqual(backward_response.status_code, 200)
+        self.assertEqual(backward_response.json()["lastReadMessageId"], second_message.pk)
+
+        details_response = self.client.get(f"/api/chat/rooms/{self.direct_room.slug}/")
+        self.assertEqual(details_response.status_code, 200)
+        self.assertEqual(details_response.json()["lastReadMessageId"], second_message.pk)
+
+    def test_mark_read_accepts_form_payload_for_keepalive_flush(self):
+        message = Message.objects.create(
+            username=self.peer.username,
+            user=self.peer,
+            room=self.direct_room,
+            message_content="form-data mark read",
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            f"/api/chat/rooms/{self.direct_room.slug}/read/",
+            data={"lastReadMessageId": str(message.pk)},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["lastReadMessageId"], message.pk)

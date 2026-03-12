@@ -1,20 +1,20 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from "react";
 
-import { apiService } from '../adapters/ApiService'
-import type { UserProfile } from '../entities/user/types'
-import { debugLog } from '../shared/lib/debug'
+import { apiService } from "../adapters/ApiService";
+import type { UserProfile } from "../entities/user/types";
+import { debugLog } from "../shared/lib/debug";
 
 type InternalState = {
-  username: string | null
-  user: UserProfile | null
-  error: string | null
-}
+  username: string | null;
+  user: UserProfile | null;
+  error: string | null;
+};
 
 export type UserProfileState = {
-  user: UserProfile | null
-  loading: boolean
-  error: string | null
-}
+  user: UserProfile | null;
+  loading: boolean;
+  error: string | null;
+};
 
 /**
  * Управляет состоянием и эффектами хука `useUserProfile`.
@@ -27,9 +27,9 @@ export const useUserProfile = (username: string) => {
     username: null,
     user: null,
     error: null,
-  })
+  });
 
-  const hasUsername = Boolean(username)
+  const hasUsername = Boolean(username);
 
   /**
    * Выполняет метод `useEffect`.
@@ -37,15 +37,15 @@ export const useUserProfile = (username: string) => {
    */
 
   useEffect(() => {
-    if (!hasUsername) return
+    if (!hasUsername) return;
 
-    let active = true
+    let active = true;
 
     apiService
       .getUserProfile(username)
       .then((payload) => {
-        if (!active) return
-        const user = payload.user
+        if (!active) return;
+        const user = payload.user;
         /**
          * Выполняет метод `setState`.
          * @param props Входной параметр `props`.
@@ -56,15 +56,17 @@ export const useUserProfile = (username: string) => {
           username,
           user: {
             ...user,
-            email: user.email || '',
+            name: user.name ?? "",
+            last_name: user.last_name ?? "",
+            email: user.email || "",
             profileImage: user.profileImage || null,
             avatarCrop: user.avatarCrop ?? null,
-            bio: user.bio || '',
+            bio: user.bio || "",
             lastSeen: user.lastSeen || null,
             registeredAt: user.registeredAt || null,
           },
           error: null,
-        })
+        });
       })
       .catch((err) => {
         /**
@@ -73,32 +75,32 @@ export const useUserProfile = (username: string) => {
          * @returns Результат выполнения `debugLog`.
          */
 
-        debugLog('User profile fetch failed', err)
-        if (!active) return
+        debugLog("User profile fetch failed", err);
+        if (!active) return;
         /**
          * Выполняет метод `setState`.
          * @param props Входной параметр `props`.
          * @returns Результат выполнения `setState`.
          */
 
-        setState({ username, user: null, error: 'not_found' })
-      })
+        setState({ username, user: null, error: "not_found" });
+      });
 
     return () => {
-      active = false
-    }
-  }, [hasUsername, username])
+      active = false;
+    };
+  }, [hasUsername, username]);
 
   return useMemo<UserProfileState>(() => {
     if (!hasUsername) {
-      return { user: null, loading: false, error: 'not_found' }
+      return { user: null, loading: false, error: "not_found" };
     }
 
-    const isStale = state.username !== username
-    const user = isStale ? null : state.user
-    const error = isStale ? null : state.error
-    const loading = isStale || (!user && !error)
+    const isStale = state.username !== username;
+    const user = isStale ? null : state.user;
+    const error = isStale ? null : state.error;
+    const loading = isStale || (!user && !error);
 
-    return { user, loading, error }
-  }, [hasUsername, state.error, state.user, state.username, username])
-}
+    return { user, loading, error };
+  }, [hasUsername, state.error, state.user, state.username, username]);
+};

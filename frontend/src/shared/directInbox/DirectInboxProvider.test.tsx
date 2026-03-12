@@ -1,50 +1,76 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const wsMock = vi.hoisted(() => ({
-  status: 'online' as 'online' | 'offline' | 'error' | 'connecting' | 'idle' | 'closed',
+  status: "online" as
+    | "online"
+    | "offline"
+    | "error"
+    | "connecting"
+    | "idle"
+    | "closed",
   lastError: null as string | null,
   send: vi.fn<(payload: string) => boolean>(),
-  options: null as
-    | {
-        url: string | null
-        onMessage?: (event: MessageEvent) => void
-      }
-    | null,
-}))
+  options: null as {
+    url: string | null;
+    onMessage?: (event: MessageEvent) => void;
+  } | null,
+}));
 
 const chatMock = vi.hoisted(() => ({
-  getDirectChats: vi.fn<() => Promise<{ items: Array<{ slug: string; peer: { username: string; profileImage: string | null }; lastMessage: string; lastMessageAt: string }> }>>(),
-}))
+  getDirectChats:
+    vi.fn<
+      () => Promise<{
+        items: Array<{
+          slug: string;
+          peer: { username: string; profileImage: string | null };
+          lastMessage: string;
+          lastMessageAt: string;
+        }>;
+      }>
+    >(),
+}));
 
-vi.mock('../../controllers/ChatController', () => ({
+vi.mock("../../controllers/ChatController", () => ({
   chatController: chatMock,
-}))
+}));
 
-vi.mock('../../hooks/useReconnectingWebSocket', () => ({
+vi.mock("../../hooks/useReconnectingWebSocket", () => ({
   useReconnectingWebSocket: (options: unknown) => {
-    wsMock.options = options as { url: string | null; onMessage?: (event: MessageEvent) => void }
+    wsMock.options = options as {
+      url: string | null;
+      onMessage?: (event: MessageEvent) => void;
+    };
     return {
       status: wsMock.status,
       lastError: wsMock.lastError,
       send: wsMock.send,
       reconnect: vi.fn(),
-    }
+    };
   },
-}))
+}));
 
-import { DirectInboxProvider } from './DirectInboxProvider'
-import { useDirectInbox } from './useDirectInbox'
-import { resetUnreadOverrides, setUnreadOverride } from '../unreadOverrides/store'
+import { DirectInboxProvider } from "./DirectInboxProvider";
+import { useDirectInbox } from "./useDirectInbox";
+import {
+  resetUnreadOverrides,
+  setUnreadOverride,
+} from "../unreadOverrides/store";
 
 const user = {
-  username: 'demo',
-  email: 'demo@example.com',
+  username: "demo",
+  email: "demo@example.com",
   profileImage: null,
-  bio: '',
+  bio: "",
   lastSeen: null,
   registeredAt: null,
-}
+};
 
 /**
  * Рендерит компонент `Probe` и связанную разметку.
@@ -52,18 +78,20 @@ const user = {
  */
 
 function Probe() {
-  const inbox = useDirectInbox()
+  const inbox = useDirectInbox();
 
   return (
     <div>
       <p data-testid="loading">{String(inbox.loading)}</p>
       <p data-testid="unread-count">{inbox.unreadDialogsCount}</p>
       <p data-testid="unread-counts">{JSON.stringify(inbox.unreadCounts)}</p>
-      <p data-testid="items-order">{inbox.items.map((item) => item.slug).join(',')}</p>
-      <button onClick={() => inbox.setActiveRoom('dm_1')}>set-active</button>
-      <button onClick={() => inbox.markRead('dm_1')}>mark-read</button>
+      <p data-testid="items-order">
+        {inbox.items.map((item) => item.slug).join(",")}
+      </p>
+      <button onClick={() => inbox.setActiveRoom("dm_1")}>set-active</button>
+      <button onClick={() => inbox.markRead("dm_1")}>mark-read</button>
     </div>
-  )
+  );
 }
 
 /**
@@ -74,43 +102,43 @@ function Probe() {
 const sentPayloads = () =>
   wsMock.send.mock.calls.map(([raw]) => {
     try {
-      return JSON.parse(raw)
+      return JSON.parse(raw);
     } catch {
-      return null
+      return null;
     }
-  })
+  });
 
-describe('DirectInboxProvider', () => {
+describe("DirectInboxProvider", () => {
   /**
    * Выполняет метод `beforeEach`.
    * @returns Результат выполнения `beforeEach`.
    */
 
   beforeEach(() => {
-    wsMock.status = 'online'
-    wsMock.lastError = null
-    wsMock.send.mockReset().mockReturnValue(true)
-    wsMock.options = null
-    chatMock.getDirectChats.mockReset().mockResolvedValue({ items: [] })
-    resetUnreadOverrides()
-  })
+    wsMock.status = "online";
+    wsMock.lastError = null;
+    wsMock.send.mockReset().mockReturnValue(true);
+    wsMock.options = null;
+    chatMock.getDirectChats.mockReset().mockResolvedValue({ items: [] });
+    resetUnreadOverrides();
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('loads initial chats and applies unread events', async () => {
+  it("loads initial chats and applies unread events", async () => {
     chatMock.getDirectChats.mockResolvedValue({
       items: [
         {
-          slug: 'dm_1',
-          peer: { username: 'alice', profileImage: null },
-          lastMessage: 'hello',
-          lastMessageAt: '2026-02-13T10:00:00Z',
+          slug: "dm_1",
+          peer: { username: "alice", profileImage: null },
+          lastMessage: "hello",
+          lastMessageAt: "2026-02-13T10:00:00Z",
         },
       ],
-    })
+    });
 
     /**
      * Выполняет метод `render`.
@@ -121,7 +149,7 @@ describe('DirectInboxProvider', () => {
       <DirectInboxProvider user={user}>
         <Probe />
       </DirectInboxProvider>,
-    )
+    );
 
     await waitFor(() => {
       /**
@@ -129,8 +157,8 @@ describe('DirectInboxProvider', () => {
        * @returns Результат выполнения `expect`.
        */
 
-      expect(screen.getByTestId('items-order').textContent).toBe('dm_1')
-    })
+      expect(screen.getByTestId("items-order").textContent).toBe("dm_1");
+    });
 
     /**
      * Выполняет метод `act`.
@@ -139,27 +167,27 @@ describe('DirectInboxProvider', () => {
 
     act(() => {
       wsMock.options?.onMessage?.(
-        new MessageEvent('message', {
+        new MessageEvent("message", {
           data: JSON.stringify({
-            type: 'direct_unread_state',
-            unread: { dialogs: 1, slugs: ['dm_1'], counts: { dm_1: 2 } },
+            type: "direct_unread_state",
+            unread: { dialogs: 1, slugs: ["dm_1"], counts: { dm_1: 2 } },
           }),
         }),
-      )
-    })
+      );
+    });
 
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(screen.getByTestId('unread-count').textContent).toBe('1')
+    expect(screen.getByTestId("unread-count").textContent).toBe("1");
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(screen.getByTestId('unread-counts').textContent).toBe('{"dm_1":2}')
+    expect(screen.getByTestId("unread-counts").textContent).toBe('{"dm_1":2}');
 
     /**
      * Выполняет метод `act`.
@@ -168,52 +196,52 @@ describe('DirectInboxProvider', () => {
 
     act(() => {
       wsMock.options?.onMessage?.(
-        new MessageEvent('message', {
+        new MessageEvent("message", {
           data: JSON.stringify({
-            type: 'direct_mark_read_ack',
-            roomSlug: 'dm_1',
+            type: "direct_mark_read_ack",
+            roomSlug: "dm_1",
             unread: { dialogs: 0, slugs: [], counts: {} },
           }),
         }),
-      )
-    })
+      );
+    });
 
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(screen.getByTestId('unread-count').textContent).toBe('0')
+    expect(screen.getByTestId("unread-count").textContent).toBe("0");
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(screen.getByTestId('unread-counts').textContent).toBe('{}')
-  })
+    expect(screen.getByTestId("unread-counts").textContent).toBe("{}");
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('reorders chats when realtime item arrives', async () => {
+  it("reorders chats when realtime item arrives", async () => {
     chatMock.getDirectChats.mockResolvedValue({
       items: [
         {
-          slug: 'dm_old',
-          peer: { username: 'alice', profileImage: null },
-          lastMessage: 'old',
-          lastMessageAt: '2026-02-13T10:00:00Z',
+          slug: "dm_old",
+          peer: { username: "alice", profileImage: null },
+          lastMessage: "old",
+          lastMessageAt: "2026-02-13T10:00:00Z",
         },
         {
-          slug: 'dm_new',
-          peer: { username: 'bob', profileImage: null },
-          lastMessage: 'new',
-          lastMessageAt: '2026-02-13T11:00:00Z',
+          slug: "dm_new",
+          peer: { username: "bob", profileImage: null },
+          lastMessage: "new",
+          lastMessageAt: "2026-02-13T11:00:00Z",
         },
       ],
-    })
+    });
 
     /**
      * Выполняет метод `render`.
@@ -224,7 +252,7 @@ describe('DirectInboxProvider', () => {
       <DirectInboxProvider user={user}>
         <Probe />
       </DirectInboxProvider>,
-    )
+    );
 
     await waitFor(() => {
       /**
@@ -232,8 +260,10 @@ describe('DirectInboxProvider', () => {
        * @returns Результат выполнения `expect`.
        */
 
-      expect(screen.getByTestId('items-order').textContent).toBe('dm_old,dm_new')
-    })
+      expect(screen.getByTestId("items-order").textContent).toBe(
+        "dm_old,dm_new",
+      );
+    });
 
     /**
      * Выполняет метод `act`.
@@ -242,47 +272,49 @@ describe('DirectInboxProvider', () => {
 
     act(() => {
       wsMock.options?.onMessage?.(
-        new MessageEvent('message', {
+        new MessageEvent("message", {
           data: JSON.stringify({
-            type: 'direct_inbox_item',
+            type: "direct_inbox_item",
             item: {
-              slug: 'dm_old',
-              peer: { username: 'alice', profileImage: null },
-              lastMessage: 'latest',
-              lastMessageAt: '2026-02-13T12:00:00Z',
+              slug: "dm_old",
+              peer: { username: "alice", profileImage: null },
+              lastMessage: "latest",
+              lastMessageAt: "2026-02-13T12:00:00Z",
             },
-            unread: { dialogs: 1, slugs: ['dm_old'], counts: { dm_old: 3 } },
+            unread: { dialogs: 1, slugs: ["dm_old"], counts: { dm_old: 3 } },
           }),
         }),
-      )
-    })
+      );
+    });
 
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(screen.getByTestId('items-order').textContent).toBe('dm_old,dm_new')
+    expect(screen.getByTestId("items-order").textContent).toBe("dm_old,dm_new");
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(screen.getByTestId('unread-count').textContent).toBe('1')
+    expect(screen.getByTestId("unread-count").textContent).toBe("1");
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(screen.getByTestId('unread-counts').textContent).toBe('{"dm_old":3}')
-  })
+    expect(screen.getByTestId("unread-counts").textContent).toBe(
+      '{"dm_old":3}',
+    );
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('sends mark_read and set_active_room commands', async () => {
+  it("sends mark_read and set_active_room commands", async () => {
     /**
      * Выполняет метод `render`.
      * @returns Результат выполнения `render`.
@@ -292,7 +324,7 @@ describe('DirectInboxProvider', () => {
       <DirectInboxProvider user={user}>
         <Probe />
       </DirectInboxProvider>,
-    )
+    );
 
     await waitFor(() => {
       /**
@@ -300,8 +332,8 @@ describe('DirectInboxProvider', () => {
        * @returns Результат выполнения `expect`.
        */
 
-      expect(chatMock.getDirectChats).toHaveBeenCalledTimes(1)
-    })
+      expect(chatMock.getDirectChats).toHaveBeenCalledTimes(1);
+    });
 
     /**
      * Выполняет метод `act`.
@@ -310,58 +342,68 @@ describe('DirectInboxProvider', () => {
 
     act(() => {
       wsMock.options?.onMessage?.(
-        new MessageEvent('message', {
+        new MessageEvent("message", {
           data: JSON.stringify({
-            type: 'direct_unread_state',
-            unread: { dialogs: 1, slugs: ['dm_1'], counts: { dm_1: 1 } },
+            type: "direct_unread_state",
+            unread: { dialogs: 1, slugs: ["dm_1"], counts: { dm_1: 1 } },
           }),
         }),
-      )
-    })
+      );
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: 'mark-read' }))
-    fireEvent.click(screen.getByRole('button', { name: 'set-active' }))
+    fireEvent.click(screen.getByRole("button", { name: "mark-read" }));
+    fireEvent.click(screen.getByRole("button", { name: "set-active" }));
 
-    const payloads = sentPayloads()
+    const payloads = sentPayloads();
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(payloads.some((payload) => payload?.type === 'mark_read' && payload?.roomSlug === 'dm_1')).toBe(true)
+    expect(
+      payloads.some(
+        (payload) =>
+          payload?.type === "mark_read" && payload?.roomSlug === "dm_1",
+      ),
+    ).toBe(true);
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(payloads.some((payload) => payload?.type === 'set_active_room' && payload?.roomSlug === 'dm_1')).toBe(true)
+    expect(
+      payloads.some(
+        (payload) =>
+          payload?.type === "set_active_room" && payload?.roomSlug === "dm_1",
+      ),
+    ).toBe(true);
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(screen.getByTestId('unread-count').textContent).toBe('0')
+    expect(screen.getByTestId("unread-count").textContent).toBe("0");
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(screen.getByTestId('unread-counts').textContent).toBe('{}')
-  })
+    expect(screen.getByTestId("unread-counts").textContent).toBe("{}");
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('re-sends active room after reconnect', async () => {
-    wsMock.status = 'offline'
+  it("re-sends active room after reconnect", async () => {
+    wsMock.status = "offline";
 
     const { rerender } = render(
       <DirectInboxProvider user={user}>
         <Probe />
       </DirectInboxProvider>,
-    )
+    );
 
     await waitFor(() => {
       /**
@@ -369,13 +411,13 @@ describe('DirectInboxProvider', () => {
        * @returns Результат выполнения `expect`.
        */
 
-      expect(chatMock.getDirectChats).toHaveBeenCalledTimes(1)
-    })
+      expect(chatMock.getDirectChats).toHaveBeenCalledTimes(1);
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: 'set-active' }))
-    wsMock.send.mockClear()
+    fireEvent.click(screen.getByRole("button", { name: "set-active" }));
+    wsMock.send.mockClear();
 
-    wsMock.status = 'online'
+    wsMock.status = "online";
     /**
      * Выполняет метод `rerender`.
      * @returns Результат выполнения `rerender`.
@@ -385,61 +427,66 @@ describe('DirectInboxProvider', () => {
       <DirectInboxProvider user={user}>
         <Probe />
       </DirectInboxProvider>,
-    )
+    );
 
-    const payloads = sentPayloads()
+    const payloads = sentPayloads();
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(payloads.some((payload) => payload?.type === 'ping')).toBe(true)
+    expect(payloads.some((payload) => payload?.type === "ping")).toBe(true);
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(payloads.some((payload) => payload?.type === 'set_active_room' && payload?.roomSlug === 'dm_1')).toBe(true)
-  })
+    expect(
+      payloads.some(
+        (payload) =>
+          payload?.type === "set_active_room" && payload?.roomSlug === "dm_1",
+      ),
+    ).toBe(true);
+  });
 
-  it('applies local unread override for active direct chat to counts and dialogs', async () => {
+  it("applies local unread override for active direct chat to counts and dialogs", async () => {
     chatMock.getDirectChats.mockResolvedValue({
       items: [
         {
-          slug: 'dm_1',
-          peer: { username: 'alice', profileImage: null },
-          lastMessage: 'hello',
-          lastMessageAt: '2026-02-13T10:00:00Z',
+          slug: "dm_1",
+          peer: { username: "alice", profileImage: null },
+          lastMessage: "hello",
+          lastMessageAt: "2026-02-13T10:00:00Z",
         },
       ],
-    })
+    });
 
     render(
       <DirectInboxProvider user={user}>
         <Probe />
       </DirectInboxProvider>,
-    )
+    );
 
     await waitFor(() => {
-      expect(screen.getByTestId('items-order').textContent).toBe('dm_1')
-    })
+      expect(screen.getByTestId("items-order").textContent).toBe("dm_1");
+    });
 
     act(() => {
       wsMock.options?.onMessage?.(
-        new MessageEvent('message', {
+        new MessageEvent("message", {
           data: JSON.stringify({
-            type: 'direct_unread_state',
+            type: "direct_unread_state",
             unread: { dialogs: 0, slugs: [], counts: {} },
           }),
         }),
-      )
-    })
+      );
+    });
 
     act(() => {
-      setUnreadOverride({ roomSlug: 'dm_1', unreadCount: 4 })
-    })
+      setUnreadOverride({ roomSlug: "dm_1", unreadCount: 4 });
+    });
 
-    expect(screen.getByTestId('unread-count').textContent).toBe('1')
-    expect(screen.getByTestId('unread-counts').textContent).toBe('{"dm_1":4}')
-  })
-})
+    expect(screen.getByTestId("unread-count").textContent).toBe("1");
+    expect(screen.getByTestId("unread-counts").textContent).toBe('{"dm_1":4}');
+  });
+});

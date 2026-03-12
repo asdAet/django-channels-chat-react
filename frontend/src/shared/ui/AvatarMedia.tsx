@@ -1,33 +1,36 @@
-import type { ImgHTMLAttributes } from 'react'
+import type { ImgHTMLAttributes } from "react";
 
-import type { AvatarCrop } from '../api/users'
-import { buildAvatarCropImageStyle, normalizeAvatarCrop } from '../lib/avatarCrop'
+import type { AvatarCrop } from "../api/users";
+import {
+  buildAvatarCropImageStyle,
+  normalizeAvatarCrop,
+} from "../lib/avatarCrop";
 
-import styles from '../../styles/ui/AvatarMedia.module.css'
+import styles from "../../styles/ui/AvatarMedia.module.css";
 
 type AvatarMediaProps = {
-  src: string
-  alt: string
-  avatarCrop?: AvatarCrop | null
-  loading?: ImgHTMLAttributes<HTMLImageElement>['loading']
-  decoding?: ImgHTMLAttributes<HTMLImageElement>['decoding']
-  draggable?: boolean
-  className?: string
-  onError?: ImgHTMLAttributes<HTMLImageElement>['onError']
-}
+  src: string;
+  alt: string;
+  avatarCrop?: AvatarCrop | null;
+  loading?: ImgHTMLAttributes<HTMLImageElement>["loading"];
+  decoding?: ImgHTMLAttributes<HTMLImageElement>["decoding"];
+  draggable?: boolean;
+  className?: string;
+  onError?: ImgHTMLAttributes<HTMLImageElement>["onError"];
+};
 
 export function AvatarMedia({
   src,
   alt,
   avatarCrop = null,
-  loading = 'lazy',
-  decoding = 'async',
+  loading = "lazy",
+  decoding = "async",
   draggable = false,
   className,
   onError,
 }: AvatarMediaProps) {
-  const crop = normalizeAvatarCrop(avatarCrop)
-  const imageClassName = [styles.image, className].filter(Boolean).join(' ')
+  const crop = normalizeAvatarCrop(avatarCrop);
+  const imageClassName = [styles.image, className].filter(Boolean).join(" ");
 
   if (!crop) {
     return (
@@ -40,7 +43,7 @@ export function AvatarMedia({
         className={imageClassName}
         onError={onError}
       />
-    )
+    );
   }
 
   return (
@@ -51,10 +54,12 @@ export function AvatarMedia({
         loading={loading}
         decoding={decoding}
         draggable={draggable}
-        className={[styles.image, styles.croppedImage, className].filter(Boolean).join(' ')}
+        className={[styles.image, styles.croppedImage, className]
+          .filter(Boolean)
+          .join(" ")}
         style={buildAvatarCropImageStyle(crop)}
         onError={onError}
       />
     </span>
-  )
+  );
 }

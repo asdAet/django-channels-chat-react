@@ -1,21 +1,23 @@
-import type { ConversationItem } from '../../entities/conversation/types'
-import { formatTimestamp } from '../../shared/lib/format'
-import { Avatar } from '../../shared/ui'
-import styles from '../../styles/sidebar/ConversationList.module.css'
+import type { ConversationItem } from "../../entities/conversation/types";
+import { formatTimestamp } from "../../shared/lib/format";
+import { Avatar } from "../../shared/ui";
+import styles from "../../styles/sidebar/ConversationList.module.css";
 
 type Props = {
-  item: ConversationItem
-  isActive: boolean
-  onClick: () => void
-}
+  item: ConversationItem;
+  isActive: boolean;
+  onClick: () => void;
+};
 
 export function ConversationListItem({ item, isActive, onClick }: Props) {
   return (
     <button
       type="button"
-      className={[styles.item, isActive ? styles.active : ''].filter(Boolean).join(' ')}
+      className={[styles.item, isActive ? styles.active : ""]
+        .filter(Boolean)
+        .join(" ")}
       onClick={onClick}
-      aria-current={isActive ? 'page' : undefined}
+      aria-current={isActive ? "page" : undefined}
     >
       <Avatar
         username={item.name}
@@ -31,16 +33,18 @@ export function ConversationListItem({ item, isActive, onClick }: Props) {
             {item.isPinned && <span className={styles.pinnedMark}>PIN</span>}
           </div>
           {item.lastMessageAt && (
-            <span className={styles.itemTime}>{formatTimestamp(item.lastMessageAt)}</span>
+            <span className={styles.itemTime}>
+              {formatTimestamp(item.lastMessageAt)}
+            </span>
           )}
         </div>
         <div className={styles.itemBottom}>
-          <p className={styles.itemPreview}>{item.lastMessage || '\u00A0' }</p>
+          <p className={styles.itemPreview}>{item.lastMessage || "\u00A0"}</p>
           {item.unreadCount > 0 && (
             <span className={styles.badge}>{item.unreadCount}</span>
           )}
         </div>
       </div>
     </button>
-  )
+  );
 }

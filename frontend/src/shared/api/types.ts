@@ -1,5 +1,5 @@
 export type ApiError = {
-  status: number
-  message: string
-  data?: Record<string, unknown>
-}
+  status: number;
+  message: string;
+  data?: Record<string, unknown>;
+};

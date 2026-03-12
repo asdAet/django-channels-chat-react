@@ -1,4 +1,4 @@
-const TAGS = /<[^>]*>/g
+const TAGS = /<[^>]*>/g;
 
 /**
  * Выполняет функцию `stripControlChars`.
@@ -7,9 +7,9 @@ const TAGS = /<[^>]*>/g
  */
 
 const stripControlChars = (value: string) => {
-  let cleaned = ''
+  let cleaned = "";
   for (let i = 0; i < value.length; i += 1) {
-    const code = value.charCodeAt(i)
+    const code = value.charCodeAt(i);
     if (
       (code >= 0 && code <= 8) ||
       code === 11 ||
@@ -17,12 +17,12 @@ const stripControlChars = (value: string) => {
       (code >= 14 && code <= 31) ||
       code === 127
     ) {
-      continue
+      continue;
     }
-    cleaned += value[i]
+    cleaned += value[i];
   }
-  return cleaned
-}
+  return cleaned;
+};
 
 /**
  * Выполняет функцию `sanitizeText`.
@@ -32,12 +32,12 @@ const stripControlChars = (value: string) => {
  */
 
 export const sanitizeText = (input: string, maxLen = 1000) => {
-  if (!input) return ''
-  const withoutTags = input.replace(TAGS, '')
-  const withoutControls = stripControlChars(withoutTags)
-  const trimmed = withoutControls.trim()
+  if (!input) return "";
+  const withoutTags = input.replace(TAGS, "");
+  const withoutControls = stripControlChars(withoutTags);
+  const trimmed = withoutControls.trim();
   if (trimmed.length > maxLen) {
-    return trimmed.slice(0, maxLen)
+    return trimmed.slice(0, maxLen);
   }
-  return trimmed
-}
+  return trimmed;
+};

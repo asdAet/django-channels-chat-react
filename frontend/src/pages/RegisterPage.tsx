@@ -1,12 +1,18 @@
-import { AuthForm } from '../widgets/auth/AuthForm'
-import styles from '../styles/pages/RegisterPage.module.css'
+import { AuthForm } from "../widgets/auth/AuthForm";
+import styles from "../styles/pages/RegisterPage.module.css";
 
 type Props = {
-  onSubmit: (username: string, password1: string, password2: string) => void
-  onNavigate: (path: string) => void
-  error?: string | null
-  passwordRules?: string[]
-}
+  onSubmit: (
+    name: string,
+    lastName: string,
+    username: string,
+    password1: string,
+    password2: string,
+  ) => void;
+  onNavigate: (path: string) => void;
+  error?: string | null;
+  passwordRules?: string[];
+};
 
 /**
  * Страница регистрации пользователя.
@@ -23,12 +29,14 @@ export function RegisterPage({
     <AuthForm
       title="Регистрация"
       submitLabel="Создать аккаунт"
-      onSubmit={(username, password, confirm) => onSubmit(username, password, confirm ?? '')}
+      onSubmit={(name, lastName, username, password, confirm) =>
+        onSubmit(name, lastName, username, password, confirm ?? "")
+      }
       onNavigate={onNavigate}
       error={error}
       requireConfirm
       passwordRules={passwordRules}
       className={styles.page}
     />
-  )
+  );
 }

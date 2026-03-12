@@ -212,13 +212,35 @@ def decline_request(actor, friendship_id: int) -> Friendship:
 
 # ── Remove friend ─────────────────────────────────────────────────────
 
+def cancel_outgoing_request(actor, friendship_id: int) -> Friendship:
+    _ensure_authenticated(actor)
+    friendship = repositories.get_friendship_by_id(int(friendship_id))
+    if not friendship or friendship.status != Friendship.Status.PENDING:
+        raise FriendNotFoundError("Заявка в ожидании не найдена")
+
+    if _friend_from_user_id(friendship) != int(actor.pk):
+        raise FriendForbiddenError("Отменить можно только свой исходящий запрос")
+
+    friendship.delete()
+
+    audit_security_event(
+        "friendship.request_canceled",
+        actor_user=actor,
+        actor_user_id=actor.pk,
+        actor_username=actor.username,
+        is_authenticated=True,
+        target_user_id=_friend_to_user_id(friendship),
+    )
+    return friendship
+
+
 def remove_friend(actor, target_user_id: int) -> None:
     _ensure_authenticated(actor)
     target = repositories.get_user_by_id(int(target_user_id))
     if not target:
         raise FriendNotFoundError("Пользователь не найден")
 
-    deleted = repositories.delete_friendship_pair(actor, target)
+    deleted = repositories.delete_friendship_pair(actor, target, status=Friendship.Status.ACCEPTED)
     if not deleted:
         raise FriendNotFoundError("Дружба не найдена")
 

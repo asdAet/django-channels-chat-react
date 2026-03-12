@@ -1,37 +1,45 @@
-import { useCallback, useState } from 'react'
+﻿import { useCallback, useState } from "react";
 
-import type { UserProfile } from '../entities/user/types'
-import { EmptyState } from '../shared/ui'
-import styles from '../styles/pages/SettingsPage.module.css'
+import type { UserProfile } from "../entities/user/types";
+import { formatFullName } from "../shared/lib/format";
+import { EmptyState } from "../shared/ui";
+import styles from "../styles/pages/SettingsPage.module.css";
 
 type Props = {
-  user: UserProfile | null
-  onNavigate: (path: string) => void
-  onLogout: () => Promise<void>
-}
+  user: UserProfile | null;
+  onNavigate: (path: string) => void;
+  onLogout: () => Promise<void>;
+};
 
 export function SettingsPage({ user, onNavigate, onLogout }: Props) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
-    () => typeof Notification !== 'undefined' && Notification.permission === 'granted',
-  )
+    () =>
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted",
+  );
 
   const handleToggleNotifications = useCallback(async () => {
-    if (typeof Notification === 'undefined') return
+    if (typeof Notification === "undefined") return;
 
-    if (Notification.permission === 'granted') {
-      setNotificationsEnabled(false)
-      return
+    if (Notification.permission === "granted") {
+      setNotificationsEnabled(false);
+      return;
     }
 
-    const result = await Notification.requestPermission()
-    setNotificationsEnabled(result === 'granted')
-  }, [])
+    const result = await Notification.requestPermission();
+    setNotificationsEnabled(result === "granted");
+  }, []);
 
   if (!user) {
     return (
-      <EmptyState title="Авторизуйтесь" description="Для доступа к настройкам войдите в аккаунт." />
-    )
+      <EmptyState
+        title="Авторизуйтесь"
+        description="Для доступа к настройкам войдите в аккаунт."
+      />
+    );
   }
+
+  const fullName = formatFullName(user.name, user.last_name) || "Без имени";
 
   return (
     <div className={styles.root}>
@@ -41,14 +49,15 @@ export function SettingsPage({ user, onNavigate, onLogout }: Props) {
         <div className={styles.sectionTitle}>Аккаунт</div>
         <div className={styles.row}>
           <div>
-            <div className={styles.rowLabel}>{user.username}</div>
+            <div className={styles.rowLabel}>{fullName}</div>
+            <div className={styles.rowDesc}>@{user.username}</div>
             <div className={styles.rowDesc}>{user.email}</div>
           </div>
           <button
             type="button"
             className={styles.themeBtn}
-            onClick={() => onNavigate('/profile')}
-            style={{ flex: 'none', padding: '6px 16px' }}
+            onClick={() => onNavigate("/profile")}
+            style={{ flex: "none", padding: "6px 16px" }}
           >
             Редактировать
           </button>
@@ -60,11 +69,18 @@ export function SettingsPage({ user, onNavigate, onLogout }: Props) {
         <div className={styles.row}>
           <div>
             <div className={styles.rowLabel}>Push-уведомления</div>
-            <div className={styles.rowDesc}>Получать уведомления о новых сообщениях</div>
+            <div className={styles.rowDesc}>
+              Получать уведомления о новых сообщениях
+            </div>
           </div>
           <button
             type="button"
-            className={[styles.toggle, notificationsEnabled ? styles.toggleActive : ''].filter(Boolean).join(' ')}
+            className={[
+              styles.toggle,
+              notificationsEnabled ? styles.toggleActive : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             onClick={handleToggleNotifications}
             aria-label="Переключить уведомления"
           />
@@ -100,5 +116,5 @@ export function SettingsPage({ user, onNavigate, onLogout }: Props) {
         </button>
       </div>
     </div>
-  )
+  );
 }

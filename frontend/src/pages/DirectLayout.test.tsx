@@ -1,29 +1,33 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
-vi.mock('./DirectChatByUsernamePage', () => ({
-  DirectChatByUsernamePage: ({ username }: { username: string }) => <div>CHAT:{username}</div>,
-}))
+vi.mock("./DirectChatByUsernamePage", () => ({
+  DirectChatByUsernamePage: ({ username }: { username: string }) => (
+    <div>CHAT:{username}</div>
+  ),
+}));
 
-import { DirectLayout } from './DirectLayout'
+import { DirectLayout } from "./DirectLayout";
 
 const user = {
-  username: 'demo',
-  email: 'demo@example.com',
+  username: "demo",
+  email: "demo@example.com",
   profileImage: null,
-  bio: '',
+  bio: "",
   lastSeen: null,
   registeredAt: null,
-}
+};
 
-describe('DirectLayout', () => {
-  it('shows placeholder when no active chat', () => {
-    render(<DirectLayout user={user} onNavigate={vi.fn()} />)
-    expect(screen.getByText('Выберите диалог в боковой панели, чтобы открыть чат.')).toBeInTheDocument()
-  })
+describe("DirectLayout", () => {
+  it("shows placeholder when no active chat", () => {
+    render(<DirectLayout user={user} onNavigate={vi.fn()} />);
+    expect(
+      screen.getByText("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ."),
+    ).toBeInTheDocument();
+  });
 
-  it('shows chat when username is provided', () => {
-    render(<DirectLayout user={user} username="alice" onNavigate={vi.fn()} />)
-    expect(screen.getByText('CHAT:alice')).toBeInTheDocument()
-  })
-})
+  it("shows chat when username is provided", () => {
+    render(<DirectLayout user={user} username="alice" onNavigate={vi.fn()} />);
+    expect(screen.getByText("CHAT:alice")).toBeInTheDocument();
+  });
+});

@@ -1,37 +1,37 @@
 export type Role = {
-  id: number
-  name: string
-  color: string
-  position: number
-  permissions: number
-  isDefault: boolean
-  createdAt: string
-}
+  id: number;
+  name: string;
+  color: string;
+  position: number;
+  permissions: number;
+  isDefault: boolean;
+  createdAt: string;
+};
 
 export type MemberRoles = {
-  userId: number
-  username: string
-  roleIds: number[]
-  roles: string[]
-  isBanned: boolean
-  joinedAt: string
-}
+  userId: number;
+  username: string;
+  roleIds: number[];
+  roles: string[];
+  isBanned: boolean;
+  joinedAt: string;
+};
 
 export type PermissionOverride = {
-  id: number
-  targetRoleId: number | null
-  targetUserId: number | null
-  allow: number
-  deny: number
-}
+  id: number;
+  targetRoleId: number | null;
+  targetUserId: number | null;
+  allow: number;
+  deny: number;
+};
 
 export type MyPermissions = {
-  permissions: number
-  roles?: number[]
-  isMember?: boolean
-  isBanned?: boolean
-  canJoin?: boolean
-}
+  permissions: number;
+  roles?: number[];
+  isMember?: boolean;
+  isBanned?: boolean;
+  canJoin?: boolean;
+};
 
 /** Bitmask flags matching backend roles/permissions.py Perm enum. */
 export const Perm = {
@@ -57,4 +57,4 @@ export const Perm = {
   VOICE_MUTE_OTHERS: 2 ** 26,
   VOICE_DEAFEN_OTHERS: 2 ** 27,
   ADMINISTRATOR: 2 ** 32,
-} as const
+} as const;

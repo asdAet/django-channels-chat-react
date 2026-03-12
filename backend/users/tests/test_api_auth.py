@@ -1,4 +1,4 @@
-"""Тесты auth API."""
+﻿"""Тесты auth API."""
 
 import json
 
@@ -35,6 +35,7 @@ class AuthApiTests(TestCase):
             '/api/auth/register/',
             data=json.dumps(
                 {
+                    'name': 'New User',
                     'username': 'new_user',
                     'password1': 'pass12345',
                     'password2': 'pass12345',
@@ -47,6 +48,10 @@ class AuthApiTests(TestCase):
         payload = response.json()
         self.assertTrue(payload.get('authenticated'))
         self.assertEqual(payload.get('user', {}).get('username'), 'new_user')
+        self.assertEqual(payload.get('user', {}).get('name'), 'New User')
+        self.assertEqual(payload.get('user', {}).get('last_name'), '')
+        registered = User.objects.get(username='new_user')
+        self.assertEqual(registered.first_name, 'New User')
 
     def test_register_duplicate_username_returns_field_error(self):
         User.objects.create_user(username='taken_name', password='pass12345')
@@ -55,6 +60,7 @@ class AuthApiTests(TestCase):
             '/api/auth/register/',
             data=json.dumps(
                 {
+                    'name': 'Taken User',
                     'username': 'taken_name',
                     'password1': 'pass12345',
                     'password2': 'pass12345',
@@ -68,12 +74,37 @@ class AuthApiTests(TestCase):
         self.assertIn('errors', payload)
         self.assertIn('username', payload['errors'])
 
+    def test_register_saves_optional_last_name(self):
+        csrf = self._csrf()
+        response = self.client.post(
+            '/api/auth/register/',
+            data=json.dumps(
+                {
+                    'name': 'John',
+                    'last_name': 'Doe',
+                    'username': 'johnuser',
+                    'password1': 'pass12345',
+                    'password2': 'pass12345',
+                }
+            ),
+            content_type='application/json',
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertEqual(payload.get('user', {}).get('name'), 'John')
+        self.assertEqual(payload.get('user', {}).get('last_name'), 'Doe')
+        registered = User.objects.get(username='johnuser')
+        self.assertEqual(registered.first_name, 'John')
+        self.assertEqual(registered.last_name, 'Doe')
+
     def test_register_rejects_long_username(self):
         csrf = self._csrf()
         response = self.client.post(
             '/api/auth/register/',
             data=json.dumps(
                 {
+                    'name': 'Long Username',
                     'username': 'a' * 31,
                     'password1': 'pass12345',
                     'password2': 'pass12345',
@@ -93,6 +124,7 @@ class AuthApiTests(TestCase):
             '/api/auth/register/',
             data=json.dumps(
                 {
+                    'name': 'Exact Length',
                     'username': 'b' * 30,
                     'password1': 'pass12345',
                     'password2': 'pass12345',
@@ -117,6 +149,7 @@ class AuthApiTests(TestCase):
             '/api/auth/register/',
             data=json.dumps(
                 {
+                    'name': 'Weak User',
                     'username': 'weak_user',
                     'password1': 'short1',
                     'password2': 'short1',
@@ -129,6 +162,25 @@ class AuthApiTests(TestCase):
         payload = response.json()
         self.assertIn('errors', payload)
         self.assertIn('password', payload['errors'])
+
+    def test_register_requires_name(self):
+        csrf = self._csrf()
+        response = self.client.post(
+            '/api/auth/register/',
+            data=json.dumps(
+                {
+                    'username': 'nameless',
+                    'password1': 'pass12345',
+                    'password2': 'pass12345',
+                }
+            ),
+            content_type='application/json',
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertIn('errors', payload)
+        self.assertIn('name', payload['errors'])
 
     def test_login_invalid_credentials(self):
         csrf = self._csrf()
@@ -228,3 +280,4 @@ class AuthApiTests(TestCase):
             )
         self.assertEqual(response.status_code, 400)
         self.assertTrue(any('auth.login.failed' in line for line in captured.output))
+

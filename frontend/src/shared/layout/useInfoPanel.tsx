@@ -1,17 +1,29 @@
 ﻿/* eslint-disable react-refresh/only-export-components */
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
 
-type InfoPanelContent = 'profile' | 'group' | 'search' | 'direct' | null
+type InfoPanelContent = "profile" | "group" | "search" | "direct" | null;
 
 type InfoPanelState = {
-  isOpen: boolean
-  content: InfoPanelContent
-  targetId: string | null
-  open: (content: NonNullable<InfoPanelContent>, targetId?: string | null) => void
-  close: () => void
-  clearClosed: () => void
-  toggle: (content: NonNullable<InfoPanelContent>, targetId?: string | null) => void
-}
+  isOpen: boolean;
+  content: InfoPanelContent;
+  targetId: string | null;
+  open: (
+    content: NonNullable<InfoPanelContent>,
+    targetId?: string | null,
+  ) => void;
+  close: () => void;
+  clearClosed: () => void;
+  toggle: (
+    content: NonNullable<InfoPanelContent>,
+    targetId?: string | null,
+  ) => void;
+};
 
 const InfoPanelCtx = createContext<InfoPanelState>({
   isOpen: false,
@@ -21,46 +33,56 @@ const InfoPanelCtx = createContext<InfoPanelState>({
   close: () => {},
   clearClosed: () => {},
   toggle: () => {},
-})
+});
 
 export function InfoPanelProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ isOpen: boolean; content: InfoPanelContent; targetId: string | null }>({
+  const [state, setState] = useState<{
+    isOpen: boolean;
+    content: InfoPanelContent;
+    targetId: string | null;
+  }>({
     isOpen: false,
     content: null,
     targetId: null,
-  })
+  });
 
-  const open = useCallback((content: NonNullable<InfoPanelContent>, targetId?: string | null) => {
-    setState({ isOpen: true, content, targetId: targetId ?? null })
-  }, [])
+  const open = useCallback(
+    (content: NonNullable<InfoPanelContent>, targetId?: string | null) => {
+      setState({ isOpen: true, content, targetId: targetId ?? null });
+    },
+    [],
+  );
 
   const close = useCallback(() => {
     setState((prev) => {
       if (prev.content === null || !prev.isOpen) {
-        return prev
+        return prev;
       }
-      return { ...prev, isOpen: false }
-    })
-  }, [])
+      return { ...prev, isOpen: false };
+    });
+  }, []);
 
   const clearClosed = useCallback(() => {
     setState((prev) => {
       if (prev.isOpen || prev.content === null) {
-        return prev
+        return prev;
       }
-      return { isOpen: false, content: null, targetId: null }
-    })
-  }, [])
+      return { isOpen: false, content: null, targetId: null };
+    });
+  }, []);
 
-  const toggle = useCallback((content: NonNullable<InfoPanelContent>, targetId?: string | null) => {
-    setState((prev) => {
-      const nextTargetId = targetId ?? null
-      if (prev.content === content && prev.targetId === nextTargetId) {
-        return { ...prev, isOpen: !prev.isOpen }
-      }
-      return { isOpen: true, content, targetId: nextTargetId }
-    })
-  }, [])
+  const toggle = useCallback(
+    (content: NonNullable<InfoPanelContent>, targetId?: string | null) => {
+      setState((prev) => {
+        const nextTargetId = targetId ?? null;
+        if (prev.content === content && prev.targetId === nextTargetId) {
+          return { ...prev, isOpen: !prev.isOpen };
+        }
+        return { isOpen: true, content, targetId: nextTargetId };
+      });
+    },
+    [],
+  );
 
   const value: InfoPanelState = {
     isOpen: state.isOpen,
@@ -70,12 +92,13 @@ export function InfoPanelProvider({ children }: { children: ReactNode }) {
     close,
     clearClosed,
     toggle,
-  }
+  };
 
-  return <InfoPanelCtx.Provider value={value}>{children}</InfoPanelCtx.Provider>
+  return (
+    <InfoPanelCtx.Provider value={value}>{children}</InfoPanelCtx.Provider>
+  );
 }
 
 export function useInfoPanel() {
-  return useContext(InfoPanelCtx)
+  return useContext(InfoPanelCtx);
 }
-

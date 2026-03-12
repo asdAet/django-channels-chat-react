@@ -2,6 +2,8 @@ from rest_framework import serializers
 
 
 class UserSerializer(serializers.Serializer):
+    name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
     username = serializers.CharField()
     email = serializers.EmailField()
     profileImage = serializers.CharField(allow_null=True)
@@ -24,6 +26,8 @@ class LoginSerializer(serializers.Serializer):
 
 
 class RegisterSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    last_name = serializers.CharField(required=False, allow_blank=True)
     username = serializers.CharField()
     password1 = serializers.CharField()
     password2 = serializers.CharField()
@@ -34,6 +38,8 @@ class LogoutSerializer(serializers.Serializer):
 
 
 class ProfileUpdateSerializer(serializers.Serializer):
+    name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
     username = serializers.CharField(required=False, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True)
     bio = serializers.CharField(required=False, allow_blank=True)

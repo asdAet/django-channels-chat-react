@@ -1,7 +1,7 @@
-import type { AxiosInstance } from 'axios'
+import type { AxiosInstance } from "axios";
 
-import { decodeMemberRolesResponse } from '../../dto'
-import type { MemberRoles } from '../../entities/role/types'
+import { decodeMemberRolesResponse } from "../../dto";
+import type { MemberRoles } from "../../entities/role/types";
 
 export async function setMemberRoles(
   apiClient: AxiosInstance,
@@ -12,6 +12,6 @@ export async function setMemberRoles(
   const response = await apiClient.patch<unknown>(
     `/chat/rooms/${encodeURIComponent(slug)}/members/${userId}/roles/`,
     { roleIds },
-  )
-  return decodeMemberRolesResponse(response.data)
+  );
+  return decodeMemberRolesResponse(response.data);
 }

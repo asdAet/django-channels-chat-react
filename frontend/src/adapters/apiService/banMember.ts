@@ -1,4 +1,4 @@
-import type { AxiosInstance } from 'axios'
+import type { AxiosInstance } from "axios";
 
 export async function banMember(
   apiClient: AxiosInstance,
@@ -6,5 +6,8 @@ export async function banMember(
   userId: number,
   reason?: string,
 ): Promise<void> {
-  await apiClient.post(`/groups/${encodeURIComponent(slug)}/members/${userId}/ban/`, reason ? { reason } : {})
+  await apiClient.post(
+    `/groups/${encodeURIComponent(slug)}/members/${userId}/ban/`,
+    reason ? { reason } : {},
+  );
 }

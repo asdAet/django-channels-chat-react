@@ -1,22 +1,22 @@
-﻿import { useEffect, useMemo } from 'react'
+﻿import { useEffect, useMemo } from "react";
 
-import type { UserProfile } from '../entities/user/types'
-import { formatTimestamp } from '../shared/lib/format'
-import { useDirectInbox } from '../shared/directInbox'
-import { usePresence } from '../shared/presence'
-import { Avatar, Button, Card, Panel, Toast } from '../shared/ui'
-import styles from '../styles/pages/DirectChatsPage.module.css'
+import type { UserProfile } from "../entities/user/types";
+import { formatTimestamp } from "../shared/lib/format";
+import { useDirectInbox } from "../shared/directInbox";
+import { usePresence } from "../shared/presence";
+import { Avatar, Button, Card, Panel, Toast } from "../shared/ui";
+import styles from "../styles/pages/DirectChatsPage.module.css";
 
 type Props = {
-  user: UserProfile | null
-  onNavigate: (path: string) => void
-}
+  user: UserProfile | null;
+  onNavigate: (path: string) => void;
+};
 
 type ListProps = Props & {
-  activeUsername?: string
-  resetActiveOnMount?: boolean
-  className?: string
-}
+  activeUsername?: string;
+  resetActiveOnMount?: boolean;
+  className?: string;
+};
 
 export function DirectChatsList({
   user,
@@ -25,60 +25,77 @@ export function DirectChatsList({
   resetActiveOnMount = true,
   className,
 }: ListProps) {
-  const { items, loading, error, setActiveRoom, refresh, unreadCounts } = useDirectInbox()
-  const { online: presenceOnline, status: presenceStatus } = usePresence()
+  const { items, loading, error, setActiveRoom, refresh, unreadCounts } =
+    useDirectInbox();
+  const { online: presenceOnline, status: presenceStatus } = usePresence();
   const onlineUsernames = useMemo(
     () =>
       new Set(
-        presenceStatus === 'online' ? presenceOnline.map((entry) => entry.username) : [],
+        presenceStatus === "online"
+          ? presenceOnline.map((entry) => entry.username)
+          : [],
       ),
     [presenceOnline, presenceStatus],
-  )
+  );
 
   useEffect(() => {
-    if (!resetActiveOnMount) return
-    setActiveRoom(null)
-  }, [resetActiveOnMount, setActiveRoom])
+    if (!resetActiveOnMount) return;
+    setActiveRoom(null);
+  }, [resetActiveOnMount, setActiveRoom]);
 
   useEffect(() => {
-    if (!user) return
-    void refresh()
-  }, [refresh, user])
+    if (!user) return;
+    void refresh();
+  }, [refresh, user]);
 
   if (!user) {
     return (
       <Panel>
         <p>Чтобы пользоваться личными чатами, войдите в аккаунт.</p>
         <div className={styles.actions}>
-          <Button variant="primary" onClick={() => onNavigate('/login')}>
+          <Button variant="primary" onClick={() => onNavigate("/login")}>
             Войти
           </Button>
-          <Button variant="ghost" onClick={() => onNavigate('/register')}>
+          <Button variant="ghost" onClick={() => onNavigate("/register")}>
             Регистрация
           </Button>
         </div>
       </Panel>
-    )
+    );
   }
 
   return (
-    <Card as="section" className={[styles.directInbox, className].filter(Boolean).join(' ')}>
+    <Card
+      as="section"
+      className={[styles.directInbox, className].filter(Boolean).join(" ")}
+    >
       {loading && <p className={styles.muted}>Загрузка диалогов...</p>}
       {error && <Toast variant="danger">{error}</Toast>}
 
-      {!loading && !error && !items.length && <p className={styles.muted}>Пока нет личных сообщений</p>}
+      {!loading && !error && !items.length && (
+        <p className={styles.muted}>Пока нет личных сообщений</p>
+      )}
 
       {!loading && !error && items.length > 0 && (
         <div className={styles.directChatList}>
           {items.map((item) => {
-            const isActive = Boolean(activeUsername && item.peer.username === activeUsername)
-            const isPeerOnline = onlineUsernames.has(item.peer.username)
+            const isActive = Boolean(
+              activeUsername && item.peer.username === activeUsername,
+            );
+            const isPeerOnline = onlineUsernames.has(item.peer.username);
             return (
               <button
                 key={item.slug}
-                className={[styles.directChatItem, isActive ? styles.active : ''].filter(Boolean).join(' ')}
-                aria-current={isActive ? 'page' : undefined}
-                onClick={() => onNavigate(`/direct/@${encodeURIComponent(item.peer.username)}`)}
+                className={[
+                  styles.directChatItem,
+                  isActive ? styles.active : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                aria-current={isActive ? "page" : undefined}
+                onClick={() =>
+                  onNavigate(`/@${encodeURIComponent(item.peer.username)}`)
+                }
                 type="button"
               >
                 <Avatar
@@ -90,27 +107,34 @@ export function DirectChatsList({
                 />
                 <div className={styles.itemBody}>
                   <div className={styles.itemHead}>
-                    <strong className={styles.itemName} title={item.peer.username}>
+                    <strong
+                      className={styles.itemName}
+                      title={item.peer.username}
+                    >
                       {item.peer.username}
                     </strong>
                     <div className={styles.itemMeta}>
-                      <span className={styles.time}>{formatTimestamp(item.lastMessageAt)}</span>
+                      <span className={styles.time}>
+                        {formatTimestamp(item.lastMessageAt)}
+                      </span>
                       {unreadCounts[item.slug] > 0 && (
-                        <span className={styles.badge}>{unreadCounts[item.slug]}</span>
+                        <span className={styles.badge}>
+                          {unreadCounts[item.slug]}
+                        </span>
                       )}
                     </div>
                   </div>
                   <p className={styles.preview}>{item.lastMessage}</p>
                 </div>
               </button>
-            )
+            );
           })}
         </div>
       )}
     </Card>
-  )
+  );
 }
 
 export function DirectChatsPage({ user, onNavigate }: Props) {
-  return <DirectChatsList user={user} onNavigate={onNavigate} />
+  return <DirectChatsList user={user} onNavigate={onNavigate} />;
 }

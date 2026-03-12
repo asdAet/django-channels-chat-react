@@ -108,6 +108,18 @@ class DeclineRequestApiView(APIView):
         return Response({"item": output.data})
 
 
+class CancelOutgoingRequestApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, friendship_id: int):
+        try:
+            friendship = friend_service.cancel_outgoing_request(request.user, int(friendship_id))
+        except FriendServiceError as exc:
+            return _service_error_response(exc)
+        output = OutgoingRequestOutputSerializer(friendship, context={"request": request})
+        return Response({"item": output.data})
+
+
 class RemoveFriendApiView(APIView):
     permission_classes = [IsAuthenticated]
 

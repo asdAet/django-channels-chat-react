@@ -1,49 +1,49 @@
-import { useCallback, useState, type KeyboardEvent } from 'react'
+import { useCallback, useState, type KeyboardEvent } from "react";
 
-import styles from '../../styles/friends/FriendsPage.module.css'
+import styles from "../../styles/friends/FriendsPage.module.css";
 
 type Props = {
-  onSubmit: (username: string) => Promise<void>
-  onClose: () => void
-}
+  onSubmit: (username: string) => Promise<void>;
+  onClose: () => void;
+};
 
 export function AddFriendDialog({ onSubmit, onClose }: Props) {
-  const [username, setUsername] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [sending, setSending] = useState(false)
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
   const handleSubmit = useCallback(async () => {
-    const trimmed = username.trim()
-    if (!trimmed) return
+    const trimmed = username.trim();
+    if (!trimmed) return;
 
-    setSending(true)
-    setError(null)
+    setSending(true);
+    setError(null);
     try {
-      await onSubmit(trimmed)
-      onClose()
+      await onSubmit(trimmed);
+      onClose();
     } catch (err: unknown) {
       const msg =
-        err && typeof err === 'object' && 'message' in err
+        err && typeof err === "object" && "message" in err
           ? (err as { message: string }).message
-          : 'Не удалось отправить запрос'
-      setError(msg)
+          : "Не удалось отправить запрос";
+      setError(msg);
     } finally {
-      setSending(false)
+      setSending(false);
     }
-  }, [username, onSubmit, onClose])
+  }, [username, onSubmit, onClose]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        e.preventDefault()
-        void handleSubmit()
+      if (e.key === "Enter") {
+        e.preventDefault();
+        void handleSubmit();
       }
-      if (e.key === 'Escape') {
-        onClose()
+      if (e.key === "Escape") {
+        onClose();
       }
     },
     [handleSubmit, onClose],
-  )
+  );
 
   return (
     <div className={styles.dialog} role="dialog" aria-label="Добавить друга">
@@ -61,7 +61,11 @@ export function AddFriendDialog({ onSubmit, onClose }: Props) {
         />
         {error && <div className={styles.dialogError}>{error}</div>}
         <div className={styles.dialogActions}>
-          <button type="button" className={styles.dialogCancelBtn} onClick={onClose}>
+          <button
+            type="button"
+            className={styles.dialogCancelBtn}
+            onClick={onClose}
+          >
             Отмена
           </button>
           <button
@@ -75,5 +79,5 @@ export function AddFriendDialog({ onSubmit, onClose }: Props) {
         </div>
       </div>
     </div>
-  )
+  );
 }

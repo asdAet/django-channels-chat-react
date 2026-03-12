@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from "react";
 
 /**
  * Управляет состоянием и эффектами хука `useOnlineStatus`.
@@ -7,9 +7,9 @@
 
 export const useOnlineStatus = () => {
   const [online, setOnline] = useState(() => {
-    if (typeof navigator === 'undefined') return true
-    return navigator.onLine
-  })
+    if (typeof navigator === "undefined") return true;
+    return navigator.onLine;
+  });
 
   /**
    * Выполняет метод `useEffect`.
@@ -18,15 +18,15 @@ export const useOnlineStatus = () => {
    */
 
   useEffect(() => {
-    const handleOnline = () => setOnline(true)
-    const handleOffline = () => setOnline(false)
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
-  return online
-}
+  return online;
+};

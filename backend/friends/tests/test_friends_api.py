@@ -181,6 +181,37 @@ class AcceptDeclineTests(FriendsApiTestBase):
         fs = Friendship.objects.get(from_user=self.alice, to_user=self.bob)
         self.assertEqual(fs.status, Friendship.Status.PENDING)
 
+    def test_cancel_outgoing_request(self):
+        fs = Friendship.objects.create(
+            from_user=self.alice,
+            to_user=self.bob,
+            status=Friendship.Status.PENDING,
+        )
+        self._login(self.alice)
+        resp = self.client.delete(f"/api/friends/requests/{fs.pk}/cancel/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse(Friendship.objects.filter(pk=fs.pk).exists())
+
+    def test_cancel_outgoing_request_by_other_user_forbidden(self):
+        fs = Friendship.objects.create(
+            from_user=self.alice,
+            to_user=self.bob,
+            status=Friendship.Status.PENDING,
+        )
+        self._login(self.charlie)
+        resp = self.client.delete(f"/api/friends/requests/{fs.pk}/cancel/")
+        self.assertEqual(resp.status_code, 403)
+
+    def test_cancel_outgoing_request_returns_not_found_for_non_pending(self):
+        fs = Friendship.objects.create(
+            from_user=self.alice,
+            to_user=self.bob,
+            status=Friendship.Status.ACCEPTED,
+        )
+        self._login(self.alice)
+        resp = self.client.delete(f"/api/friends/requests/{fs.pk}/cancel/")
+        self.assertEqual(resp.status_code, 404)
+
 
 class ListTests(FriendsApiTestBase):
     def test_list_friends(self):
@@ -278,6 +309,36 @@ class RemoveFriendTests(FriendsApiTestBase):
         self._login(self.alice)
         resp = self.client.delete("/api/friends/99999/")
         self.assertEqual(resp.status_code, 404)
+
+    def test_remove_friend_does_not_delete_pending_relation(self):
+        Friendship.objects.create(
+            from_user=self.alice, to_user=self.bob, status=Friendship.Status.PENDING
+        )
+        self._login(self.alice)
+        resp = self.client.delete(f"/api/friends/{self.bob.pk}/")
+        self.assertEqual(resp.status_code, 404)
+        self.assertTrue(
+            Friendship.objects.filter(
+                from_user=self.alice,
+                to_user=self.bob,
+                status=Friendship.Status.PENDING,
+            ).exists()
+        )
+
+    def test_remove_friend_does_not_delete_blocked_relation(self):
+        Friendship.objects.create(
+            from_user=self.alice, to_user=self.bob, status=Friendship.Status.BLOCKED
+        )
+        self._login(self.alice)
+        resp = self.client.delete(f"/api/friends/{self.bob.pk}/")
+        self.assertEqual(resp.status_code, 404)
+        self.assertTrue(
+            Friendship.objects.filter(
+                from_user=self.alice,
+                to_user=self.bob,
+                status=Friendship.Status.BLOCKED,
+            ).exists()
+        )
 
 
 class BlockUnblockTests(FriendsApiTestBase):

@@ -15,10 +15,12 @@
   --tg-bg-input: #2b2b2b;
 
   /* Message bubbles */
-  --tg-msg-out-bg: #2fb3a3;
+  --tg-msg-out-bg: #5f50a7;
   --tg-msg-in-bg: #212121;
   --tg-msg-out-text: #ffffff;
   --tg-msg-in-text: #ffffff;
+  /* Message replay */
+  --tg-msg-replay-bg: #5f50a731;
 
   /* Text */
   --tg-text-primary: #ffffff;
@@ -30,8 +32,8 @@
 
   /* Status */
   --tg-danger: #ff595a;
-  --tg-success: #5CC85E;
-  --tg-online: #5CC85E;
+  --tg-success: #5cc85e;
+  --tg-online: #5cc85e;
   --tg-warning: #e5a64e;
 
   /* Badges & accents */
@@ -54,7 +56,7 @@
   --tg-radius-round: 50%;
 
   /* Typography */
-  --tg-font: 'Manrope', 'Segoe UI', sans-serif;
+  --tg-font: "Manrope", "Segoe UI", sans-serif;
 
   /* Layout */
   --tg-sidebar-w: 308px;
@@ -93,4 +95,3 @@
     --app-height: 100dvh;
   }
 }
-

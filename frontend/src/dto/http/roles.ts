@@ -1,7 +1,12 @@
-import { z } from 'zod'
+import { z } from "zod";
 
-import type { MemberRoles, MyPermissions, PermissionOverride, Role } from '../../entities/role/types'
-import { decodeOrThrow } from '../core/codec'
+import type {
+  MemberRoles,
+  MyPermissions,
+  PermissionOverride,
+  Role,
+} from "../../entities/role/types";
+import { decodeOrThrow } from "../core/codec";
 
 const roleSchema = z
   .object({
@@ -15,9 +20,9 @@ const roleSchema = z
     createdAt: z.string().optional(),
     created_at: z.string().optional(),
   })
-  .passthrough()
+  .passthrough();
 
-const roleListSchema = z.object({ items: z.array(roleSchema) }).passthrough()
+const roleListSchema = z.object({ items: z.array(roleSchema) }).passthrough();
 
 const memberRolesSchema = z
   .object({
@@ -26,12 +31,7 @@ const memberRolesSchema = z
         userId: z.number(),
         username: z.string(),
         roleIds: z.array(z.number()),
-        roles: z.array(
-          z.union([
-            z.string(),
-            roleSchema,
-          ]),
-        ),
+        roles: z.array(z.union([z.string(), roleSchema])),
         isBanned: z.boolean().optional(),
         is_banned: z.boolean().optional(),
         joinedAt: z.string().optional(),
@@ -39,7 +39,7 @@ const memberRolesSchema = z
       })
       .passthrough(),
   })
-  .passthrough()
+  .passthrough();
 
 const overrideSchema = z
   .object({
@@ -49,9 +49,11 @@ const overrideSchema = z
     allow: z.number().optional(),
     deny: z.number().optional(),
   })
-  .passthrough()
+  .passthrough();
 
-const overrideListSchema = z.object({ items: z.array(overrideSchema) }).passthrough()
+const overrideListSchema = z
+  .object({ items: z.array(overrideSchema) })
+  .passthrough();
 
 const myPermissionsSchema = z
   .object({
@@ -61,64 +63,68 @@ const myPermissionsSchema = z
     isBanned: z.boolean().optional(),
     canJoin: z.boolean().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const mapRole = (dto: z.infer<typeof roleSchema>): Role => ({
   id: dto.id,
   name: dto.name,
-  color: dto.color ?? '#99AAB5',
+  color: dto.color ?? "#99AAB5",
   position: dto.position ?? 0,
   permissions: dto.permissions ?? 0,
   isDefault: dto.isDefault ?? dto.is_default ?? false,
-  createdAt: dto.createdAt ?? dto.created_at ?? '',
-})
+  createdAt: dto.createdAt ?? dto.created_at ?? "",
+});
 
 export const decodeRolesListResponse = (input: unknown): Role[] => {
-  const parsed = decodeOrThrow(roleListSchema, input, 'roles/list')
-  return parsed.items.map(mapRole)
-}
+  const parsed = decodeOrThrow(roleListSchema, input, "roles/list");
+  return parsed.items.map(mapRole);
+};
 
 export const decodeRoleResponse = (input: unknown): Role => {
-  const wrapped = z.object({ item: roleSchema }).passthrough()
-  const parsed = decodeOrThrow(wrapped, input, 'roles/single')
-  return mapRole(parsed.item)
-}
+  const wrapped = z.object({ item: roleSchema }).passthrough();
+  const parsed = decodeOrThrow(wrapped, input, "roles/single");
+  return mapRole(parsed.item);
+};
 
 export const decodeMemberRolesResponse = (input: unknown): MemberRoles => {
-  const parsed = decodeOrThrow(memberRolesSchema, input, 'roles/member')
+  const parsed = decodeOrThrow(memberRolesSchema, input, "roles/member");
   return {
     userId: parsed.item.userId,
     username: parsed.item.username,
     roleIds: parsed.item.roleIds,
-    roles: parsed.item.roles.map((role) => (typeof role === 'string' ? role : role.name)),
+    roles: parsed.item.roles.map((role) =>
+      typeof role === "string" ? role : role.name,
+    ),
     isBanned: parsed.item.isBanned ?? parsed.item.is_banned ?? false,
-    joinedAt: parsed.item.joinedAt ?? parsed.item.joined_at ?? '',
-  }
-}
+    joinedAt: parsed.item.joinedAt ?? parsed.item.joined_at ?? "",
+  };
+};
 
-export const decodeOverridesResponse = (input: unknown): PermissionOverride[] => {
-  const parsed = decodeOrThrow(overrideListSchema, input, 'roles/overrides')
+export const decodeOverridesResponse = (
+  input: unknown,
+): PermissionOverride[] => {
+  const parsed = decodeOrThrow(overrideListSchema, input, "roles/overrides");
   return parsed.items.map((o) => ({
     id: o.id,
     targetRoleId: o.targetRoleId ?? null,
     targetUserId: o.targetUserId ?? null,
     allow: o.allow ?? 0,
     deny: o.deny ?? 0,
-  }))
-}
+  }));
+};
 
 export const decodeOverrideResponse = (input: unknown): PermissionOverride => {
-  const wrapped = z.object({ item: overrideSchema }).passthrough()
-  const parsed = decodeOrThrow(wrapped, input, 'roles/override')
+  const wrapped = z.object({ item: overrideSchema }).passthrough();
+  const parsed = decodeOrThrow(wrapped, input, "roles/override");
   return {
     id: parsed.item.id,
     targetRoleId: parsed.item.targetRoleId ?? null,
     targetUserId: parsed.item.targetUserId ?? null,
     allow: parsed.item.allow ?? 0,
     deny: parsed.item.deny ?? 0,
-  }
-}
+  };
+};
 
 export const decodeMyPermissionsResponse = (input: unknown): MyPermissions => {
-  return decodeOrThrow(myPermissionsSchema, input, 'roles/my-permissions')
-}
+  return decodeOrThrow(myPermissionsSchema, input, "roles/my-permissions");
+};

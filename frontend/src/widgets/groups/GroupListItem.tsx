@@ -1,15 +1,20 @@
-import type { GroupListItem as GroupListItemType } from '../../entities/group/types'
-import { Avatar } from '../../shared/ui'
-import styles from '../../styles/groups/GroupsPage.module.css'
+import type { GroupListItem as GroupListItemType } from "../../entities/group/types";
+import { Avatar } from "../../shared/ui";
+import styles from "../../styles/groups/GroupsPage.module.css";
 
 type Props = {
-  group: GroupListItemType
-  onClick: (slug: string) => void
-}
+  group: GroupListItemType;
+  onClick: (slug: string) => void;
+};
 
 export function GroupListItem({ group, onClick }: Props) {
   return (
-    <div className={styles.item} onClick={() => onClick(group.slug)} role="button" tabIndex={0}>
+    <div
+      className={styles.item}
+      onClick={() => onClick(group.slug)}
+      role="button"
+      tabIndex={0}
+    >
       <div className={styles.itemIcon}>
         <Avatar
           username={group.name}
@@ -24,9 +29,7 @@ export function GroupListItem({ group, onClick }: Props) {
           <div className={styles.itemDesc}>{group.description}</div>
         )}
       </div>
-      <div className={styles.itemMeta}>
-        {group.memberCount} уч.
-      </div>
+      <div className={styles.itemMeta}>{group.memberCount} уч.</div>
     </div>
-  )
+  );
 }

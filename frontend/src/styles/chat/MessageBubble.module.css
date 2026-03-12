@@ -18,7 +18,7 @@
 }
 
 .highlighted {
-  background: rgba(245, 158, 11, 0.16);
+  background: var(--tg-msg-replay-bg, #212121);
 }
 
 .messageOwn {
@@ -64,7 +64,7 @@
 
 .messageOwn .bubble {
   border-radius: var(--tg-radius-bubble, 12px) var(--tg-radius-bubble, 12px) 4px var(--tg-radius-bubble, 12px);
-  background: var(--tg-msg-out-bg, #2fb3a3);
+  background: var(--tg-msg-out-bg, #364368);
 }
 
 .deleted .bubble {
@@ -227,7 +227,7 @@
 .attachVideo {
   width: min(100%, clamp(200px, 64vw, 360px));
   max-width: min(100%, 360px);
-  max-height: 280px;
+  max-height: 200px;
   border-radius: 6px;
   background: #000;
 }

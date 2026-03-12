@@ -1,13 +1,13 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ButtonHTMLAttributes } from "react";
 
-import styles from '../../styles/ui/Button.module.css'
+import styles from "../../styles/ui/Button.module.css";
 
-type ButtonVariant = 'primary' | 'ghost' | 'outline' | 'link' | 'dangerLink'
+type ButtonVariant = "primary" | "ghost" | "outline" | "link" | "dangerLink";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant
-  fullWidth?: boolean
-}
+  variant?: ButtonVariant;
+  fullWidth?: boolean;
+};
 
 const variantClassMap: Record<ButtonVariant, string> = {
   primary: styles.primary,
@@ -15,7 +15,7 @@ const variantClassMap: Record<ButtonVariant, string> = {
   outline: styles.outline,
   link: styles.link,
   dangerLink: styles.dangerLink,
-}
+};
 
 /**
  * Универсальная кнопка интерфейса с вариантами оформления.
@@ -23,20 +23,24 @@ const variantClassMap: Record<ButtonVariant, string> = {
  * @returns JSX-кнопка с модульными стилями.
  */
 export function Button({
-  variant = 'primary',
+  variant = "primary",
   fullWidth = false,
   className,
-  type = 'button',
+  type = "button",
   ...props
 }: ButtonProps) {
   return (
     <button
       type={type}
-      className={[styles.button, variantClassMap[variant], fullWidth ? styles.fullWidth : '', className]
+      className={[
+        styles.button,
+        variantClassMap[variant],
+        fullWidth ? styles.fullWidth : "",
+        className,
+      ]
         .filter(Boolean)
-        .join(' ')}
+        .join(" ")}
       {...props}
     />
-  )
+  );
 }
-

@@ -129,6 +129,16 @@
   gap: 18px;
 }
 
+.usernameHandle {
+  margin: 4px 0 0;
+  color: var(--tg-text-secondary, #9ab1d0);
+  font-size: 14px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .muted {
   color: var(--color-muted);
 }

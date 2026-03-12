@@ -1062,41 +1062,39 @@ def global_search(request):
     interaction_room_ids = _interaction_room_ids(request.user)
     interaction_user_ids = _interaction_user_ids(request.user, interaction_room_ids)
 
-    users_qs = (
-        User.objects.filter(pk__in=interaction_user_ids)
-        .filter(username__icontains=q)
-        .select_related("profile")
-        .order_by("username")[:users_limit]
-    )
-    users = [_serialize_peer(request, found_user) for found_user in users_qs]
+    users = []
+    groups = []
+    if is_handle_query:
+        users_qs = (
+            User.objects.filter(pk__in=interaction_user_ids)
+            .filter(username__icontains=q)
+            .select_related("profile")
+            .order_by("username")[:users_limit]
+        )
+        users = [_serialize_peer(request, found_user) for found_user in users_qs]
 
-    group_filters = (
-        Q(username__icontains=q)
-        if is_handle_query
-        else (Q(name__icontains=q) | Q(username__icontains=q))
-    )
-    groups_qs = (
-        Room.objects.filter(
-            kind=Room.Kind.GROUP,
+        groups_qs = (
+            Room.objects.filter(
+                kind=Room.Kind.GROUP,
+            )
+            .filter(
+                Q(id__in=interaction_room_ids) | Q(is_public=True)
+            )
+            .filter(username__icontains=q)
+            .distinct()
+            .order_by("-member_count", "name")[:groups_limit]
         )
-        .filter(
-            Q(id__in=interaction_room_ids) | Q(is_public=True)
-        )
-        .filter(group_filters)
-        .distinct()
-        .order_by("-member_count", "name")[:groups_limit]
-    )
-    groups = [
-        {
-            "slug": room.slug,
-            "name": room.name,
-            "description": room.description[:200],
-            "username": room.username,
-            "memberCount": room.member_count,
-            "isPublic": room.is_public,
-        }
-        for room in groups_qs
-    ]
+        groups = [
+            {
+                "slug": room.slug,
+                "name": room.name,
+                "description": room.description[:200],
+                "username": room.username,
+                "memberCount": room.member_count,
+                "isPublic": room.is_public,
+            }
+            for room in groups_qs
+        ]
 
     if interaction_room_ids:
         messages_qs = (
@@ -1147,8 +1145,16 @@ def mark_read_view(request, room_slug):
     except Http404:
         return Response({"error": "Не найдено"}, status=http_status.HTTP_404_NOT_FOUND)
 
-    last_read_id = request.data.get("lastReadMessageId")
-    if not isinstance(last_read_id, int) or last_read_id < 1:
+    last_read_raw = request.data.get("lastReadMessageId")
+    if isinstance(last_read_raw, bool):
+        return Response({"error": "lastReadMessageId должен быть положительным целым числом"}, status=http_status.HTTP_400_BAD_REQUEST)
+
+    try:
+        last_read_id = int(last_read_raw)
+    except (TypeError, ValueError):
+        return Response({"error": "lastReadMessageId должен быть положительным целым числом"}, status=http_status.HTTP_400_BAD_REQUEST)
+
+    if last_read_id < 1:
         return Response({"error": "lastReadMessageId должен быть положительным целым числом"}, status=http_status.HTTP_400_BAD_REQUEST)
 
     try:

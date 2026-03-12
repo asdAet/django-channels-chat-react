@@ -1,16 +1,16 @@
-import type { GroupMember } from '../../entities/group/types'
-import { Avatar } from '../../shared/ui'
-import styles from '../../styles/groups/GroupsPage.module.css'
+import type { GroupMember } from "../../entities/group/types";
+import { Avatar } from "../../shared/ui";
+import styles from "../../styles/groups/GroupsPage.module.css";
 
 type Props = {
-  members: GroupMember[]
-  currentUsername: string | null
-  isAdmin: boolean
-  onKick?: (userId: number) => void
-  onBan?: (userId: number) => void
-  onMute?: (userId: number) => void
-  onUnmute?: (userId: number) => void
-}
+  members: GroupMember[];
+  currentUsername: string | null;
+  isAdmin: boolean;
+  onKick?: (userId: number) => void;
+  onBan?: (userId: number) => void;
+  onMute?: (userId: number) => void;
+  onUnmute?: (userId: number) => void;
+};
 
 export function GroupMembersList({
   members,
@@ -24,7 +24,7 @@ export function GroupMembersList({
   return (
     <>
       {members.map((m) => {
-        const isSelf = m.username === currentUsername
+        const isSelf = m.username === currentUsername;
         return (
           <div key={m.userId} className={styles.item}>
             <Avatar
@@ -38,12 +38,15 @@ export function GroupMembersList({
               <div className={styles.itemName}>
                 {m.username}
                 {m.roles.map((r) => (
-                  <span key={r} className={styles.memberRoleBadge}>{r}</span>
+                  <span key={r} className={styles.memberRoleBadge}>
+                    {r}
+                  </span>
                 ))}
                 {m.isMuted && <span className={styles.mutedTag}>muted</span>}
               </div>
               <div className={styles.itemDesc}>
-                {m.nickname || `Участник с ${new Date(m.joinedAt).toLocaleDateString()}`}
+                {m.nickname ||
+                  `Участник с ${new Date(m.joinedAt).toLocaleDateString()}`}
               </div>
             </div>
             {isAdmin && !isSelf && (
@@ -67,14 +70,18 @@ export function GroupMembersList({
                 )}
                 <button
                   type="button"
-                  className={[styles.actionBtn, styles.actionBtnDanger].join(' ')}
+                  className={[styles.actionBtn, styles.actionBtnDanger].join(
+                    " ",
+                  )}
                   onClick={() => onKick?.(m.userId)}
                 >
                   Кик
                 </button>
                 <button
                   type="button"
-                  className={[styles.actionBtn, styles.actionBtnDanger].join(' ')}
+                  className={[styles.actionBtn, styles.actionBtnDanger].join(
+                    " ",
+                  )}
                   onClick={() => onBan?.(m.userId)}
                 >
                   Бан
@@ -82,8 +89,8 @@ export function GroupMembersList({
               </div>
             )}
           </div>
-        )
+        );
       })}
     </>
-  )
+  );
 }

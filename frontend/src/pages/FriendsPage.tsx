@@ -1,27 +1,35 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { UserProfile } from '../entities/user/types'
-import { useFriends } from '../hooks/useFriends'
-import { usePresence } from '../shared/presence'
-import { Avatar, Spinner, EmptyState } from '../shared/ui'
-import { AddFriendDialog } from '../widgets/friends/AddFriendDialog'
-import { FriendListItem } from '../widgets/friends/FriendListItem'
-import { FriendRequestItem } from '../widgets/friends/FriendRequestItem'
-import styles from '../styles/friends/FriendsPage.module.css'
+import type { UserProfile } from "../entities/user/types";
+import { useFriends } from "../hooks/useFriends";
+import { usePresence } from "../shared/presence";
+import { Avatar, Spinner, EmptyState } from "../shared/ui";
+import { AddFriendDialog } from "../widgets/friends/AddFriendDialog";
+import { FriendListItem } from "../widgets/friends/FriendListItem";
+import { FriendRequestItem } from "../widgets/friends/FriendRequestItem";
+import styles from "../styles/friends/FriendsPage.module.css";
 
-type Tab = 'friends' | 'online' | 'incoming' | 'outgoing' | 'blocked'
+type Tab = "friends" | "online" | "incoming" | "outgoing" | "blocked";
 
 type Props = {
-  user: UserProfile | null
-  onNavigate: (path: string) => void
-}
+  user: UserProfile | null;
+  onNavigate: (path: string) => void;
+};
 
 const IconPlus = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  >
     <line x1="12" y1="5" x2="12" y2="19" />
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
-)
+);
 
 export function FriendsPage({ user, onNavigate }: Props) {
   const {
@@ -36,42 +44,51 @@ export function FriendsPage({ user, onNavigate }: Props) {
     sendRequest,
     acceptRequest,
     declineRequest,
+    cancelOutgoingRequest,
     removeFriend,
     blockUser,
     unblockUser,
-  } = useFriends()
+  } = useFriends();
 
-  const { online: presenceOnline, status: presenceStatus } = usePresence()
+  const { online: presenceOnline, status: presenceStatus } = usePresence();
   const onlineUsernames = useMemo(
-    () => new Set(presenceStatus === 'online' ? presenceOnline.map((e) => e.username) : []),
+    () =>
+      new Set(
+        presenceStatus === "online"
+          ? presenceOnline.map((e) => e.username)
+          : [],
+      ),
     [presenceOnline, presenceStatus],
-  )
+  );
 
-  const [tab, setTab] = useState<Tab>('friends')
-  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [tab, setTab] = useState<Tab>("friends");
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   const onlineFriends = useMemo(
     () => friends.filter((friend) => onlineUsernames.has(friend.username)),
     [friends, onlineUsernames],
-  )
+  );
 
   useEffect(() => {
-    if (!infoMessage) return
-    const timer = window.setTimeout(() => clearInfoMessage(), 3000)
-    return () => window.clearTimeout(timer)
-  }, [clearInfoMessage, infoMessage])
+    if (!infoMessage) return;
+    const timer = window.setTimeout(() => clearInfoMessage(), 3000);
+    return () => window.clearTimeout(timer);
+  }, [clearInfoMessage, infoMessage]);
 
   const handleMessage = useCallback(
-    (username: string) => onNavigate(`/direct/@${username}`),
+    (username: string) => onNavigate(`/@${encodeURIComponent(username)}`),
     [onNavigate],
-  )
+  );
 
   if (!user) {
     return (
       <div className={styles.root}>
-        <EmptyState title="Авторизуйтесь" description="Для просмотра друзей войдите в аккаунт." />
+        <EmptyState
+          title="Авторизуйтесь"
+          description="Для просмотра друзей войдите в аккаунт."
+        />
       </div>
-    )
+    );
   }
 
   return (
@@ -96,36 +113,46 @@ export function FriendsPage({ user, onNavigate }: Props) {
       <div className={styles.tabs}>
         <button
           type="button"
-          className={[styles.tab, tab === 'friends' ? styles.tabActive : ''].filter(Boolean).join(' ')}
-          onClick={() => setTab('friends')}
+          className={[styles.tab, tab === "friends" ? styles.tabActive : ""]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={() => setTab("friends")}
         >
           Все ({friends.length})
         </button>
         <button
           type="button"
-          className={[styles.tab, tab === 'online' ? styles.tabActive : ''].filter(Boolean).join(' ')}
-          onClick={() => setTab('online')}
+          className={[styles.tab, tab === "online" ? styles.tabActive : ""]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={() => setTab("online")}
         >
           Онлайн ({onlineFriends.length})
         </button>
         <button
           type="button"
-          className={[styles.tab, tab === 'incoming' ? styles.tabActive : ''].filter(Boolean).join(' ')}
-          onClick={() => setTab('incoming')}
+          className={[styles.tab, tab === "incoming" ? styles.tabActive : ""]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={() => setTab("incoming")}
         >
           Входящие ({incoming.length})
         </button>
         <button
           type="button"
-          className={[styles.tab, tab === 'outgoing' ? styles.tabActive : ''].filter(Boolean).join(' ')}
-          onClick={() => setTab('outgoing')}
+          className={[styles.tab, tab === "outgoing" ? styles.tabActive : ""]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={() => setTab("outgoing")}
         >
           Исходящие ({outgoing.length})
         </button>
         <button
           type="button"
-          className={[styles.tab, tab === 'blocked' ? styles.tabActive : ''].filter(Boolean).join(' ')}
-          onClick={() => setTab('blocked')}
+          className={[styles.tab, tab === "blocked" ? styles.tabActive : ""]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={() => setTab("blocked")}
         >
           Заблокированные ({blocked.length})
         </button>
@@ -133,16 +160,21 @@ export function FriendsPage({ user, onNavigate }: Props) {
 
       <div className={styles.body}>
         {loading && (
-          <div className={styles.centered}><Spinner size="md" /></div>
+          <div className={styles.centered}>
+            <Spinner size="md" />
+          </div>
         )}
 
-        {error && (
-          <div className={styles.centered}>{error}</div>
-        )}
+        {error && <div className={styles.centered}>{error}</div>}
 
-        {!loading && !error && tab === 'friends' && (
-          friends.length === 0 ? (
-            <EmptyState title="Нет друзей" description="Добавьте друзей, чтобы начать общение." />
+        {!loading &&
+          !error &&
+          tab === "friends" &&
+          (friends.length === 0 ? (
+            <EmptyState
+              title="Нет друзей"
+              description="Добавьте друзей, чтобы начать общение."
+            />
           ) : (
             friends.map((f) => (
               <FriendListItem
@@ -154,12 +186,16 @@ export function FriendsPage({ user, onNavigate }: Props) {
                 onBlock={blockUser}
               />
             ))
-          )
-        )}
+          ))}
 
-        {!loading && !error && tab === 'online' && (
-          onlineFriends.length === 0 ? (
-            <EmptyState title="Нет друзей онлайн" description="Когда кто-то появится в сети, он будет показан здесь." />
+        {!loading &&
+          !error &&
+          tab === "online" &&
+          (onlineFriends.length === 0 ? (
+            <EmptyState
+              title="Нет друзей онлайн"
+              description="Когда кто-то появится в сети, он будет показан здесь."
+            />
           ) : (
             onlineFriends.map((f) => (
               <FriendListItem
@@ -171,12 +207,16 @@ export function FriendsPage({ user, onNavigate }: Props) {
                 onBlock={blockUser}
               />
             ))
-          )
-        )}
+          ))}
 
-        {!loading && !error && tab === 'incoming' && (
-          incoming.length === 0 ? (
-            <EmptyState title="Нет входящих запросов" description="Новые запросы в друзья появятся здесь." />
+        {!loading &&
+          !error &&
+          tab === "incoming" &&
+          (incoming.length === 0 ? (
+            <EmptyState
+              title="Нет входящих запросов"
+              description="Новые запросы в друзья появятся здесь."
+            />
           ) : (
             incoming.map((r) => (
               <FriendRequestItem
@@ -187,27 +227,35 @@ export function FriendsPage({ user, onNavigate }: Props) {
                 onDecline={declineRequest}
               />
             ))
-          )
-        )}
+          ))}
 
-        {!loading && !error && tab === 'outgoing' && (
-          outgoing.length === 0 ? (
-            <EmptyState title="Нет исходящих запросов" description="Вы пока никому не отправляли запросы." />
+        {!loading &&
+          !error &&
+          tab === "outgoing" &&
+          (outgoing.length === 0 ? (
+            <EmptyState
+              title="Нет исходящих запросов"
+              description="Вы пока никому не отправляли запросы."
+            />
           ) : (
             outgoing.map((r) => (
               <FriendRequestItem
                 key={r.id}
                 request={r}
                 direction="outgoing"
-                onDecline={declineRequest}
+                onCancel={cancelOutgoingRequest}
               />
             ))
-          )
-        )}
+          ))}
 
-        {!loading && !error && tab === 'blocked' && (
-          blocked.length === 0 ? (
-            <EmptyState title="Нет заблокированных" description="Пользователи, которых вы заблокировали, появятся здесь." />
+        {!loading &&
+          !error &&
+          tab === "blocked" &&
+          (blocked.length === 0 ? (
+            <EmptyState
+              title="Нет заблокированных"
+              description="Пользователи, которых вы заблокировали, появятся здесь."
+            />
           ) : (
             blocked.map((b) => (
               <div key={b.id} className={styles.item}>
@@ -225,7 +273,9 @@ export function FriendsPage({ user, onNavigate }: Props) {
                 <div className={styles.itemActions}>
                   <button
                     type="button"
-                    className={[styles.actionBtn, styles.actionBtnAccept].join(' ')}
+                    className={[styles.actionBtn, styles.actionBtnAccept].join(
+                      " ",
+                    )}
                     onClick={() => void unblockUser(b.userId)}
                   >
                     Разблокировать
@@ -233,8 +283,7 @@ export function FriendsPage({ user, onNavigate }: Props) {
                 </div>
               </div>
             ))
-          )
-        )}
+          ))}
       </div>
 
       {showAddDialog && (
@@ -244,5 +293,5 @@ export function FriendsPage({ user, onNavigate }: Props) {
         />
       )}
     </div>
-  )
+  );
 }

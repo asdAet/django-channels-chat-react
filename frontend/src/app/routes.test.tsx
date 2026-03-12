@@ -1,38 +1,40 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
-import { MemoryRouter } from 'react-router-dom'
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 
-vi.mock('../pages/HomePage', () => ({
+vi.mock("../pages/HomePage", () => ({
   HomePage: () => <div>HOME_PAGE</div>,
-}))
+}));
 
-vi.mock('../pages/LoginPage', () => ({
+vi.mock("../pages/LoginPage", () => ({
   LoginPage: () => <div>LOGIN_PAGE</div>,
-}))
+}));
 
-vi.mock('../pages/RegisterPage', () => ({
+vi.mock("../pages/RegisterPage", () => ({
   RegisterPage: () => <div>REGISTER_PAGE</div>,
-}))
+}));
 
-vi.mock('../pages/ProfilePage', () => ({
+vi.mock("../pages/ProfilePage", () => ({
   ProfilePage: () => <div>PROFILE_PAGE</div>,
-}))
+}));
 
-vi.mock('../pages/DirectLayout', () => ({
+vi.mock("../pages/DirectLayout", () => ({
   DirectLayout: ({ username }: { username?: string }) => (
-    <div>{username ? `DIRECT_PAGE:${username}` : 'DIRECT_PAGE'}</div>
+    <div>{username ? `DIRECT_PAGE:${username}` : "DIRECT_PAGE"}</div>
   ),
-}))
+}));
 
-vi.mock('../pages/UserProfilePage', () => ({
-  UserProfilePage: ({ username }: { username: string }) => <div>USER_PAGE:{username}</div>,
-}))
+vi.mock("../pages/UserProfilePage", () => ({
+  UserProfilePage: ({ username }: { username: string }) => (
+    <div>USER_PAGE:{username}</div>
+  ),
+}));
 
-vi.mock('../pages/ChatRoomPage', () => ({
+vi.mock("../pages/ChatRoomPage", () => ({
   ChatRoomPage: ({ slug }: { slug: string }) => <div>ROOM_PAGE:{slug}</div>,
-}))
+}));
 
-import { AppRoutes } from './routes'
+import { AppRoutes } from "./routes";
 
 const handlers = {
   onNavigate: vi.fn(),
@@ -40,61 +42,69 @@ const handlers = {
   onRegister: vi.fn(async () => {}),
   onLogout: vi.fn(async () => {}),
   onProfileSave: vi.fn(async () => ({ ok: true as const })),
-}
+};
 
-describe('AppRoutes', () => {
-  it('renders login route', () => {
+describe("AppRoutes", () => {
+  it("renders login route", () => {
     render(
-      <MemoryRouter initialEntries={['/login']}>
+      <MemoryRouter initialEntries={["/login"]}>
         <AppRoutes user={null} error={null} passwordRules={[]} {...handlers} />
       </MemoryRouter>,
-    )
-    expect(screen.getByText('LOGIN_PAGE')).toBeInTheDocument()
-  })
+    );
+    expect(screen.getByText("LOGIN_PAGE")).toBeInTheDocument();
+  });
 
-  it('renders register route', () => {
+  it("renders register route", () => {
     render(
-      <MemoryRouter initialEntries={['/register']}>
+      <MemoryRouter initialEntries={["/register"]}>
         <AppRoutes user={null} error={null} passwordRules={[]} {...handlers} />
       </MemoryRouter>,
-    )
-    expect(screen.getByText('REGISTER_PAGE')).toBeInTheDocument()
-  })
+    );
+    expect(screen.getByText("REGISTER_PAGE")).toBeInTheDocument();
+  });
 
-  it('renders direct by username route', () => {
+  it("renders direct by username route", () => {
     render(
-      <MemoryRouter initialEntries={['/direct/@alice']}>
+      <MemoryRouter initialEntries={["/@alice"]}>
         <AppRoutes user={null} error={null} passwordRules={[]} {...handlers} />
       </MemoryRouter>,
-    )
-    expect(screen.getByText('DIRECT_PAGE:alice')).toBeInTheDocument()
-  })
+    );
+    expect(screen.getByText("DIRECT_PAGE:alice")).toBeInTheDocument();
+  });
 
-  it('canonicalizes legacy direct username route', () => {
+  it("treats legacy direct username route as invalid and redirects to home", () => {
     render(
-      <MemoryRouter initialEntries={['/direct/alice']}>
+      <MemoryRouter initialEntries={["/direct/alice"]}>
         <AppRoutes user={null} error={null} passwordRules={[]} {...handlers} />
       </MemoryRouter>,
-    )
-    expect(screen.getByText('DIRECT_PAGE:alice')).toBeInTheDocument()
-  })
+    );
+    expect(screen.getByText("HOME_PAGE")).toBeInTheDocument();
+  });
 
-  it('renders room route for valid slug', () => {
+  it("renders room route for valid slug", () => {
     render(
-      <MemoryRouter initialEntries={['/rooms/public']}>
+      <MemoryRouter initialEntries={["/rooms/public"]}>
         <AppRoutes user={null} error={null} passwordRules={[]} {...handlers} />
       </MemoryRouter>,
-    )
-    expect(screen.getByText('ROOM_PAGE:public')).toBeInTheDocument()
-  })
+    );
+    expect(screen.getByText("ROOM_PAGE:public")).toBeInTheDocument();
+  });
 
-  it('redirects invalid room slug to home', () => {
+  it("keeps usernames that start with multiple @ symbols", () => {
     render(
-      <MemoryRouter initialEntries={['/rooms/a']}>
+      <MemoryRouter initialEntries={["/users/%40%40%40%40"]}>
         <AppRoutes user={null} error={null} passwordRules={[]} {...handlers} />
       </MemoryRouter>,
-    )
-    expect(screen.getByText('HOME_PAGE')).toBeInTheDocument()
-  })
-})
+    );
+    expect(screen.getByText("USER_PAGE:@@@@")).toBeInTheDocument();
+  });
 
+  it("redirects invalid room slug to home", () => {
+    render(
+      <MemoryRouter initialEntries={["/rooms/a"]}>
+        <AppRoutes user={null} error={null} passwordRules={[]} {...handlers} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("HOME_PAGE")).toBeInTheDocument();
+  });
+});

@@ -1,9 +1,9 @@
-import { z } from 'zod'
+import { z } from "zod";
 
-import type { ClientRuntimeConfig } from '../../domain/interfaces/IApiService'
-import { decodeOrThrow } from '../core/codec'
+import type { ClientRuntimeConfig } from "../../domain/interfaces/IApiService";
+import { decodeOrThrow } from "../core/codec";
 
-const mediaModeSchema = z.literal('signed_only')
+const mediaModeSchema = z.literal("signed_only");
 
 const clientConfigSchema = z
   .object({
@@ -16,10 +16,12 @@ const clientConfigSchema = z
     mediaUrlTtlSeconds: z.number().int().min(1),
     mediaMode: mediaModeSchema,
   })
-  .passthrough()
+  .passthrough();
 
 /**
  * Декодирует payload /api/meta/client-config/.
  */
-export const decodeClientConfigResponse = (input: unknown): ClientRuntimeConfig =>
-  decodeOrThrow(clientConfigSchema, input, 'meta/client-config')
+export const decodeClientConfigResponse = (
+  input: unknown,
+): ClientRuntimeConfig =>
+  decodeOrThrow(clientConfigSchema, input, "meta/client-config");

@@ -1,7 +1,7 @@
-﻿import type { AxiosInstance } from 'axios'
+﻿import type { AxiosInstance } from "axios";
 
-import { buildLoginRequestDto, decodeSessionResponse } from '../../dto'
-import type { SessionResponse } from '../../domain/interfaces/IApiService'
+import { buildLoginRequestDto, decodeSessionResponse } from "../../dto";
+import type { SessionResponse } from "../../domain/interfaces/IApiService";
 
 /**
  * Выполняет логин пользователя.
@@ -15,8 +15,7 @@ export async function login(
   username: string,
   password: string,
 ): Promise<SessionResponse> {
-  const body = buildLoginRequestDto({ username, password })
-  const response = await apiClient.post<unknown>('/auth/login/', body)
-  return decodeSessionResponse(response.data)
+  const body = buildLoginRequestDto({ username, password });
+  const response = await apiClient.post<unknown>("/auth/login/", body);
+  return decodeSessionResponse(response.data);
 }
-

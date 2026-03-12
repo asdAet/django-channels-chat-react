@@ -23,12 +23,12 @@ class ProfileApiTests(TestCase):
         """Проверяет сценарий `setUp`."""
         self.client = Client(enforce_csrf_checks=True)
         self.user = User.objects.create_user(
-            username='profile_user',
+            username='profileuser',
             password='pass12345',
             email='profile@example.com',
         )
         self.other = User.objects.create_user(
-            username='other_user',
+            username='otheruser',
             password='pass12345',
             email='other@example.com',
         )
@@ -75,12 +75,39 @@ class ProfileApiTests(TestCase):
         response = self.client.get('/api/auth/profile/')
         self.assertEqual(response.status_code, 200)
         payload = response.json()['user']
+        self.assertIn('name', payload)
+        self.assertEqual(payload['name'], '')
+        self.assertIn('last_name', payload)
+        self.assertEqual(payload['last_name'], '')
         self.assertEqual(payload['username'], self.user.username)
         self.assertEqual(payload['email'], self.user.email)
         self.assertIn('bio', payload)
         self.assertIn('lastSeen', payload)
         self.assertIn('avatarCrop', payload)
         self.assertIsNone(payload['avatarCrop'])
+
+    def test_profile_update_allows_arbitrary_name_and_last_name(self):
+        """Name fields can be free-form and are not unique."""
+        self.other.first_name = 'Same Name'
+        self.other.last_name = 'Same Last'
+        self.other.save(update_fields=['first_name', 'last_name'])
+
+        self.client.force_login(self.user)
+        csrf = self._csrf()
+        response = self.client.post(
+            '/api/auth/profile/',
+            data={
+                'name': 'Same Name',
+                'last_name': 'Same Last',
+                'username': self.user.username,
+                'email': self.user.email,
+            },
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, 'Same Name')
+        self.assertEqual(self.user.last_name, 'Same Last')
 
     def test_profile_update_allows_same_username(self):
         """Проверяет сценарий `test_profile_update_allows_same_username`."""
@@ -97,7 +124,7 @@ class ProfileApiTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.user = User.objects.get(pk=self.user.pk)
-        self.assertEqual(self.user.username, 'profile_user')
+        self.assertEqual(self.user.username, 'profileuser')
         self.assertEqual(self.user.profile.bio, 'updated')
 
     def test_profile_update_rejects_duplicate_username(self):
@@ -125,6 +152,23 @@ class ProfileApiTests(TestCase):
             '/api/auth/profile/',
             data={
                 'username': 'a' * 31,
+                'email': self.user.email,
+            },
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(response.status_code, 400)
+        payload = response.json()
+        self.assertIn('errors', payload)
+        self.assertIn('username', payload['errors'])
+
+    def test_profile_update_rejects_username_with_invalid_symbols(self):
+        """Отклоняет username с недопустимыми символами."""
+        self.client.force_login(self.user)
+        csrf = self._csrf()
+        response = self.client.post(
+            '/api/auth/profile/',
+            data={
+                'username': '@@@@',
                 'email': self.user.email,
             },
             HTTP_X_CSRFTOKEN=csrf,

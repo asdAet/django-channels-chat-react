@@ -1,7 +1,7 @@
-﻿import type { AxiosInstance } from 'axios'
+﻿import type { AxiosInstance } from "axios";
 
-import { decodeDirectStartResponse } from '../../dto'
-import type { DirectStartResponse } from '../../domain/interfaces/IApiService'
+import { decodeDirectStartResponse } from "../../dto";
+import type { DirectStartResponse } from "../../domain/interfaces/IApiService";
 
 /**
  * Создает или возвращает direct-чат по username.
@@ -13,7 +13,8 @@ export const startDirectChat = async (
   apiClient: AxiosInstance,
   username: string,
 ): Promise<DirectStartResponse> => {
-  const response = await apiClient.post<unknown>('/chat/direct/start/', { username })
-  return decodeDirectStartResponse(response.data)
-}
-
+  const response = await apiClient.post<unknown>("/chat/direct/start/", {
+    username,
+  });
+  return decodeDirectStartResponse(response.data);
+};

@@ -1,4 +1,4 @@
-"""API пользователей: auth/session/profile/media endpoints."""
+﻿"""API РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№: auth/session/profile/media endpoints."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login, logout, password_validation
 from django.contrib.auth.models import User
 from django.core.files.storage import default_storage
-from django.db import OperationalError, ProgrammingError
+from django.db import IntegrityError, OperationalError, ProgrammingError
 from django.http import FileResponse, HttpResponse
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
@@ -40,7 +40,7 @@ from .serializers import LoginSerializer, LogoutSerializer, ProfileUpdateSeriali
 
 
 def _serialize_user(request, user):
-    """Сериализует пользователя в единый формат auth/profile API."""
+    """РЎРµСЂРёР°Р»РёР·СѓРµС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІ РµРґРёРЅС‹Р№ С„РѕСЂРјР°С‚ auth/profile API."""
     profile = getattr(user, "profile", None)
     profile_image = None
     if profile and getattr(profile, "image", None):
@@ -50,6 +50,8 @@ def _serialize_user(request, user):
     last_seen = getattr(profile, "last_seen", None)
 
     return {
+        "name": (user.first_name or "").strip(),
+        "last_name": (user.last_name or "").strip(),
         "username": user.username,
         "email": user.email,
         "profileImage": profile_image,
@@ -61,7 +63,7 @@ def _serialize_user(request, user):
 
 
 def _collect_errors(*errors):
-    """Объединяет ValidationError-словари из нескольких форм."""
+    """РћР±СЉРµРґРёРЅСЏРµС‚ ValidationError-СЃР»РѕРІР°СЂРё РёР· РЅРµСЃРєРѕР»СЊРєРёС… С„РѕСЂРј."""
     combined = {}
     for error_dict in errors:
         for field, messages in error_dict.items():
@@ -70,12 +72,12 @@ def _collect_errors(*errors):
 
 
 def _get_client_ip(request) -> str:
-    """Возвращает IP клиента с учетом trusted proxy."""
+    """Р’РѕР·РІСЂР°С‰Р°РµС‚ IP РєР»РёРµРЅС‚Р° СЃ СѓС‡РµС‚РѕРј trusted proxy."""
     return get_client_ip_from_request(request) or ""
 
 
 def _rate_limited(request, action: str) -> bool:
-    """Проверяет auth rate-limit через персистентный DB-limiter."""
+    """РџСЂРѕРІРµСЂСЏРµС‚ auth rate-limit С‡РµСЂРµР· РїРµСЂСЃРёСЃС‚РµРЅС‚РЅС‹Р№ DB-limiter."""
     limit = int(getattr(settings, "AUTH_RATE_LIMIT", 10))
     window = int(getattr(settings, "AUTH_RATE_WINDOW", 60))
     ip = _get_client_ip(request) or "unknown"
@@ -99,14 +101,14 @@ def _extract_payload(request) -> Mapping[str, object]:
 @ensure_csrf_cookie
 @api_view(["GET"])
 def csrf_token(request):
-    """Отдает CSRF token и гарантирует CSRF cookie."""
+    """РћС‚РґР°РµС‚ CSRF token Рё РіР°СЂР°РЅС‚РёСЂСѓРµС‚ CSRF cookie."""
     return Response({"csrfToken": get_token(request)})
 
 
 @ensure_csrf_cookie
 @api_view(["GET"])
 def session_view(request):
-    """Возвращает текущее состояние сессии пользователя."""
+    """Р’РѕР·РІСЂР°С‰Р°РµС‚ С‚РµРєСѓС‰РµРµ СЃРѕСЃС‚РѕСЏРЅРёРµ СЃРµСЃСЃРёРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ."""
     user = getattr(request, "user", None)
     if user and user.is_authenticated:
         return Response({"authenticated": True, "user": _serialize_user(request, user)})
@@ -116,7 +118,7 @@ def session_view(request):
 @ensure_csrf_cookie
 @api_view(["GET"])
 def presence_session_view(request):
-    """Инициализирует guest session для presence websocket."""
+    """РРЅРёС†РёР°Р»РёР·РёСЂСѓРµС‚ guest session РґР»СЏ presence websocket."""
     if not request.session.session_key:
         request.session.create()
     request.session.modified = True
@@ -127,18 +129,18 @@ def presence_session_view(request):
 @csrf_protect
 @api_view(["POST"])
 def login_view(request):
-    """Логин пользователя по username/password."""
+    """Р›РѕРіРёРЅ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕ username/password."""
     if _rate_limited(request, "login"):
         audit_http_event("auth.login.rate_limited", request)
-        return error_response(status=429, error="Слишком много попыток")
+        return error_response(status=429, error="РЎР»РёС€РєРѕРј РјРЅРѕРіРѕ РїРѕРїС‹С‚РѕРє")
 
     payload = _extract_payload(request)
     if not payload:
         audit_http_event("auth.login.failed", request, reason="empty_body")
         return error_response(
             status=400,
-            error="Пустое тело запроса",
-            errors={"body": ["Пустое тело запроса"]},
+            error="РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°",
+            errors={"body": ["РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°"]},
         )
 
     username = payload.get("username")
@@ -147,8 +149,8 @@ def login_view(request):
         audit_http_event("auth.login.failed", request, reason="missing_credentials")
         return error_response(
             status=400,
-            error="Укажите логин и пароль",
-            errors={"credentials": ["Укажите логин и пароль"]},
+            error="РЈРєР°Р¶РёС‚Рµ Р»РѕРіРёРЅ Рё РїР°СЂРѕР»СЊ",
+            errors={"credentials": ["РЈРєР°Р¶РёС‚Рµ Р»РѕРіРёРЅ Рё РїР°СЂРѕР»СЊ"]},
         )
 
     user = authenticate(request, username=username, password=password)
@@ -161,8 +163,8 @@ def login_view(request):
         )
         return error_response(
             status=400,
-            error="Неверный логин или пароль",
-            errors={"credentials": ["Неверный логин или пароль"]},
+            error="РќРµРІРµСЂРЅС‹Р№ Р»РѕРіРёРЅ РёР»Рё РїР°СЂРѕР»СЊ",
+            errors={"credentials": ["РќРµРІРµСЂРЅС‹Р№ Р»РѕРіРёРЅ РёР»Рё РїР°СЂРѕР»СЊ"]},
         )
 
     login(request, user)
@@ -173,7 +175,7 @@ def login_view(request):
 @csrf_protect
 @api_view(["POST"])
 def logout_view(request):
-    """Завершает сессию пользователя и обновляет last_seen."""
+    """Р—Р°РІРµСЂС€Р°РµС‚ СЃРµСЃСЃРёСЋ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Рё РѕР±РЅРѕРІР»СЏРµС‚ last_seen."""
     user = getattr(request, "user", None)
     if user and user.is_authenticated:
         try:
@@ -192,22 +194,26 @@ def logout_view(request):
 @csrf_protect
 @api_view(["POST"])
 def register_view(request):
-    """Регистрирует нового пользователя."""
+    """Р РµРіРёСЃС‚СЂРёСЂСѓРµС‚ РЅРѕРІРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ."""
 
     if _rate_limited(request, "register"):
         audit_http_event("auth.register.rate_limited", request)
-        return error_response(status=429, error="Слишком много попыток")
+        return error_response(status=429, error="РЎР»РёС€РєРѕРј РјРЅРѕРіРѕ РїРѕРїС‹С‚РѕРє")
 
     payload = _extract_payload(request)
     if not payload:
         audit_http_event("auth.register.failed", request, reason="empty_body")
         return error_response(
             status=400,
-            error="Пустое тело запроса",
-            errors={"body": ["Пустое тело запроса"]},
+            error="РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°",
+            errors={"body": ["РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°"]},
         )
 
     username = payload.get("username")
+    name_raw = payload.get("name")
+    name = str(name_raw).strip() if name_raw is not None else ""
+    last_name_raw = payload.get("last_name")
+    last_name = str(last_name_raw).strip() if last_name_raw is not None else ""
     password1 = payload.get("password1")
     password2 = payload.get("password2")
 
@@ -215,32 +221,47 @@ def register_view(request):
         audit_http_event("auth.register.failed", request, reason="missing_username")
         return error_response(
             status=400,
-            error="Укажите имя пользователя",
-            errors={"username": ["Укажите имя пользователя"]},
+            error="РЈРєР°Р¶РёС‚Рµ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ",
+            errors={"username": ["РЈРєР°Р¶РёС‚Рµ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"]},
+        )
+    if not name:
+        audit_http_event("auth.register.failed", request, reason="missing_name", attempted_username=username)
+        return error_response(
+            status=400,
+            error="РЈРєР°Р¶РёС‚Рµ РёРјСЏ",
+            errors={"name": ["РЈРєР°Р¶РёС‚Рµ РёРјСЏ"]},
         )
     if User.objects.filter(username=username).exists():
         audit_http_event("auth.register.failed", request, reason="username_exists", attempted_username=username)
         return error_response(
             status=400,
-            error="Имя пользователя уже занято",
-            errors={"username": ["Имя пользователя уже занято"]},
+            error="РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СѓР¶Рµ Р·Р°РЅСЏС‚Рѕ",
+            errors={"username": ["РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СѓР¶Рµ Р·Р°РЅСЏС‚Рѕ"]},
         )
     if not password1 or not password2:
         audit_http_event("auth.register.failed", request, reason="missing_password")
         return error_response(
             status=400,
-            error="Укажите пароль",
-            errors={"password": ["Укажите пароль"]},
+            error="РЈРєР°Р¶РёС‚Рµ РїР°СЂРѕР»СЊ",
+            errors={"password": ["РЈРєР°Р¶РёС‚Рµ РїР°СЂРѕР»СЊ"]},
         )
     if password1 != password2:
         audit_http_event("auth.register.failed", request, reason="password_mismatch", attempted_username=username)
         return error_response(
             status=400,
-            error="Пароли не совпадают",
-            errors={"password": ["Пароли не совпадают"]},
+            error="РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚",
+            errors={"password": ["РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚"]},
         )
 
-    form = UserRegisterForm({"username": username, "password1": password1, "password2": password2})
+    form = UserRegisterForm(
+        {
+            "username": username,
+            "password1": password1,
+            "password2": password2,
+            "name": name,
+            "last_name": last_name,
+        }
+    )
     if form.is_valid():
         form.save()
         user = authenticate(request, username=payload.get("username"), password=payload.get("password1"))
@@ -256,31 +277,31 @@ def register_view(request):
     if errors and password_fields.intersection(errors.keys()):
         errors.pop("password1", None)
         errors.pop("password2", None)
-        errors["password"] = ["Пароль слишком слабый"]
+        errors["password"] = ["РџР°СЂРѕР»СЊ СЃР»РёС€РєРѕРј СЃР»Р°Р±С‹Р№"]
         audit_http_event("auth.register.failed", request, reason="weak_password", attempted_username=username)
         return error_response(
             status=400,
-            error="Пароль слишком слабый",
+            error="РџР°СЂРѕР»СЊ СЃР»РёС€РєРѕРј СЃР»Р°Р±С‹Р№",
             errors=errors,
         )
 
-    summary = " ".join(["; ".join(v) for v in errors.values()]) if errors else "Ошибка валидации"
+    summary = " ".join(["; ".join(v) for v in errors.values()]) if errors else "РћС€РёР±РєР° РІР°Р»РёРґР°С†РёРё"
     audit_http_event("auth.register.failed", request, reason="validation_error", attempted_username=username, errors=errors)
     return error_response(status=400, error=summary, errors=errors)
 
 
 @api_view(["GET"])
 def password_rules(request):
-    """Возвращает текущие требования валидаторов пароля."""
+    """Р’РѕР·РІСЂР°С‰Р°РµС‚ С‚РµРєСѓС‰РёРµ С‚СЂРµР±РѕРІР°РЅРёСЏ РІР°Р»РёРґР°С‚РѕСЂРѕРІ РїР°СЂРѕР»СЏ."""
     return Response({"rules": password_validation.password_validators_help_texts()})
 
 
 @api_view(["GET"])
 def media_view(request, file_path: str):
-    """Отдает media-файл по подписанному URL через X-Accel-Redirect."""
+    """РћС‚РґР°РµС‚ media-С„Р°Р№Р» РїРѕ РїРѕРґРїРёСЃР°РЅРЅРѕРјСѓ URL С‡РµСЂРµР· X-Accel-Redirect."""
     normalized_path = normalize_media_path(file_path)
     if not normalized_path:
-        return Response({"error": "Не найдено"}, status=404)
+        return Response({"error": "РќРµ РЅР°Р№РґРµРЅРѕ"}, status=404)
 
     exp_raw = request.GET.get("exp")
     signature = request.GET.get("sig")
@@ -288,19 +309,19 @@ def media_view(request, file_path: str):
         expires_at = int(exp_raw)  # type: ignore[arg-type]
     except (TypeError, ValueError):
         audit_http_event("media.signature.invalid", request, path=file_path, reason="invalid_exp")
-        return Response({"error": "Доступ запрещен"}, status=403)
+        return Response({"error": "Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰РµРЅ"}, status=403)
 
     now = int(time.time())
     if expires_at < now:
         audit_http_event("media.signature.expired", request, path=normalized_path)
-        return Response({"error": "Доступ запрещен"}, status=403)
+        return Response({"error": "Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰РµРЅ"}, status=403)
 
     if not is_valid_media_signature(normalized_path, expires_at, signature):
         audit_http_event("media.signature.invalid", request, path=normalized_path, reason="bad_signature")
-        return Response({"error": "Доступ запрещен"}, status=403)
+        return Response({"error": "Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰РµРЅ"}, status=403)
 
     if not default_storage.exists(normalized_path):
-        return Response({"error": "Не найдено"}, status=404)
+        return Response({"error": "РќРµ РЅР°Р№РґРµРЅРѕ"}, status=404)
 
     cache_seconds = max(0, expires_at - now)
     if settings.DEBUG:
@@ -315,13 +336,13 @@ def media_view(request, file_path: str):
 
 @api_view(["GET"])
 def public_profile_view(request, username: str):
-    """Возвращает публичные поля профиля по username."""
+    """Р’РѕР·РІСЂР°С‰Р°РµС‚ РїСѓР±Р»РёС‡РЅС‹Рµ РїРѕР»СЏ РїСЂРѕС„РёР»СЏ РїРѕ username."""
     if not username:
-        return Response({"error": "Не найдено"}, status=404)
+        return Response({"error": "РќРµ РЅР°Р№РґРµРЅРѕ"}, status=404)
 
     user = User.objects.filter(username=username).select_related("profile").first()
     if not user:
-        return Response({"error": "Не найдено"}, status=404)
+        return Response({"error": "РќРµ РЅР°Р№РґРµРЅРѕ"}, status=404)
 
     profile = getattr(user, "profile", None)
     profile_image = None
@@ -334,6 +355,8 @@ def public_profile_view(request, username: str):
     return Response(
         {
             "user": {
+                "name": (user.first_name or "").strip(),
+                "last_name": (user.last_name or "").strip(),
                 "username": user.username,
                 "email": "",
                 "profileImage": profile_image,
@@ -349,10 +372,10 @@ def public_profile_view(request, username: str):
 @csrf_protect
 @api_view(["GET", "POST"])
 def profile_view(request):
-    """Читает и обновляет профиль текущего пользователя."""
+    """Р§РёС‚Р°РµС‚ Рё РѕР±РЅРѕРІР»СЏРµС‚ РїСЂРѕС„РёР»СЊ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ."""
     user = getattr(request, "user", None)
     if not user or not user.is_authenticated:
-        return error_response(status=401, error="Требуется авторизация")
+        return error_response(status=401, error="РўСЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ")
 
     if request.method == "GET":
         return Response({"user": _serialize_user(request, user)})
@@ -362,8 +385,13 @@ def profile_view(request):
     p_form = ProfileUpdateForm(payload, request.FILES, instance=user.profile)
 
     if u_form.is_valid() and p_form.is_valid():
-        u_form.save()
-        p_form.save()
+        try:
+            u_form.save()
+            p_form.save()
+        except IntegrityError:
+            errors = {"username": ["РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СѓР¶Рµ Р·Р°РЅСЏС‚Рѕ"]}
+            audit_http_event("auth.profile.update.failed", request, username=user.username, errors=errors)
+            return error_response(status=400, errors=errors)
         audit_http_event("auth.profile.update.success", request, username=user.username)
         return Response({"user": _serialize_user(request, user)})
 
@@ -378,20 +406,20 @@ class LoginInteractiveView(GenericAPIView):
     serializer_class = LoginSerializer
 
     def get(self, _request):
-        return error_response(status=200, detail="Используйте POST с полями username и password")
+        return error_response(status=200, detail="РСЃРїРѕР»СЊР·СѓР№С‚Рµ POST СЃ РїРѕР»СЏРјРё username Рё password")
 
     def post(self, request):
         if _rate_limited(request, "login"):
             audit_http_event("auth.login.rate_limited", request)
-            return error_response(status=429, error="Слишком много попыток")
+            return error_response(status=429, error="РЎР»РёС€РєРѕРј РјРЅРѕРіРѕ РїРѕРїС‹С‚РѕРє")
 
         payload = _extract_payload(request)
         if not payload:
             audit_http_event("auth.login.failed", request, reason="empty_body")
             return error_response(
                 status=400,
-                error="Пустое тело запроса",
-                errors={"body": ["Пустое тело запроса"]},
+                error="РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°",
+                errors={"body": ["РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°"]},
             )
 
         username = payload.get("username")
@@ -400,8 +428,8 @@ class LoginInteractiveView(GenericAPIView):
             audit_http_event("auth.login.failed", request, reason="missing_credentials")
             return error_response(
                 status=400,
-                error="Укажите логин и пароль",
-                errors={"credentials": ["Укажите логин и пароль"]},
+                error="РЈРєР°Р¶РёС‚Рµ Р»РѕРіРёРЅ Рё РїР°СЂРѕР»СЊ",
+                errors={"credentials": ["РЈРєР°Р¶РёС‚Рµ Р»РѕРіРёРЅ Рё РїР°СЂРѕР»СЊ"]},
             )
 
         user = authenticate(request, username=username, password=password)
@@ -414,8 +442,8 @@ class LoginInteractiveView(GenericAPIView):
             )
             return error_response(
                 status=400,
-                error="Неверный логин или пароль",
-                errors={"credentials": ["Неверный логин или пароль"]},
+                error="РќРµРІРµСЂРЅС‹Р№ Р»РѕРіРёРЅ РёР»Рё РїР°СЂРѕР»СЊ",
+                errors={"credentials": ["РќРµРІРµСЂРЅС‹Р№ Р»РѕРіРёРЅ РёР»Рё РїР°СЂРѕР»СЊ"]},
             )
 
         login(request, user)
@@ -429,7 +457,7 @@ class LogoutInteractiveView(GenericAPIView):
     serializer_class = LogoutSerializer
 
     def get(self, _request):
-        return error_response(status=200, detail="Используйте POST для выхода")
+        return error_response(status=200, detail="РСЃРїРѕР»СЊР·СѓР№С‚Рµ POST РґР»СЏ РІС‹С…РѕРґР°")
 
     def post(self, request):
         user = getattr(request, "user", None)
@@ -453,23 +481,27 @@ class RegisterInteractiveView(GenericAPIView):
     serializer_class = RegisterSerializer
 
     def get(self, _request):
-        return error_response(status=200, detail="Используйте POST с полями username, password1, password2")
+        return error_response(status=200, detail="Используйте POST с полями name, last_name (опционально), username, password1, password2")
 
     def post(self, request):
         if _rate_limited(request, "register"):
             audit_http_event("auth.register.rate_limited", request)
-            return error_response(status=429, error="Слишком много попыток")
+            return error_response(status=429, error="РЎР»РёС€РєРѕРј РјРЅРѕРіРѕ РїРѕРїС‹С‚РѕРє")
 
         payload = _extract_payload(request)
         if not payload:
             audit_http_event("auth.register.failed", request, reason="empty_body")
             return error_response(
                 status=400,
-                error="Пустое тело запроса",
-                errors={"body": ["Пустое тело запроса"]},
+                error="РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°",
+                errors={"body": ["РџСѓСЃС‚РѕРµ С‚РµР»Рѕ Р·Р°РїСЂРѕСЃР°"]},
             )
 
         username = payload.get("username")
+        name_raw = payload.get("name")
+        name = str(name_raw).strip() if name_raw is not None else ""
+        last_name_raw = payload.get("last_name")
+        last_name = str(last_name_raw).strip() if last_name_raw is not None else ""
         password1 = payload.get("password1")
         password2 = payload.get("password2")
 
@@ -477,32 +509,47 @@ class RegisterInteractiveView(GenericAPIView):
             audit_http_event("auth.register.failed", request, reason="missing_username")
             return error_response(
                 status=400,
-                error="Укажите имя пользователя",
-                errors={"username": ["Укажите имя пользователя"]},
+                error="РЈРєР°Р¶РёС‚Рµ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ",
+                errors={"username": ["РЈРєР°Р¶РёС‚Рµ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"]},
+            )
+        if not name:
+            audit_http_event("auth.register.failed", request, reason="missing_name", attempted_username=username)
+            return error_response(
+                status=400,
+                error="РЈРєР°Р¶РёС‚Рµ РёРјСЏ",
+                errors={"name": ["РЈРєР°Р¶РёС‚Рµ РёРјСЏ"]},
             )
         if User.objects.filter(username=username).exists():
             audit_http_event("auth.register.failed", request, reason="username_exists", attempted_username=username)
             return error_response(
                 status=400,
-                error="Имя пользователя уже занято",
-                errors={"username": ["Имя пользователя уже занято"]},
+                error="РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СѓР¶Рµ Р·Р°РЅСЏС‚Рѕ",
+                errors={"username": ["РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СѓР¶Рµ Р·Р°РЅСЏС‚Рѕ"]},
             )
         if not password1 or not password2:
             audit_http_event("auth.register.failed", request, reason="missing_password")
             return error_response(
                 status=400,
-                error="Укажите пароль",
-                errors={"password": ["Укажите пароль"]},
+                error="РЈРєР°Р¶РёС‚Рµ РїР°СЂРѕР»СЊ",
+                errors={"password": ["РЈРєР°Р¶РёС‚Рµ РїР°СЂРѕР»СЊ"]},
             )
         if password1 != password2:
             audit_http_event("auth.register.failed", request, reason="password_mismatch", attempted_username=username)
             return error_response(
                 status=400,
-                error="Пароли не совпадают",
-                errors={"password": ["Пароли не совпадают"]},
+                error="РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚",
+                errors={"password": ["РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚"]},
             )
 
-        form = UserRegisterForm({"username": username, "password1": password1, "password2": password2})
+        form = UserRegisterForm(
+            {
+                "username": username,
+                "password1": password1,
+                "password2": password2,
+                "name": name,
+                "last_name": last_name,
+            }
+        )
         if form.is_valid():
             form.save()
             user = authenticate(request, username=payload.get("username"), password=payload.get("password1"))
@@ -518,15 +565,15 @@ class RegisterInteractiveView(GenericAPIView):
         if errors and password_fields.intersection(errors.keys()):
             errors.pop("password1", None)
             errors.pop("password2", None)
-            errors["password"] = ["Пароль слишком слабый"]
+            errors["password"] = ["РџР°СЂРѕР»СЊ СЃР»РёС€РєРѕРј СЃР»Р°Р±С‹Р№"]
             audit_http_event("auth.register.failed", request, reason="weak_password", attempted_username=username)
             return error_response(
                 status=400,
-                error="Пароль слишком слабый",
+                error="РџР°СЂРѕР»СЊ СЃР»РёС€РєРѕРј СЃР»Р°Р±С‹Р№",
                 errors=errors,
             )
 
-        summary = " ".join(["; ".join(v) for v in errors.values()]) if errors else "Ошибка валидации"
+        summary = " ".join(["; ".join(v) for v in errors.values()]) if errors else "РћС€РёР±РєР° РІР°Р»РёРґР°С†РёРё"
         audit_http_event("auth.register.failed", request, reason="validation_error", attempted_username=username, errors=errors)
         return error_response(status=400, error=summary, errors=errors)
 
@@ -539,21 +586,26 @@ class ProfileInteractiveView(GenericAPIView):
     def get(self, request):
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated:
-            return error_response(status=401, error="Требуется авторизация")
+            return error_response(status=401, error="РўСЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ")
         return Response({"user": _serialize_user(request, user)})
 
     def post(self, request):
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated:
-            return error_response(status=401, error="Требуется авторизация")
+            return error_response(status=401, error="РўСЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ")
 
         payload = _extract_payload(request)
         u_form = UserUpdateForm(payload, instance=user)
         p_form = ProfileUpdateForm(payload, request.FILES, instance=user.profile)
 
         if u_form.is_valid() and p_form.is_valid():
-            u_form.save()
-            p_form.save()
+            try:
+                u_form.save()
+                p_form.save()
+            except IntegrityError:
+                errors = {"username": ["РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СѓР¶Рµ Р·Р°РЅСЏС‚Рѕ"]}
+                audit_http_event("auth.profile.update.failed", request, username=user.username, errors=errors)
+                return error_response(status=400, errors=errors)
             audit_http_event("auth.profile.update.success", request, username=user.username)
             return Response({"user": _serialize_user(request, user)})
 
@@ -566,3 +618,4 @@ login_view = LoginInteractiveView.as_view()
 logout_view = LogoutInteractiveView.as_view()
 register_view = RegisterInteractiveView.as_view()
 profile_view = ProfileInteractiveView.as_view()
+

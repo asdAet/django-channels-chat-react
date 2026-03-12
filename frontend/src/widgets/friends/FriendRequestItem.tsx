@@ -1,24 +1,24 @@
-import type { FriendRequest } from '../../entities/friend/types'
-import { Avatar } from '../../shared/ui'
-import styles from '../../styles/friends/FriendsPage.module.css'
+import type { FriendRequest } from "../../entities/friend/types";
+import { Avatar } from "../../shared/ui";
+import styles from "../../styles/friends/FriendsPage.module.css";
 
 type IncomingProps = {
-  request: FriendRequest
-  direction: 'incoming'
-  onAccept: (id: number) => void
-  onDecline: (id: number) => void
-}
+  request: FriendRequest;
+  direction: "incoming";
+  onAccept: (id: number) => void;
+  onDecline: (id: number) => void;
+};
 
 type OutgoingProps = {
-  request: FriendRequest
-  direction: 'outgoing'
-  onDecline: (id: number) => void
-}
+  request: FriendRequest;
+  direction: "outgoing";
+  onCancel: (id: number) => void;
+};
 
-type Props = IncomingProps | OutgoingProps
+type Props = IncomingProps | OutgoingProps;
 
 export function FriendRequestItem(props: Props) {
-  const { request, direction, onDecline } = props
+  const { request, direction } = props;
 
   return (
     <div className={styles.item}>
@@ -32,14 +32,16 @@ export function FriendRequestItem(props: Props) {
       <div className={styles.itemInfo}>
         <div className={styles.itemName}>{request.username}</div>
         <div className={styles.itemMeta}>
-          {direction === 'incoming' ? 'Хочет добавить вас' : 'Ожидает подтверждения'}
+          {direction === "incoming"
+            ? "Хочет добавить вас"
+            : "Ожидает подтверждения"}
         </div>
       </div>
       <div className={styles.itemActions}>
-        {direction === 'incoming' && (
+        {direction === "incoming" && (
           <button
             type="button"
-            className={[styles.actionBtn, styles.actionBtnAccept].join(' ')}
+            className={[styles.actionBtn, styles.actionBtnAccept].join(" ")}
             onClick={() => (props as IncomingProps).onAccept(request.id)}
           >
             Принять
@@ -47,12 +49,18 @@ export function FriendRequestItem(props: Props) {
         )}
         <button
           type="button"
-          className={[styles.actionBtn, styles.actionBtnDanger].join(' ')}
-          onClick={() => onDecline(request.id)}
+          className={[styles.actionBtn, styles.actionBtnDanger].join(" ")}
+          onClick={() => {
+            if (direction === "incoming") {
+              props.onDecline(request.id);
+              return;
+            }
+            props.onCancel(request.id);
+          }}
         >
-          {direction === 'incoming' ? 'Отклонить' : 'Отменить'}
+          {direction === "incoming" ? "Отклонить" : "Отменить"}
         </button>
       </div>
     </div>
-  )
+  );
 }

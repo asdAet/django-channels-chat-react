@@ -1,4 +1,4 @@
-import type { AxiosInstance } from 'axios'
+import type { AxiosInstance } from "axios";
 
 export async function muteMember(
   apiClient: AxiosInstance,
@@ -6,5 +6,8 @@ export async function muteMember(
   userId: number,
   durationSeconds = 3600,
 ): Promise<void> {
-  await apiClient.post(`/groups/${encodeURIComponent(slug)}/members/${userId}/mute/`, { durationSeconds })
+  await apiClient.post(
+    `/groups/${encodeURIComponent(slug)}/members/${userId}/mute/`,
+    { durationSeconds },
+  );
 }

@@ -1,12 +1,16 @@
-import { z } from 'zod'
+import { z } from "zod";
 
-import { getChatRoomSlugRegExp } from '../../shared/config/limits'
+import { getChatRoomSlugRegExp } from "../../shared/config/limits";
 
 const usernameSchema = z
   .string()
-  .transform((value) => (value.startsWith('@') ? value.slice(1) : value))
   .transform((value) => value.trim())
-  .refine((value) => value.length > 0, 'Требуется имя пользователя')
+  .transform((value) => {
+    if (!value.startsWith("@")) return value;
+    const next = value.slice(1);
+    return next.startsWith("@") ? value : next;
+  })
+  .refine((value) => value.length > 0, "Требуется имя пользователя");
 
 /**
  * Декодирует slug комнаты из route-параметра.
@@ -14,10 +18,10 @@ const usernameSchema = z
  * @returns Валидный slug или null.
  */
 export const decodeRoomSlugParam = (value: unknown): string | null => {
-  const roomSlugSchema = z.string().regex(getChatRoomSlugRegExp())
-  const parsed = roomSlugSchema.safeParse(value)
-  return parsed.success ? parsed.data : null
-}
+  const roomSlugSchema = z.string().regex(getChatRoomSlugRegExp());
+  const parsed = roomSlugSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+};
 
 /**
  * Декодирует username из route-параметра.
@@ -25,6 +29,6 @@ export const decodeRoomSlugParam = (value: unknown): string | null => {
  * @returns Валидный username без префикса @ или null.
  */
 export const decodeUsernameParam = (value: unknown): string | null => {
-  const parsed = usernameSchema.safeParse(value)
-  return parsed.success ? parsed.data : null
-}
+  const parsed = usernameSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+};

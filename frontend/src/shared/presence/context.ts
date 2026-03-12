@@ -1,20 +1,21 @@
-import { createContext } from 'react'
+import { createContext } from "react";
 
-import type { OnlineUser } from '../api/users'
-import type { WebSocketStatus } from '../../hooks/useReconnectingWebSocket'
+import type { OnlineUser } from "../api/users";
+import type { WebSocketStatus } from "../../hooks/useReconnectingWebSocket";
 
 export type PresenceContextValue = {
-  online: OnlineUser[]
-  guests: number
-  status: WebSocketStatus
-  lastError: string | null
-}
+  online: OnlineUser[];
+  guests: number;
+  status: WebSocketStatus;
+  lastError: string | null;
+};
 
 export const FALLBACK_PRESENCE: PresenceContextValue = {
   online: [],
   guests: 0,
-  status: 'idle',
+  status: "idle",
   lastError: null,
-}
+};
 
-export const PresenceContext = createContext<PresenceContextValue>(FALLBACK_PRESENCE)
+export const PresenceContext =
+  createContext<PresenceContextValue>(FALLBACK_PRESENCE);

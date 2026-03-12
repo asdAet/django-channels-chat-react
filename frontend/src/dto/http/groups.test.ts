@@ -1,44 +1,49 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from "vitest";
 
-import { decodeGroupListResponse, decodeGroupMembersResponse } from './groups'
+import { decodeGroupListResponse, decodeGroupMembersResponse } from "./groups";
 
-describe('groups DTO decoders', () => {
-  it('accepts nullable nickname in members payload', () => {
+describe("groups DTO decoders", () => {
+  it("accepts nullable nickname in members payload", () => {
     const decoded = decodeGroupMembersResponse({
       items: [
         {
           userId: 1,
-          username: 'alice',
+          username: "alice",
           nickname: null,
           roles: [],
-          joinedAt: '2026-03-10T10:00:00.000Z',
+          joinedAt: "2026-03-10T10:00:00.000Z",
         },
       ],
       total: 1,
-    })
+    });
 
-    expect(decoded.items[0]?.nickname).toBe('')
-  })
+    expect(decoded.items[0]?.nickname).toBe("");
+  });
 
-  it('maps group list avatar fields', () => {
+  it("maps group list avatar fields", () => {
     const decoded = decodeGroupListResponse({
       items: [
         {
-          slug: 'g-1',
-          name: 'Group',
-          description: 'desc',
-          username: 'group',
+          slug: "g-1",
+          name: "Group",
+          description: "desc",
+          username: "group",
           memberCount: 2,
-          avatarUrl: 'https://example.com/a.jpg',
+          avatarUrl: "https://example.com/a.jpg",
           avatarCrop: { x: 0.1, y: 0.2, width: 0.3, height: 0.4 },
         },
       ],
       total: 1,
       page: 1,
       pageSize: 20,
-    })
+    });
 
-    expect(decoded.items[0]?.avatarUrl).toBe('https://example.com/a.jpg')
-    expect(decoded.items[0]?.avatarCrop).toEqual({ x: 0.1, y: 0.2, width: 0.3, height: 0.4 })
-  })
-})
+    expect(decoded.items[0]?.avatarUrl).toBe("https://example.com/a.jpg");
+    expect(decoded.items[0]?.avatarCrop).toEqual({
+      x: 0.1,
+      y: 0.2,
+      width: 0.3,
+      height: 0.4,
+    });
+  });
+});

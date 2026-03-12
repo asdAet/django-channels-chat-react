@@ -1,52 +1,58 @@
-import { useCallback, useState, type KeyboardEvent } from 'react'
+import { useCallback, useState, type KeyboardEvent } from "react";
 
-import { groupController } from '../../controllers/GroupController'
-import styles from '../../styles/groups/GroupsPage.module.css'
+import { groupController } from "../../controllers/GroupController";
+import styles from "../../styles/groups/GroupsPage.module.css";
 
 type Props = {
-  onCreated: (slug: string) => void
-  onClose: () => void
-}
+  onCreated: (slug: string) => void;
+  onClose: () => void;
+};
 
 export function CreateGroupDialog({ onCreated, onClose }: Props) {
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [isPublic, setIsPublic] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [sending, setSending] = useState(false)
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
   const handleSubmit = useCallback(async () => {
-    const trimmedName = name.trim()
-    if (!trimmedName) return
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
 
-    setSending(true)
-    setError(null)
+    setSending(true);
+    setError(null);
     try {
       const group = await groupController.createGroup({
         name: trimmedName,
         description: description.trim() || undefined,
         isPublic,
-      })
-      onCreated(group.slug)
+      });
+      onCreated(group.slug);
     } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'message' in err
-        ? (err as { message: string }).message
-        : 'Не удалось создать группу'
-      setError(msg)
+      const msg =
+        err && typeof err === "object" && "message" in err
+          ? (err as { message: string }).message
+          : "Не удалось создать группу";
+      setError(msg);
     } finally {
-      setSending(false)
+      setSending(false);
     }
-  }, [description, isPublic, name, onCreated])
+  }, [description, isPublic, name, onCreated]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === "Escape") onClose();
     },
     [onClose],
-  )
+  );
 
   return (
-    <div className={styles.dialog} role="dialog" aria-label="Создать группу" onKeyDown={handleKeyDown}>
+    <div
+      className={styles.dialog}
+      role="dialog"
+      aria-label="Создать группу"
+      onKeyDown={handleKeyDown}
+    >
       <div className={styles.dialogBackdrop} onClick={onClose} />
       <div className={styles.dialogCard}>
         <div className={styles.dialogTitle}>Новая группа</div>
@@ -87,7 +93,11 @@ export function CreateGroupDialog({ onCreated, onClose }: Props) {
         {error && <div className={styles.dialogError}>{error}</div>}
 
         <div className={styles.dialogActions}>
-          <button type="button" className={styles.dialogCancelBtn} onClick={onClose}>
+          <button
+            type="button"
+            className={styles.dialogCancelBtn}
+            onClick={onClose}
+          >
             Отмена
           </button>
           <button
@@ -101,5 +111,5 @@ export function CreateGroupDialog({ onCreated, onClose }: Props) {
         </div>
       </div>
     </div>
-  )
+  );
 }

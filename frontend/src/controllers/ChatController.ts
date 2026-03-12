@@ -1,10 +1,10 @@
-﻿import { apiService } from '../adapters/ApiService'
+﻿import { apiService } from "../adapters/ApiService";
 import type {
   DirectChatsResponseDto,
   DirectStartResponseDto,
   RoomMessagesDto,
   RoomMessagesParams,
-} from '../dto'
+} from "../dto";
 import type {
   EditMessageResult,
   GlobalSearchResult,
@@ -15,14 +15,14 @@ import type {
   UploadAttachmentsOptions,
   ReadStateResult,
   UnreadCountItem,
-} from '../domain/interfaces/IApiService'
-import type { RoomDetails as RoomDetailsDto } from '../entities/room/types'
+} from "../domain/interfaces/IApiService";
+import type { RoomDetails as RoomDetailsDto } from "../entities/room/types";
 
-let publicRoomInFlight: Promise<RoomDetailsDto> | null = null
-let directChatsInFlight: Promise<DirectChatsResponseDto> | null = null
+let publicRoomInFlight: Promise<RoomDetailsDto> | null = null;
+let directChatsInFlight: Promise<DirectChatsResponseDto> | null = null;
 
-const roomDetailsInFlight = new Map<string, Promise<RoomDetailsDto>>()
-const roomMessagesInFlight = new Map<string, Promise<RoomMessagesDto>>()
+const roomDetailsInFlight = new Map<string, Promise<RoomDetailsDto>>();
+const roomMessagesInFlight = new Map<string, Promise<RoomMessagesDto>>();
 
 /**
  * Выполняет функцию `buildRoomMessagesKey`.
@@ -31,10 +31,10 @@ const roomMessagesInFlight = new Map<string, Promise<RoomMessagesDto>>()
  */
 
 const buildRoomMessagesKey = (slug: string, params?: RoomMessagesParams) => {
-  const limit = params?.limit ?? ''
-  const beforeId = params?.beforeId ?? ''
-  return `${slug}|limit=${limit}|before=${beforeId}`
-}
+  const limit = params?.limit ?? "";
+  const beforeId = params?.beforeId ?? "";
+  return `${slug}|limit=${limit}|before=${beforeId}`;
+};
 
 /**
  * Описывает назначение класса `ChatController`.
@@ -48,16 +48,14 @@ class ChatController {
 
   public async getPublicRoom(): Promise<RoomDetailsDto> {
     if (publicRoomInFlight) {
-      return publicRoomInFlight
+      return publicRoomInFlight;
     }
 
-    publicRoomInFlight = apiService
-      .getPublicRoom()
-      .finally(() => {
-        publicRoomInFlight = null
-      })
+    publicRoomInFlight = apiService.getPublicRoom().finally(() => {
+      publicRoomInFlight = null;
+    });
 
-    return publicRoomInFlight
+    return publicRoomInFlight;
   }
 
   /**
@@ -67,19 +65,17 @@ class ChatController {
    */
 
   public async getRoomDetails(slug: string): Promise<RoomDetailsDto> {
-    const inFlight = roomDetailsInFlight.get(slug)
+    const inFlight = roomDetailsInFlight.get(slug);
     if (inFlight) {
-      return inFlight
+      return inFlight;
     }
 
-    const request = apiService
-      .getRoomDetails(slug)
-      .finally(() => {
-        roomDetailsInFlight.delete(slug)
-      })
+    const request = apiService.getRoomDetails(slug).finally(() => {
+      roomDetailsInFlight.delete(slug);
+    });
 
-    roomDetailsInFlight.set(slug, request)
-    return request
+    roomDetailsInFlight.set(slug, request);
+    return request;
   }
 
   /**
@@ -88,21 +84,22 @@ class ChatController {
    * @returns Результат выполнения `getRoomMessages`.
    */
 
-  public async getRoomMessages(slug: string, params?: RoomMessagesParams): Promise<RoomMessagesDto> {
-    const cacheKey = buildRoomMessagesKey(slug, params)
-    const inFlight = roomMessagesInFlight.get(cacheKey)
+  public async getRoomMessages(
+    slug: string,
+    params?: RoomMessagesParams,
+  ): Promise<RoomMessagesDto> {
+    const cacheKey = buildRoomMessagesKey(slug, params);
+    const inFlight = roomMessagesInFlight.get(cacheKey);
     if (inFlight) {
-      return inFlight
+      return inFlight;
     }
 
-    const request = apiService
-      .getRoomMessages(slug, params)
-      .finally(() => {
-        roomMessagesInFlight.delete(cacheKey)
-      })
+    const request = apiService.getRoomMessages(slug, params).finally(() => {
+      roomMessagesInFlight.delete(cacheKey);
+    });
 
-    roomMessagesInFlight.set(cacheKey, request)
-    return request
+    roomMessagesInFlight.set(cacheKey, request);
+    return request;
   }
 
   /**
@@ -111,9 +108,11 @@ class ChatController {
    * @returns Результат выполнения `startDirectChat`.
    */
 
-  public async startDirectChat(username: string): Promise<DirectStartResponseDto> {
-    const response = await apiService.startDirectChat(username)
-    return response
+  public async startDirectChat(
+    username: string,
+  ): Promise<DirectStartResponseDto> {
+    const response = await apiService.startDirectChat(username);
+    return response;
   }
 
   /**
@@ -123,56 +122,86 @@ class ChatController {
 
   public async getDirectChats(): Promise<DirectChatsResponseDto> {
     if (directChatsInFlight) {
-      return directChatsInFlight
+      return directChatsInFlight;
     }
 
-    directChatsInFlight = apiService
-      .getDirectChats()
-      .finally(() => {
-        directChatsInFlight = null
-      })
+    directChatsInFlight = apiService.getDirectChats().finally(() => {
+      directChatsInFlight = null;
+    });
 
-    return directChatsInFlight
+    return directChatsInFlight;
   }
   public async getUnreadCounts(): Promise<UnreadCountItem[]> {
-    return apiService.getUnreadCounts()
+    return apiService.getUnreadCounts();
   }
 
-  public async editMessage(slug: string, messageId: number, content: string): Promise<EditMessageResult> {
-    return apiService.editMessage(slug, messageId, content)
+  public async editMessage(
+    slug: string,
+    messageId: number,
+    content: string,
+  ): Promise<EditMessageResult> {
+    return apiService.editMessage(slug, messageId, content);
   }
 
   public async deleteMessage(slug: string, messageId: number): Promise<void> {
-    return apiService.deleteMessage(slug, messageId)
+    return apiService.deleteMessage(slug, messageId);
   }
 
-  public async addReaction(slug: string, messageId: number, emoji: string): Promise<ReactionResult> {
-    return apiService.addReaction(slug, messageId, emoji)
+  public async addReaction(
+    slug: string,
+    messageId: number,
+    emoji: string,
+  ): Promise<ReactionResult> {
+    return apiService.addReaction(slug, messageId, emoji);
   }
 
-  public async removeReaction(slug: string, messageId: number, emoji: string): Promise<void> {
-    return apiService.removeReaction(slug, messageId, emoji)
+  public async removeReaction(
+    slug: string,
+    messageId: number,
+    emoji: string,
+  ): Promise<void> {
+    return apiService.removeReaction(slug, messageId, emoji);
   }
 
-  public async searchMessages(slug: string, query: string): Promise<SearchResult> {
-    return apiService.searchMessages(slug, query)
+  public async searchMessages(
+    slug: string,
+    query: string,
+  ): Promise<SearchResult> {
+    return apiService.searchMessages(slug, query);
   }
 
-  public async uploadAttachments(slug: string, files: File[], options?: UploadAttachmentsOptions): Promise<UploadResult> {
-    return apiService.uploadAttachments(slug, files, options)
+  public async uploadAttachments(
+    slug: string,
+    files: File[],
+    options?: UploadAttachmentsOptions,
+  ): Promise<UploadResult> {
+    return apiService.uploadAttachments(slug, files, options);
   }
 
-  public async markRead(slug: string, messageId?: number): Promise<ReadStateResult> {
-    return apiService.markRead(slug, messageId)
+  public async markRead(
+    slug: string,
+    messageId?: number,
+  ): Promise<ReadStateResult> {
+    return apiService.markRead(slug, messageId);
   }
 
-  public async globalSearch(query: string, params?: { usersLimit?: number; groupsLimit?: number; messagesLimit?: number }): Promise<GlobalSearchResult> {
-    return apiService.globalSearch(query, params)
+  public async globalSearch(
+    query: string,
+    params?: {
+      usersLimit?: number;
+      groupsLimit?: number;
+      messagesLimit?: number;
+    },
+  ): Promise<GlobalSearchResult> {
+    return apiService.globalSearch(query, params);
   }
 
-  public async getRoomAttachments(slug: string, params?: { limit?: number; before?: number }): Promise<RoomAttachmentsResult> {
-    return apiService.getRoomAttachments(slug, params)
+  public async getRoomAttachments(
+    slug: string,
+    params?: { limit?: number; before?: number },
+  ): Promise<RoomAttachmentsResult> {
+    return apiService.getRoomAttachments(slug, params);
   }
 }
 
-export const chatController = new ChatController()
+export const chatController = new ChatController();

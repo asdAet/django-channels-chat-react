@@ -1,9 +1,9 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from "react";
 
-import { chatController } from '../controllers/ChatController'
-import type { RoomDetails as RoomDetailsDto } from '../entities/room/types'
-import type { UserProfile as UserProfileDto } from '../entities/user/types'
-import { debugLog } from '../shared/lib/debug'
+import { chatController } from "../controllers/ChatController";
+import type { RoomDetails as RoomDetailsDto } from "../entities/room/types";
+import type { UserProfile as UserProfileDto } from "../entities/user/types";
+import { debugLog } from "../shared/lib/debug";
 
 /**
  * Управляет состоянием и эффектами хука `usePublicRoom`.
@@ -12,8 +12,8 @@ import { debugLog } from '../shared/lib/debug'
  */
 
 export const usePublicRoom = (user: UserProfileDto | null) => {
-  const [publicRoom, setPublicRoom] = useState<RoomDetailsDto | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [publicRoom, setPublicRoom] = useState<RoomDetailsDto | null>(null);
+  const [loading, setLoading] = useState(false);
 
   /**
    * Выполняет метод `useEffect`.
@@ -27,12 +27,12 @@ export const usePublicRoom = (user: UserProfileDto | null) => {
      * @returns Результат выполнения `queueMicrotask`.
      */
 
-    queueMicrotask(() => setLoading(true))
-    let active = true
+    queueMicrotask(() => setLoading(true));
+    let active = true;
     chatController
       .getPublicRoom()
       .then((room) => {
-        if (active) setPublicRoom(room)
+        if (active) setPublicRoom(room);
       })
       .catch(() => {
         /**
@@ -40,18 +40,17 @@ export const usePublicRoom = (user: UserProfileDto | null) => {
          * @returns Результат выполнения `debugLog`.
          */
 
-        debugLog('Public room fetch failed')
-        if (active) setPublicRoom(null)
+        debugLog("Public room fetch failed");
+        if (active) setPublicRoom(null);
       })
       .finally(() => {
-        if (active) setLoading(false)
-      })
+        if (active) setLoading(false);
+      });
 
     return () => {
-      active = false
-    }
-  }, [user])
+      active = false;
+    };
+  }, [user]);
 
-  return { publicRoom, loading }
-}
-
+  return { publicRoom, loading };
+};

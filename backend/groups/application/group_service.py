@@ -45,6 +45,9 @@ class GroupConflictError(GroupError):
     pass
 
 
+_GROUP_USERNAME_CONFLICT_MSG = "Это имя пользователя уже занято"
+
+
 def _append_changed(changed_fields: list[str], field_name: str) -> None:
     if field_name not in changed_fields:
         changed_fields.append(field_name)
@@ -155,11 +158,9 @@ def create_group(
     name = group_rules.validate_group_name(name)
     description = group_rules.validate_group_description(description)
     username = group_rules.validate_group_username(username)
-    if is_public and not username:
-        raise GroupError("Для публичной группы необходимо указать username")
 
     if username and Room.objects.filter(username=username).exists():
-        raise GroupConflictError("Это имя пользователя уже занято")
+        raise GroupConflictError(_GROUP_USERNAME_CONFLICT_MSG)
 
     slug = group_rules.generate_group_slug(name)
 
@@ -181,6 +182,8 @@ def create_group(
             if owner_role:
                 membership.roles.add(owner_role)
     except IntegrityError as exc:
+        if username and Room.objects.filter(username=username).exists():
+            raise GroupConflictError(_GROUP_USERNAME_CONFLICT_MSG) from exc
         raise GroupConflictError("Не удалось создать группу") from exc
 
     audit_security_event(
@@ -269,21 +272,18 @@ def update_group(
     elif not isinstance(crop_update, _UnsetType):
         _apply_room_avatar_crop(room, crop_update, changed_fields)
 
-    if room.is_public and not room.username and (
-        "is_public" in changed_fields or "username" in changed_fields
-    ):
-        raise GroupError("Для публичной группы необходимо указать username")
-
     if "username" in changed_fields and room.username:
         conflict = Room.objects.filter(username=room.username).exclude(pk=room.pk).exists()
         if conflict:
-            raise GroupConflictError("Это имя пользователя уже занято")
+            raise GroupConflictError(_GROUP_USERNAME_CONFLICT_MSG)
 
     if changed_fields:
         try:
             with transaction.atomic():
                 room.save(update_fields=changed_fields)
         except IntegrityError as exc:
+            if room.username and Room.objects.filter(username=room.username).exclude(pk=room.pk).exists():
+                raise GroupConflictError(_GROUP_USERNAME_CONFLICT_MSG) from exc
             raise GroupConflictError("Не удалось обновить группу") from exc
 
         audit_security_event(

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 import type {
   BannedMember,
@@ -9,8 +9,8 @@ import type {
   InvitePreview,
   JoinRequest,
   PinnedMessage,
-} from '../../entities/group/types'
-import { decodeOrThrow } from '../core/codec'
+} from "../../entities/group/types";
+import { decodeOrThrow } from "../core/codec";
 
 const avatarCropSchema = z
   .object({
@@ -19,7 +19,7 @@ const avatarCropSchema = z
     width: z.number(),
     height: z.number(),
   })
-  .passthrough()
+  .passthrough();
 
 const groupSchema = z
   .object({
@@ -35,7 +35,7 @@ const groupSchema = z
     avatarUrl: z.string().nullable().optional(),
     avatarCrop: avatarCropSchema.nullable().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const groupListItemSchema = z
   .object({
@@ -47,7 +47,7 @@ const groupListItemSchema = z
     avatarUrl: z.string().nullable().optional(),
     avatarCrop: avatarCropSchema.nullable().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const groupListSchema = z
   .object({
@@ -56,7 +56,7 @@ const groupListSchema = z
     pageSize: z.number().optional(),
     total: z.number().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const memberSchema = z
   .object({
@@ -83,7 +83,7 @@ const memberSchema = z
     isMuted: z.boolean().optional(),
     isSelf: z.boolean().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const memberListSchema = z
   .object({
@@ -92,7 +92,7 @@ const memberListSchema = z
     pageSize: z.number().optional(),
     total: z.number().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const inviteSchema = z
   .object({
@@ -106,9 +106,11 @@ const inviteSchema = z
     isExpired: z.boolean().optional(),
     createdAt: z.string(),
   })
-  .passthrough()
+  .passthrough();
 
-const inviteListSchema = z.object({ items: z.array(inviteSchema) }).passthrough()
+const inviteListSchema = z
+  .object({ items: z.array(inviteSchema) })
+  .passthrough();
 
 const invitePreviewSchema = z
   .object({
@@ -119,7 +121,7 @@ const invitePreviewSchema = z
     memberCount: z.number().optional(),
     isPublic: z.boolean().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const joinRequestSchema = z
   .object({
@@ -129,9 +131,11 @@ const joinRequestSchema = z
     message: z.string().optional(),
     createdAt: z.string(),
   })
-  .passthrough()
+  .passthrough();
 
-const joinRequestListSchema = z.object({ items: z.array(joinRequestSchema) }).passthrough()
+const joinRequestListSchema = z
+  .object({ items: z.array(joinRequestSchema) })
+  .passthrough();
 
 const pinSchema = z
   .object({
@@ -142,9 +146,9 @@ const pinSchema = z
     pinnedAt: z.string(),
     createdAt: z.string().optional(),
   })
-  .passthrough()
+  .passthrough();
 
-const pinListSchema = z.object({ items: z.array(pinSchema) }).passthrough()
+const pinListSchema = z.object({ items: z.array(pinSchema) }).passthrough();
 
 const bannedSchema = z
   .object({
@@ -153,7 +157,7 @@ const bannedSchema = z
     reason: z.string().optional(),
     bannedBy: z.string().nullable().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const bannedListSchema = z
   .object({
@@ -162,12 +166,12 @@ const bannedListSchema = z
     pageSize: z.number().optional(),
     total: z.number().optional(),
   })
-  .passthrough()
+  .passthrough();
 
 const mapGroup = (dto: z.infer<typeof groupSchema>): Group => ({
   slug: dto.slug,
   name: dto.name,
-  description: dto.description ?? '',
+  description: dto.description ?? "",
   isPublic: dto.isPublic ?? false,
   username: dto.username ?? null,
   memberCount: dto.memberCount ?? 0,
@@ -176,20 +180,25 @@ const mapGroup = (dto: z.infer<typeof groupSchema>): Group => ({
   createdBy: dto.createdBy ?? null,
   avatarUrl: dto.avatarUrl ?? null,
   avatarCrop: dto.avatarCrop ?? null,
-})
+});
 
 export const decodeGroupResponse = (input: unknown): Group =>
-  mapGroup(decodeOrThrow(groupSchema, input, 'groups/detail'))
+  mapGroup(decodeOrThrow(groupSchema, input, "groups/detail"));
 
 export const decodeGroupListResponse = (
   input: unknown,
-): { items: GroupListItem[]; total: number; page: number; pageSize: number } => {
-  const parsed = decodeOrThrow(groupListSchema, input, 'groups/list')
+): {
+  items: GroupListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+} => {
+  const parsed = decodeOrThrow(groupListSchema, input, "groups/list");
   return {
     items: parsed.items.map((i) => ({
       slug: i.slug,
       name: i.name,
-      description: i.description ?? '',
+      description: i.description ?? "",
       username: i.username ?? null,
       memberCount: i.memberCount ?? 0,
       avatarUrl: i.avatarUrl ?? null,
@@ -198,38 +207,38 @@ export const decodeGroupListResponse = (
     total: parsed.total ?? parsed.items.length,
     page: parsed.page ?? 1,
     pageSize: parsed.pageSize ?? parsed.items.length,
-  }
-}
+  };
+};
 
 export const decodeGroupMembersResponse = (
   input: unknown,
 ): { items: GroupMember[]; total: number } => {
-  const parsed = decodeOrThrow(memberListSchema, input, 'groups/members')
+  const parsed = decodeOrThrow(memberListSchema, input, "groups/members");
   return {
     items: parsed.items.map((m) => ({
       userId: m.userId,
       username: m.username,
-      nickname: m.nickname ?? '',
+      nickname: m.nickname ?? "",
       profileImage: m.profileImage ?? null,
       avatarCrop: m.avatarCrop ?? null,
       roles: (m.roles ?? []).map((role) =>
-        typeof role === 'string'
+        typeof role === "string"
           ? role
-          : role.name || (role.id ? `role_${role.id}` : 'role'),
+          : role.name || (role.id ? `role_${role.id}` : "role"),
       ),
       joinedAt: m.joinedAt,
       isMuted: m.isMuted ?? false,
       isSelf: m.isSelf ?? false,
     })),
     total: parsed.total ?? parsed.items.length,
-  }
-}
+  };
+};
 
 export const decodeInvitesResponse = (input: unknown): GroupInvite[] => {
-  const parsed = decodeOrThrow(inviteListSchema, input, 'groups/invites')
+  const parsed = decodeOrThrow(inviteListSchema, input, "groups/invites");
   return parsed.items.map((i) => ({
     code: i.code,
-    name: i.name ?? '',
+    name: i.name ?? "",
     createdBy: i.createdBy ?? null,
     expiresAt: i.expiresAt ?? null,
     maxUses: i.maxUses ?? 0,
@@ -237,14 +246,14 @@ export const decodeInvitesResponse = (input: unknown): GroupInvite[] => {
     isRevoked: i.isRevoked ?? false,
     isExpired: i.isExpired ?? false,
     createdAt: i.createdAt,
-  }))
-}
+  }));
+};
 
 export const decodeInviteResponse = (input: unknown): GroupInvite => {
-  const parsed = decodeOrThrow(inviteSchema, input, 'groups/invite')
+  const parsed = decodeOrThrow(inviteSchema, input, "groups/invite");
   return {
     code: parsed.code,
-    name: parsed.name ?? '',
+    name: parsed.name ?? "",
     createdBy: parsed.createdBy ?? null,
     expiresAt: parsed.expiresAt ?? null,
     maxUses: parsed.maxUses ?? 0,
@@ -252,55 +261,65 @@ export const decodeInviteResponse = (input: unknown): GroupInvite => {
     isRevoked: parsed.isRevoked ?? false,
     isExpired: parsed.isExpired ?? false,
     createdAt: parsed.createdAt,
-  }
-}
+  };
+};
 
 export const decodeInvitePreviewResponse = (input: unknown): InvitePreview => {
-  const parsed = decodeOrThrow(invitePreviewSchema, input, 'groups/invite-preview')
+  const parsed = decodeOrThrow(
+    invitePreviewSchema,
+    input,
+    "groups/invite-preview",
+  );
   return {
     code: parsed.code,
     groupSlug: parsed.groupSlug,
     groupName: parsed.groupName,
-    groupDescription: parsed.groupDescription ?? '',
+    groupDescription: parsed.groupDescription ?? "",
     memberCount: parsed.memberCount ?? 0,
     isPublic: parsed.isPublic ?? false,
-  }
-}
+  };
+};
 
 export const decodeJoinRequestsResponse = (input: unknown): JoinRequest[] => {
-  const parsed = decodeOrThrow(joinRequestListSchema, input, 'groups/join-requests')
+  const parsed = decodeOrThrow(
+    joinRequestListSchema,
+    input,
+    "groups/join-requests",
+  );
   return parsed.items.map((r) => ({
     id: r.id,
     userId: r.userId,
     username: r.username,
-    message: r.message ?? '',
+    message: r.message ?? "",
     createdAt: r.createdAt,
-  }))
-}
+  }));
+};
 
-export const decodePinnedMessagesResponse = (input: unknown): PinnedMessage[] => {
-  const parsed = decodeOrThrow(pinListSchema, input, 'groups/pins')
+export const decodePinnedMessagesResponse = (
+  input: unknown,
+): PinnedMessage[] => {
+  const parsed = decodeOrThrow(pinListSchema, input, "groups/pins");
   return parsed.items.map((p) => ({
     messageId: p.messageId,
-    content: p.content ?? '',
+    content: p.content ?? "",
     author: p.author ?? null,
     pinnedBy: p.pinnedBy ?? null,
     pinnedAt: p.pinnedAt,
     createdAt: p.createdAt ?? p.pinnedAt,
-  }))
-}
+  }));
+};
 
 export const decodeBannedMembersResponse = (
   input: unknown,
 ): { items: BannedMember[]; total: number } => {
-  const parsed = decodeOrThrow(bannedListSchema, input, 'groups/banned')
+  const parsed = decodeOrThrow(bannedListSchema, input, "groups/banned");
   return {
     items: parsed.items.map((b) => ({
       userId: b.userId,
       username: b.username,
-      reason: b.reason ?? '',
+      reason: b.reason ?? "",
       bannedBy: b.bannedBy ?? null,
     })),
     total: parsed.total ?? parsed.items.length,
-  }
-}
+  };
+};

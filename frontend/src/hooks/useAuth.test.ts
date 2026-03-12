@@ -1,210 +1,252 @@
-﻿import { act, renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+﻿import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { UpdateProfileRequestDto as UpdateProfileDto } from '../dto'
-import type { UserProfile } from '../entities/user/types'
+import type { UpdateProfileRequestDto as UpdateProfileDto } from "../dto";
+import type { UserProfile } from "../entities/user/types";
 
 const authControllerMock = vi.hoisted(() => ({
   ensureCsrf: vi.fn<() => Promise<{ csrfToken: string }>>(),
-  getSession: vi.fn<() => Promise<{ authenticated: boolean; user: UserProfile | null }>>(),
-  login: vi.fn<(dto: { username: string; password: string }) => Promise<{ authenticated: boolean; user: UserProfile | null }>>(),
-  register: vi.fn<
-    (dto: { username: string; password1: string; password2: string }) => Promise<{ authenticated: boolean; user: UserProfile | null }>
-  >(),
+  getSession:
+    vi.fn<
+      () => Promise<{ authenticated: boolean; user: UserProfile | null }>
+    >(),
+  login:
+    vi.fn<
+      (dto: {
+        username: string;
+        password: string;
+      }) => Promise<{ authenticated: boolean; user: UserProfile | null }>
+    >(),
+  register:
+    vi.fn<
+      (dto: {
+        name: string;
+        last_name?: string;
+        username: string;
+        password1: string;
+        password2: string;
+      }) => Promise<{ authenticated: boolean; user: UserProfile | null }>
+    >(),
   logout: vi.fn<() => Promise<{ ok: boolean }>>(),
-  updateProfile: vi.fn<(dto: UpdateProfileDto) => Promise<{ user: UserProfile }>>(),
-}))
+  updateProfile:
+    vi.fn<(dto: UpdateProfileDto) => Promise<{ user: UserProfile }>>(),
+}));
 
-vi.mock('../controllers/AuthController', () => ({
+vi.mock("../controllers/AuthController", () => ({
   authController: authControllerMock,
-}))
+}));
 
-import { useAuth } from './useAuth'
+import { useAuth } from "./useAuth";
 
 const sessionUser = {
-  username: 'demo',
-  email: 'demo@example.com',
+  name: "Demo",
+  last_name: "",
+  username: "demo",
+  email: "demo@example.com",
   profileImage: null,
-  bio: '',
+  bio: "",
   lastSeen: null,
   registeredAt: null,
-}
+};
 
-describe('useAuth', () => {
+describe("useAuth", () => {
   /**
    * Выполняет метод `beforeEach`.
    * @returns Результат выполнения `beforeEach`.
    */
 
   beforeEach(() => {
-    authControllerMock.ensureCsrf.mockReset().mockResolvedValue({ csrfToken: 'token' })
-    authControllerMock.getSession.mockReset().mockResolvedValue({ authenticated: true, user: sessionUser })
-    authControllerMock.login.mockReset().mockResolvedValue({ authenticated: true, user: sessionUser })
-    authControllerMock.register.mockReset().mockResolvedValue({ authenticated: true, user: sessionUser })
-    authControllerMock.logout.mockReset().mockResolvedValue({ ok: true })
-    authControllerMock.updateProfile.mockReset().mockResolvedValue({ user: { ...sessionUser, bio: 'updated' } })
-  })
+    authControllerMock.ensureCsrf
+      .mockReset()
+      .mockResolvedValue({ csrfToken: "token" });
+    authControllerMock.getSession
+      .mockReset()
+      .mockResolvedValue({ authenticated: true, user: sessionUser });
+    authControllerMock.login
+      .mockReset()
+      .mockResolvedValue({ authenticated: true, user: sessionUser });
+    authControllerMock.register
+      .mockReset()
+      .mockResolvedValue({ authenticated: true, user: sessionUser });
+    authControllerMock.logout.mockReset().mockResolvedValue({ ok: true });
+    authControllerMock.updateProfile
+      .mockReset()
+      .mockResolvedValue({ user: { ...sessionUser, bio: "updated" } });
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('loads session on mount', async () => {
-    const { result } = renderHook(() => useAuth())
+  it("loads session on mount", async () => {
+    const { result } = renderHook(() => useAuth());
 
-    await waitFor(() => expect(result.current.auth.loading).toBe(false))
+    await waitFor(() => expect(result.current.auth.loading).toBe(false));
 
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(authControllerMock.ensureCsrf).toHaveBeenCalledTimes(1)
+    expect(authControllerMock.ensureCsrf).toHaveBeenCalledTimes(1);
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(authControllerMock.getSession).toHaveBeenCalledTimes(1)
+    expect(authControllerMock.getSession).toHaveBeenCalledTimes(1);
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(result.current.auth.user?.username).toBe('demo')
-  })
+    expect(result.current.auth.user?.username).toBe("demo");
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('falls back to guest state when session request fails', async () => {
-    authControllerMock.getSession.mockRejectedValueOnce(new Error('session failed'))
+  it("falls back to guest state when session request fails", async () => {
+    authControllerMock.getSession.mockRejectedValueOnce(
+      new Error("session failed"),
+    );
 
-    const { result } = renderHook(() => useAuth())
+    const { result } = renderHook(() => useAuth());
 
-    await waitFor(() => expect(result.current.auth.loading).toBe(false))
+    await waitFor(() => expect(result.current.auth.loading).toBe(false));
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(result.current.auth.user).toBeNull()
-  })
+    expect(result.current.auth.user).toBeNull();
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('login and register refresh auth user', async () => {
-    const { result } = renderHook(() => useAuth())
-    await waitFor(() => expect(result.current.auth.loading).toBe(false))
+  it("login and register refresh auth user", async () => {
+    const { result } = renderHook(() => useAuth());
+    await waitFor(() => expect(result.current.auth.loading).toBe(false));
 
     await act(async () => {
-      await result.current.login({ username: 'demo', password: 'pass12345' })
-      await result.current.register({ username: 'demo', password1: 'pass12345', password2: 'pass12345' })
-    })
+      await result.current.login({ username: "demo", password: "pass12345" });
+      await result.current.register({
+        name: "Demo",
+        last_name: "",
+        username: "demo",
+        password1: "pass12345",
+        password2: "pass12345",
+      });
+    });
 
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(authControllerMock.login).toHaveBeenCalledWith({ username: 'demo', password: 'pass12345' })
+    expect(authControllerMock.login).toHaveBeenCalledWith({
+      username: "demo",
+      password: "pass12345",
+    });
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
     expect(authControllerMock.register).toHaveBeenCalledWith({
-      username: 'demo',
-      password1: 'pass12345',
-      password2: 'pass12345',
-    })
+      name: "Demo",
+      last_name: "",
+      username: "demo",
+      password1: "pass12345",
+      password2: "pass12345",
+    });
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(result.current.auth.user?.username).toBe('demo')
-  })
+    expect(result.current.auth.user?.username).toBe("demo");
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('logout clears auth user even when api fails', async () => {
-    const { result } = renderHook(() => useAuth())
-    await waitFor(() => expect(result.current.auth.loading).toBe(false))
+  it("logout clears auth user even when api fails", async () => {
+    const { result } = renderHook(() => useAuth());
+    await waitFor(() => expect(result.current.auth.loading).toBe(false));
 
-    authControllerMock.logout.mockRejectedValueOnce(new Error('network'))
+    authControllerMock.logout.mockRejectedValueOnce(new Error("network"));
 
     await act(async () => {
-      await result.current.logout()
-    })
+      await result.current.logout();
+    });
 
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(result.current.auth.user).toBeNull()
-  })
+    expect(result.current.auth.user).toBeNull();
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('updateProfile normalizes empty profile image', async () => {
-    const { result } = renderHook(() => useAuth())
-    await waitFor(() => expect(result.current.auth.loading).toBe(false))
+  it("updateProfile normalizes empty profile image", async () => {
+    const { result } = renderHook(() => useAuth());
+    await waitFor(() => expect(result.current.auth.loading).toBe(false));
 
     authControllerMock.updateProfile.mockResolvedValueOnce({
       user: {
         ...sessionUser,
-        profileImage: '',
+        profileImage: "",
       },
-    })
+    });
 
     await act(async () => {
-      await result.current.updateProfile({ username: 'demo', email: '' })
-    })
+      await result.current.updateProfile({ username: "demo", email: "" });
+    });
 
     /**
      * Выполняет метод `expect`.
      * @returns Результат выполнения `expect`.
      */
 
-    expect(result.current.auth.user?.profileImage).toBeNull()
-  })
+    expect(result.current.auth.user?.profileImage).toBeNull();
+  });
 
   /**
    * Выполняет метод `it`.
    * @returns Результат выполнения `it`.
    */
 
-  it('updateProfile drops user on 401', async () => {
-    const { result } = renderHook(() => useAuth())
-    await waitFor(() => expect(result.current.auth.loading).toBe(false))
+  it("updateProfile drops user on 401", async () => {
+    const { result } = renderHook(() => useAuth());
+    await waitFor(() => expect(result.current.auth.loading).toBe(false));
 
     authControllerMock.updateProfile.mockRejectedValueOnce({
       status: 401,
-      message: 'Unauthorized',
-    })
+      message: "Unauthorized",
+    });
 
-    let thrown: unknown = null
+    let thrown: unknown = null;
     await act(async () => {
       try {
-        await result.current.updateProfile({ username: 'demo', email: '' })
+        await result.current.updateProfile({ username: "demo", email: "" });
       } catch (error) {
-        thrown = error
+        thrown = error;
       }
-    })
+    });
 
     /**
      * Выполняет метод `expect`.
@@ -212,7 +254,7 @@ describe('useAuth', () => {
      * @returns Результат выполнения `expect`.
      */
 
-    expect(thrown).toMatchObject({ status: 401 })
-    await waitFor(() => expect(result.current.auth.user).toBeNull())
-  })
-})
+    expect(thrown).toMatchObject({ status: 401 });
+    await waitFor(() => expect(result.current.auth.user).toBeNull());
+  });
+});

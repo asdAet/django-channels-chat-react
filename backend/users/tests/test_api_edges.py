@@ -149,7 +149,7 @@ class AuthApiEdgeTests(TestCase):
         csrf = self._csrf()
         response = self.client.post(
             '/api/auth/register/',
-            data=json.dumps({'password1': 'pass12345', 'password2': 'pass12345'}),
+            data=json.dumps({'name': 'Edge User', 'password1': 'pass12345', 'password2': 'pass12345'}),
             content_type='application/json',
             HTTP_X_CSRFTOKEN=csrf,
         )
@@ -161,7 +161,7 @@ class AuthApiEdgeTests(TestCase):
         csrf = self._csrf()
         response = self.client.post(
             '/api/auth/register/',
-            data=json.dumps({'username': 'edge_user'}),
+            data=json.dumps({'name': 'Edge User', 'username': 'edge_user'}),
             content_type='application/json',
             HTTP_X_CSRFTOKEN=csrf,
         )
@@ -175,6 +175,7 @@ class AuthApiEdgeTests(TestCase):
             '/api/auth/register/',
             data=json.dumps(
                 {
+                    'name': 'Edge User',
                     'username': 'edge_user',
                     'password1': 'pass12345',
                     'password2': 'pass54321',
@@ -193,6 +194,7 @@ class AuthApiEdgeTests(TestCase):
             '/api/auth/register/',
             data=json.dumps(
                 {
+                    'name': 'Bad Username',
                     'username': 'bad user name',
                     'password1': 'pass12345',
                     'password2': 'pass12345',

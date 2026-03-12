@@ -219,9 +219,24 @@
   background: var(--tg-hover, rgba(255, 255, 255, 0.05));
 }
 
+.userIdentity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
 .userName {
   font-weight: 600;
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userHandle {
+  font-size: 12px;
+  color: var(--tg-text-secondary, #aaa);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -338,6 +353,9 @@
   font-weight: 600;
   font-size: 15px;
   color: var(--tg-text-primary, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .drawerDivider {

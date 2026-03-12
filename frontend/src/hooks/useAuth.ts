@@ -1,16 +1,24 @@
-﻿import { useCallback, useEffect, useState } from 'react'
+﻿import { useCallback, useEffect, useState } from "react";
 
-import { authController } from '../controllers/AuthController'
-import type { LoginRequestDto as LoginDto, RegisterRequestDto as RegisterDto, UpdateProfileRequestDto as UpdateProfileDto } from '../dto'
-import type { UserProfile as UserProfileDto } from '../entities/user/types'
-import { debugLog } from '../shared/lib/debug'
-import type { ApiError } from '../shared/api/types'
-import { clearAllUserCaches, invalidateSelfProfile, invalidateUserProfile } from '../shared/cache/cacheManager'
+import { authController } from "../controllers/AuthController";
+import type {
+  LoginRequestDto as LoginDto,
+  RegisterRequestDto as RegisterDto,
+  UpdateProfileRequestDto as UpdateProfileDto,
+} from "../dto";
+import type { UserProfile as UserProfileDto } from "../entities/user/types";
+import { debugLog } from "../shared/lib/debug";
+import type { ApiError } from "../shared/api/types";
+import {
+  clearAllUserCaches,
+  invalidateSelfProfile,
+  invalidateUserProfile,
+} from "../shared/cache/cacheManager";
 
 export type AuthState = {
-  user: UserProfileDto | null
-  loading: boolean
-}
+  user: UserProfileDto | null;
+  loading: boolean;
+};
 
 /**
  * Выполняет функцию `normalizeProfileImage`.
@@ -20,10 +28,10 @@ export type AuthState = {
 
 const normalizeProfileImage = (user: UserProfileDto): UserProfileDto => {
   if (!user.profileImage || user.profileImage.length === 0) {
-    return { ...user, profileImage: null }
+    return { ...user, profileImage: null };
   }
-  return user
-}
+  return user;
+};
 
 /**
  * Управляет состоянием и эффектами хука `useAuth`.
@@ -31,7 +39,7 @@ const normalizeProfileImage = (user: UserProfileDto): UserProfileDto => {
  */
 
 export const useAuth = () => {
-  const [auth, setAuth] = useState<AuthState>({ user: null, loading: true })
+  const [auth, setAuth] = useState<AuthState>({ user: null, loading: true });
 
   /**
    * Выполняет метод `useEffect`.
@@ -40,22 +48,22 @@ export const useAuth = () => {
    */
 
   useEffect(() => {
-    let active = true
+    let active = true;
     authController
       .ensureCsrf()
-      .catch((err) => debugLog('CSRF fetch failed', err))
+      .catch((err) => debugLog("CSRF fetch failed", err))
       .finally(() => {
         authController
           .getSession()
           .then((session) => {
-            if (!active) return
+            if (!active) return;
             /**
              * Выполняет метод `setAuth`.
              * @param props Входной параметр `props`.
              * @returns Результат выполнения `setAuth`.
              */
 
-            setAuth({ user: session.user, loading: false })
+            setAuth({ user: session.user, loading: false });
           })
           .catch((err) => {
             /**
@@ -64,113 +72,126 @@ export const useAuth = () => {
              * @returns Результат выполнения `debugLog`.
              */
 
-            debugLog('Session fetch failed', err)
-            if (!active) return
+            debugLog("Session fetch failed", err);
+            if (!active) return;
             /**
              * Выполняет метод `setAuth`.
              * @param props Входной параметр `props`.
              * @returns Результат выполнения `setAuth`.
              */
 
-            setAuth({ user: null, loading: false })
-          })
-      })
+            setAuth({ user: null, loading: false });
+          });
+      });
 
     return () => {
-      active = false
-    }
-  }, [])
+      active = false;
+    };
+  }, []);
 
   const login = useCallback(async (dto: LoginDto) => {
-    await authController.ensureCsrf()
-    const session = await authController.login(dto)
+    await authController.ensureCsrf();
+    const session = await authController.login(dto);
     /**
      * Выполняет метод `setAuth`.
      * @param props Входной параметр `props`.
      * @returns Результат выполнения `setAuth`.
      */
 
-    setAuth({ user: session.user, loading: false })
+    setAuth({ user: session.user, loading: false });
     /**
      * Выполняет метод `clearAllUserCaches`.
      * @returns Результат выполнения `clearAllUserCaches`.
      */
 
-    clearAllUserCaches()
-    return session
-  }, [])
+    clearAllUserCaches();
+    return session;
+  }, []);
 
   const register = useCallback(async (dto: RegisterDto) => {
-    await authController.ensureCsrf()
-    const session = await authController.register(dto)
+    await authController.ensureCsrf();
+    const session = await authController.register(dto);
     /**
      * Выполняет метод `setAuth`.
      * @param props Входной параметр `props`.
      * @returns Результат выполнения `setAuth`.
      */
 
-    setAuth({ user: session.user, loading: false })
+    setAuth({ user: session.user, loading: false });
     /**
      * Выполняет метод `clearAllUserCaches`.
      * @returns Результат выполнения `clearAllUserCaches`.
      */
 
-    clearAllUserCaches()
-    return session
-  }, [])
+    clearAllUserCaches();
+    return session;
+  }, []);
 
   const logout = useCallback(async () => {
-    await authController.logout().catch(() => {})
+    await authController.logout().catch(() => {});
     /**
      * Выполняет метод `setAuth`.
      * @param props Входной параметр `props`.
      * @returns Результат выполнения `setAuth`.
      */
 
-    setAuth({ user: null, loading: false })
+    setAuth({ user: null, loading: false });
     /**
      * Выполняет метод `clearAllUserCaches`.
      * @returns Результат выполнения `clearAllUserCaches`.
      */
 
-    clearAllUserCaches()
-  }, [])
+    clearAllUserCaches();
+  }, []);
 
-  const updateProfile = useCallback(async (dto: UpdateProfileDto) => {
-    await authController.ensureCsrf()
-    try {
-      const { user } = await authController.updateProfile(dto)
-      const normalizedUser = normalizeProfileImage(user)
-      const previousUsername = auth.user?.username ?? null
-      /**
-       * Выполняет метод `setAuth`.
-       * @returns Результат выполнения `setAuth`.
-       */
-
-      setAuth((prev) => ({ ...prev, user: normalizedUser }))
-      /**
-       * Выполняет метод `invalidateSelfProfile`.
-       * @returns Результат выполнения `invalidateSelfProfile`.
-       */
-
-      invalidateSelfProfile()
-      const usernamesToInvalidate = new Set([previousUsername, normalizedUser.username].filter(Boolean) as string[])
-      usernamesToInvalidate.forEach((username) => invalidateUserProfile(username))
-      return { user: normalizedUser }
-    } catch (err) {
-      const apiErr = err as ApiError
-      if (apiErr && typeof apiErr.status === 'number' && apiErr.status === 401) {
+  const updateProfile = useCallback(
+    async (dto: UpdateProfileDto) => {
+      await authController.ensureCsrf();
+      try {
+        const { user } = await authController.updateProfile(dto);
+        const normalizedUser = normalizeProfileImage(user);
+        const previousUsername = auth.user?.username ?? null;
         /**
          * Выполняет метод `setAuth`.
-         * @param props Входной параметр `props`.
          * @returns Результат выполнения `setAuth`.
          */
 
-        setAuth({ user: null, loading: false })
+        setAuth((prev) => ({ ...prev, user: normalizedUser }));
+        /**
+         * Выполняет метод `invalidateSelfProfile`.
+         * @returns Результат выполнения `invalidateSelfProfile`.
+         */
+
+        invalidateSelfProfile();
+        const usernamesToInvalidate = new Set(
+          [previousUsername, normalizedUser.username].filter(
+            Boolean,
+          ) as string[],
+        );
+        usernamesToInvalidate.forEach((username) =>
+          invalidateUserProfile(username),
+        );
+        return { user: normalizedUser };
+      } catch (err) {
+        const apiErr = err as ApiError;
+        if (
+          apiErr &&
+          typeof apiErr.status === "number" &&
+          apiErr.status === 401
+        ) {
+          /**
+           * Выполняет метод `setAuth`.
+           * @param props Входной параметр `props`.
+           * @returns Результат выполнения `setAuth`.
+           */
+
+          setAuth({ user: null, loading: false });
+        }
+        throw err;
       }
-      throw err
-    }
-  }, [auth.user])
+    },
+    [auth.user],
+  );
 
   return {
     auth,
@@ -178,6 +199,5 @@ export const useAuth = () => {
     register,
     logout,
     updateProfile,
-  }
-}
-
+  };
+};

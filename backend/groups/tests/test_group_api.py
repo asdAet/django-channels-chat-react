@@ -49,13 +49,16 @@ class TestCreateGroup(APITestCase):
         assert room.kind == Room.Kind.GROUP
         assert room.member_count == 1
 
-    def test_create_public_group_requires_username(self):
+    def test_create_public_group_without_username(self):
         resp = self.api_client.post(
             "/api/groups/",
             {"name": "Public Group", "isPublic": True},
             format="json",
         )
-        assert resp.status_code == 400
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["isPublic"] is True
+        assert data["username"] is None
 
     def test_create_public_group_with_username(self):
         resp = self.api_client.post(
@@ -116,6 +119,31 @@ class TestGroupDetail(APITestCase):
         )
         assert resp.status_code == 200
         assert resp.json()["slowModeSeconds"] == 30
+
+    def test_update_public_group_allows_empty_username(self):
+        resp = self.api_client.patch(
+            f"/api/groups/{self.slug}/",
+            {"username": ""},
+            format="json",
+        )
+        assert resp.status_code == 200
+        assert resp.json()["isPublic"] is True
+        assert resp.json()["username"] is None
+
+    def test_update_group_rejects_duplicate_username(self):
+        other = self.api_client.post(
+            "/api/groups/",
+            {"name": "Other", "isPublic": True, "username": "taken_group"},
+            format="json",
+        )
+        assert other.status_code == 201
+
+        resp = self.api_client.patch(
+            f"/api/groups/{self.slug}/",
+            {"username": "taken_group"},
+            format="json",
+        )
+        assert resp.status_code == 409
 
     def test_update_group_forbidden_for_non_admin(self):
         self.api_client.force_authenticate(user=self.other)

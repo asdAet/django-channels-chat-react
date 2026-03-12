@@ -1,26 +1,26 @@
-﻿import { beforeEach, describe, expect, it } from 'vitest'
+﻿import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   readCookieValue,
   readCsrfFromSessionStorage,
   writeCsrfToSessionStorage,
-} from './storage'
+} from "./storage";
 
-describe('storage input decoders', () => {
+describe("storage input decoders", () => {
   beforeEach(() => {
-    sessionStorage.clear()
-  })
+    sessionStorage.clear();
+  });
 
-  it('reads cookie value by name', () => {
-    const value = readCookieValue('csrftoken=token123; foo=bar', 'csrftoken')
-    expect(value).toBe('token123')
-  })
+  it("reads cookie value by name", () => {
+    const value = readCookieValue("csrftoken=token123; foo=bar", "csrftoken");
+    expect(value).toBe("token123");
+  });
 
-  it('writes and reads csrf from sessionStorage', () => {
-    writeCsrfToSessionStorage('csrfToken', 'abc')
-    expect(readCsrfFromSessionStorage('csrfToken')).toBe('abc')
+  it("writes and reads csrf from sessionStorage", () => {
+    writeCsrfToSessionStorage("csrfToken", "abc");
+    expect(readCsrfFromSessionStorage("csrfToken")).toBe("abc");
 
-    writeCsrfToSessionStorage('csrfToken', null)
-    expect(readCsrfFromSessionStorage('csrfToken')).toBeNull()
-  })
-})
+    writeCsrfToSessionStorage("csrfToken", null);
+    expect(readCsrfFromSessionStorage("csrfToken")).toBeNull();
+  });
+});
