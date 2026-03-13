@@ -48,7 +48,8 @@ services:
       dockerfile: deploy/nginx.Dockerfile
     ports:
       - "80:80"
-      - "443:443"
+      # "443:443" Public :443 is owned by Xray; website HTTPS stays local for REALITY target/fallback.
+      - "127.0.0.1:8443:443"
     volumes:
       - static_volume:/static
       - media_volume:/media
