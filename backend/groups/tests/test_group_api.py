@@ -276,6 +276,25 @@ class TestPublicGroupList(APITestCase):
         assert resp.status_code == 200
         assert resp.json()["total"] == 1
 
+    def test_public_groups_cursor_pagination_by_id(self):
+        self.api_client.force_authenticate(user=None)
+
+        first = self.api_client.get("/api/groups/public/?limit=1")
+        assert first.status_code == 200
+        first_payload = first.json()
+        assert first_payload["pagination"]["limit"] == 1
+        assert first_payload["pagination"]["hasMore"] is True
+        assert first_payload["pagination"]["nextBefore"] is not None
+        first_room_id = int(first_payload["items"][0]["roomId"])
+
+        second = self.api_client.get(
+            f"/api/groups/public/?limit=1&before={first_payload['pagination']['nextBefore']}"
+        )
+        assert second.status_code == 200
+        second_payload = second.json()
+        assert len(second_payload["items"]) == 1
+        assert int(second_payload["items"][0]["roomId"]) < first_room_id
+
 
 @pytest.mark.django_db
 class TestMyGroupList(APITestCase):
@@ -324,6 +343,23 @@ class TestMyGroupList(APITestCase):
         self.api_client.force_authenticate(user=None)
         resp = self.api_client.get("/api/groups/my/")
         assert resp.status_code == 403
+
+    def test_my_groups_cursor_pagination_by_id(self):
+        resp = self.api_client.get("/api/groups/my/?limit=1")
+        assert resp.status_code == 200
+        first_payload = resp.json()
+        assert first_payload["pagination"]["limit"] == 1
+        assert first_payload["pagination"]["hasMore"] is True
+        assert first_payload["pagination"]["nextBefore"] is not None
+        first_room_id = int(first_payload["items"][0]["roomId"])
+
+        second = self.api_client.get(
+            f"/api/groups/my/?limit=1&before={first_payload['pagination']['nextBefore']}"
+        )
+        assert second.status_code == 200
+        second_payload = second.json()
+        assert len(second_payload["items"]) == 1
+        assert int(second_payload["items"][0]["roomId"]) < first_room_id
 
 
 @pytest.mark.django_db

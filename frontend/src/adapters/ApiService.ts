@@ -455,8 +455,8 @@ class ApiService implements IApiService {
 
   public async getPublicGroups(params?: {
     search?: string;
-    page?: number;
-    pageSize?: number;
+    limit?: number;
+    before?: number;
   }) {
     return this.runWithDecode(async () =>
       getPublicGroups(this.apiClient, params),
@@ -465,8 +465,8 @@ class ApiService implements IApiService {
 
   public async getMyGroups(params?: {
     search?: string;
-    page?: number;
-    pageSize?: number;
+    limit?: number;
+    before?: number;
   }) {
     return this.runWithDecode(async () => getMyGroups(this.apiClient, params));
   }
@@ -497,7 +497,7 @@ class ApiService implements IApiService {
 
   public async getGroupMembers(
     slug: string,
-    params?: { page?: number; pageSize?: number },
+    params?: { limit?: number; before?: number },
   ) {
     return this.runWithDecode(async () =>
       getGroupMembers(this.apiClient, slug, params),
@@ -538,9 +538,12 @@ class ApiService implements IApiService {
     );
   }
 
-  public async getBannedMembers(slug: string) {
+  public async getBannedMembers(
+    slug: string,
+    params?: { limit?: number; before?: number },
+  ) {
     return this.runWithDecode(async () =>
-      getBannedMembers(this.apiClient, slug),
+      getBannedMembers(this.apiClient, slug, params),
     );
   }
 

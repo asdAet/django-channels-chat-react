@@ -26,16 +26,16 @@ class GroupController {
 
   public async getPublicGroups(params?: {
     search?: string;
-    page?: number;
-    pageSize?: number;
+    limit?: number;
+    before?: number;
   }): Promise<{ items: GroupListItem[]; total: number }> {
     return apiService.getPublicGroups(params);
   }
 
   public async getMyGroups(params?: {
     search?: string;
-    page?: number;
-    pageSize?: number;
+    limit?: number;
+    before?: number;
   }): Promise<{ items: GroupListItem[]; total: number }> {
     return apiService.getMyGroups(params);
   }
@@ -70,7 +70,7 @@ class GroupController {
 
   public async getGroupMembers(
     slug: string,
-    params?: { page?: number; pageSize?: number },
+    params?: { limit?: number; before?: number },
   ): Promise<{ items: GroupMember[]; total: number }> {
     return apiService.getGroupMembers(slug, params);
   }
@@ -105,8 +105,9 @@ class GroupController {
 
   public async getBannedMembers(
     slug: string,
+    params?: { limit?: number; before?: number },
   ): Promise<{ items: BannedMember[]; total: number }> {
-    return apiService.getBannedMembers(slug);
+    return apiService.getBannedMembers(slug, params);
   }
 
   public async createInvite(

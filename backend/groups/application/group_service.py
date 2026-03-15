@@ -381,25 +381,39 @@ def _room_matches_handle(room: Room, search: str) -> bool:
     return search in handle
 
 
-def list_public_groups(*, search: str | None = None, page: int = 1, page_size: int = 20, request=None) -> dict:
-    qs = (
-        Room.objects.filter(kind=Room.Kind.GROUP, is_public=True, public_handle__isnull=False)
-        .order_by("-member_count", "name")
+def list_public_groups(
+    *,
+    search: str | None = None,
+    before_id: int | None = None,
+    limit: int = 20,
+    request=None,
+) -> dict:
+    limit = max(1, min(int(limit), 100))
+    qs = Room.objects.filter(
+        kind=Room.Kind.GROUP,
+        is_public=True,
+        public_handle__isnull=False,
     )
-    items = list(qs)
 
     if search:
         value = search.strip().lower()
         if value.startswith("@"):
             value = value[1:]
-        items = [room for room in items if _room_matches_handle(room, value)]
+        if value:
+            qs = qs.filter(public_handle__handle__icontains=value)
 
-    total = len(items)
-    offset = (max(1, page) - 1) * page_size
-    items = items[offset : offset + page_size]
+    total = qs.count()
+    if before_id is not None:
+        qs = qs.filter(id__lt=int(before_id))
+
+    batch = list(qs.order_by("-id")[: limit + 1])
+    has_more = len(batch) > limit
+    if has_more:
+        batch = batch[:limit]
+    next_before = int(batch[-1].pk) if has_more and batch else None
 
     payload_items = []
-    for room in items:
+    for room in batch:
         ensure_group_public_id(room)
         avatar_url, avatar_crop = _serialize_group_avatar(request, room)
         payload_items.append(
@@ -419,13 +433,24 @@ def list_public_groups(*, search: str | None = None, page: int = 1, page_size: i
     return {
         "items": payload_items,
         "total": total,
-        "page": page,
-        "pageSize": page_size,
+        "pagination": {
+            "limit": limit,
+            "hasMore": has_more,
+            "nextBefore": next_before,
+        },
     }
 
 
-def list_my_groups(actor, *, search: str | None = None, page: int = 1, page_size: int = 20, request=None) -> dict:
+def list_my_groups(
+    actor,
+    *,
+    search: str | None = None,
+    before_id: int | None = None,
+    limit: int = 20,
+    request=None,
+) -> dict:
     _ensure_authenticated(actor)
+    limit = max(1, min(int(limit), 100))
 
     qs = (
         Room.objects.filter(
@@ -434,22 +459,27 @@ def list_my_groups(actor, *, search: str | None = None, page: int = 1, page_size
             memberships__is_banned=False,
         )
         .distinct()
-        .order_by("-member_count", "name")
     )
 
-    items = list(qs)
     if search:
         value = search.strip().lower()
         if value.startswith("@"):
             value = value[1:]
-        items = [room for room in items if _room_matches_handle(room, value)]
+        if value:
+            qs = qs.filter(public_handle__handle__icontains=value)
 
-    total = len(items)
-    offset = (max(1, page) - 1) * page_size
-    items = items[offset : offset + page_size]
+    total = qs.count()
+    if before_id is not None:
+        qs = qs.filter(id__lt=int(before_id))
+
+    batch = list(qs.order_by("-id")[: limit + 1])
+    has_more = len(batch) > limit
+    if has_more:
+        batch = batch[:limit]
+    next_before = int(batch[-1].pk) if has_more and batch else None
 
     payload_items = []
-    for room in items:
+    for room in batch:
         ensure_group_public_id(room)
         avatar_url, avatar_crop = _serialize_group_avatar(request, room)
         payload_items.append(
@@ -469,7 +499,10 @@ def list_my_groups(actor, *, search: str | None = None, page: int = 1, page_size
     return {
         "items": payload_items,
         "total": total,
-        "page": page,
-        "pageSize": page_size,
+        "pagination": {
+            "limit": limit,
+            "hasMore": has_more,
+            "nextBefore": next_before,
+        },
     }
 

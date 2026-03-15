@@ -48,8 +48,8 @@ export function AuthForm({
   const [identifier, setIdentifier] = useState("");
   const [login, setLogin] = useState("");
   const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  // const [username, setUsername] = useState("");
+  // const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [googleAuthPending, setGoogleAuthPending] = useState(false);
@@ -73,8 +73,8 @@ export function AuthForm({
         password,
         passwordConfirm: confirm,
         name: name.trim(),
-        username: username.trim() || undefined,
-        email: email.trim() || undefined,
+        // username: username.trim() || undefined,
+        // email: email.trim() || undefined,
       };
       onSubmit(payload);
       return;
@@ -113,18 +113,7 @@ export function AuthForm({
           {isRegister ? (
             <>
               <label className={styles.field}>
-                <span>Логин</span>
-                <input
-                  type="text"
-                  data-testid="auth-login-input"
-                  autoComplete="username"
-                  value={login}
-                  onChange={(event) => setLogin(event.target.value)}
-                />
-              </label>
-
-              <label className={styles.field}>
-                <span>Имя</span>
+                <span>Ваше имя</span>
                 <input
                   type="text"
                   data-testid="auth-name-input"
@@ -135,6 +124,17 @@ export function AuthForm({
               </label>
 
               <label className={styles.field}>
+                <span>Логин</span>
+                <input
+                  type="text"
+                  data-testid="auth-login-input"
+                  autoComplete="username"
+                  value={login}
+                  onChange={(event) => setLogin(event.target.value)}
+                />
+              </label>
+
+              {/* <label className={styles.field}>
                 <span>Username (опционально)</span>
                 <input
                   type="text"
@@ -143,9 +143,9 @@ export function AuthForm({
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
                 />
-              </label>
+              </label> */}
 
-              <label className={styles.field}>
+              {/* <label className={styles.field}>
                 <span>Email (опционально)</span>
                 <input
                   type="email"
@@ -154,7 +154,7 @@ export function AuthForm({
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                 />
-              </label>
+              </label> */}
             </>
           ) : (
             <label className={styles.field}>
@@ -195,7 +195,9 @@ export function AuthForm({
 
           {isRegister && passwordRules.length > 0 && (
             <div className={styles.passwordRules}>
-              <p className={styles.note}>Пароль должен соответствовать требованиям:</p>
+              <p className={styles.note}>
+                Пароль должен соответствовать требованиям:
+              </p>
               <ul className={styles.ticks}>
                 {passwordRules.map((rule) => (
                   <li key={rule}>{rule}</li>
@@ -222,7 +224,9 @@ export function AuthForm({
             disabled={!canUseGoogleAuth || googleAuthPending}
             data-testid="auth-google-button"
           >
-            {googleAuthPending ? "Подключение к Google..." : "Продолжить с Google"}
+            {googleAuthPending
+              ? "Подключение к Google..."
+              : "Продолжить с Google"}
           </Button>
           {googleAuthDisabledReason && (
             <p className={styles.oauthHint}>{googleAuthDisabledReason}</p>

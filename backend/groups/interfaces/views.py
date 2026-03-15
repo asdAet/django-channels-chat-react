@@ -49,6 +49,16 @@ def _validated_data(serializer: Any) -> dict[str, Any]:
     return cast(dict[str, Any], serializer.validated_data)
 
 
+def _parse_positive_int(raw_value: str | None, param_name: str) -> int:
+    try:
+        parsed = int(raw_value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        raise ValueError(f"Некорректный параметр '{param_name}': должно быть целое число")
+    if parsed < 1:
+        raise ValueError(f"Некорректный параметр '{param_name}': должно быть >= 1")
+    return parsed
+
+
 def _handle_group_errors(func):
     """Decorator to handle common group service errors."""
     @wraps(func)
@@ -91,12 +101,14 @@ def create_group(request):
 @_handle_group_errors
 def list_public_groups(request):
     search = request.query_params.get("search")
-    page = int(request.query_params.get("page", 1))
-    page_size = min(int(request.query_params.get("pageSize", 20)), 100)
+    limit_raw = request.query_params.get("limit")
+    before_raw = request.query_params.get("before")
+    limit = 20 if limit_raw is None else min(_parse_positive_int(limit_raw, "limit"), 100)
+    before_id = _parse_positive_int(before_raw, "before") if before_raw is not None else None
     result = group_service.list_public_groups(
         search=search,
-        page=page,
-        page_size=page_size,
+        before_id=before_id,
+        limit=limit,
         request=request,
     )
     result["items"] = GroupListItemSerializer(result["items"], many=True).data
@@ -108,13 +120,15 @@ def list_public_groups(request):
 @_handle_group_errors
 def list_my_groups(request):
     search = request.query_params.get("search")
-    page = int(request.query_params.get("page", 1))
-    page_size = min(int(request.query_params.get("pageSize", 20)), 100)
+    limit_raw = request.query_params.get("limit")
+    before_raw = request.query_params.get("before")
+    limit = 20 if limit_raw is None else min(_parse_positive_int(limit_raw, "limit"), 100)
+    before_id = _parse_positive_int(before_raw, "before") if before_raw is not None else None
     result = group_service.list_my_groups(
         request.user,
         search=search,
-        page=page,
-        page_size=page_size,
+        before_id=before_id,
+        limit=limit,
         request=request,
     )
     result["items"] = GroupListItemSerializer(result["items"], many=True).data
@@ -201,13 +215,15 @@ def leave_group(request, room_id):
 @permission_classes([IsAuthenticated])
 @_handle_group_errors
 def list_members(request, room_id):
-    page = int(request.query_params.get("page", 1))
-    page_size = min(int(request.query_params.get("pageSize", 50)), 200)
+    limit_raw = request.query_params.get("limit")
+    before_raw = request.query_params.get("before")
+    limit = 50 if limit_raw is None else min(_parse_positive_int(limit_raw, "limit"), 200)
+    before_id = _parse_positive_int(before_raw, "before") if before_raw is not None else None
     result = member_service.list_members(
         request.user,
         room_id,
-        page=page,
-        page_size=page_size,
+        before_id=before_id,
+        limit=limit,
         request=request,
     )
     return Response(result)
@@ -268,9 +284,16 @@ def unmute_member(request, room_id, user_id):
 @permission_classes([IsAuthenticated])
 @_handle_group_errors
 def list_banned(request, room_id):
-    page = int(request.query_params.get("page", 1))
-    page_size = int(request.query_params.get("pageSize", 50))
-    data = member_service.list_banned(request.user, room_id, page=page, page_size=page_size)
+    limit_raw = request.query_params.get("limit")
+    before_raw = request.query_params.get("before")
+    limit = 50 if limit_raw is None else min(_parse_positive_int(limit_raw, "limit"), 200)
+    before_id = _parse_positive_int(before_raw, "before") if before_raw is not None else None
+    data = member_service.list_banned(
+        request.user,
+        room_id,
+        before_id=before_id,
+        limit=limit,
+    )
     return Response(data)
 
 

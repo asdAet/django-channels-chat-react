@@ -378,11 +378,17 @@ def unmute_member(actor, room_id: int, target_user_id: int) -> Membership:
 
 
 def list_members(
-    actor, room_id: int, *, page: int = 1, page_size: int = 50, request=None
+    actor,
+    room_id: int,
+    *,
+    before_id: int | None = None,
+    limit: int = 50,
+    request=None,
 ) -> dict:
     """List group members with their roles."""
     _ensure_authenticated(actor)
     room = _load_group_or_raise(room_id)
+    limit = max(1, min(int(limit), 200))
 
     if not has_permission(room, actor, Perm.READ_MESSAGES):
         raise GroupForbiddenError("Нет доступа к просмотру участников")
@@ -391,12 +397,17 @@ def list_members(
         Membership.objects.filter(room=room, is_banned=False)
         .select_related("user", "user__profile")
         .prefetch_related("roles")
-        .order_by("joined_at")
     )
 
     total = qs.count()
-    offset = (max(1, page) - 1) * page_size
-    members = list(qs[offset : offset + page_size])
+    if before_id is not None:
+        qs = qs.filter(id__lt=int(before_id))
+    batch = list(qs.order_by("-id")[: limit + 1])
+    has_more = len(batch) > limit
+    if has_more:
+        batch = batch[:limit]
+    next_before = int(batch[-1].pk) if has_more and batch else None
+
     actor_user_id = getattr(actor, "pk", None)
 
     def _member_dict(m):
@@ -434,19 +445,27 @@ def list_members(
         }
 
     return {
-        "items": [_member_dict(m) for m in members],
+        "items": [_member_dict(m) for m in batch],
         "total": total,
-        "page": page,
-        "pageSize": page_size,
+        "pagination": {
+            "limit": limit,
+            "hasMore": has_more,
+            "nextBefore": next_before,
+        },
     }
 
 
 def list_banned(
-    actor, room_id: int, *, page: int = 1, page_size: int = 50
+    actor,
+    room_id: int,
+    *,
+    before_id: int | None = None,
+    limit: int = 50,
 ) -> dict:
     """List banned members. Requires BAN_MEMBERS permission."""
     _ensure_authenticated(actor)
     room = _load_group_or_raise(room_id)
+    limit = max(1, min(int(limit), 200))
 
     if not has_permission(room, actor, Perm.BAN_MEMBERS):
         raise GroupForbiddenError("Отсутствует разрешение BAN_MEMBERS")
@@ -454,12 +473,16 @@ def list_banned(
     qs = (
         Membership.objects.filter(room=room, is_banned=True)
         .select_related("user", "banned_by")
-        .order_by("-joined_at")
     )
 
     total = qs.count()
-    offset = (max(1, page) - 1) * page_size
-    banned = list(qs[offset : offset + page_size])
+    if before_id is not None:
+        qs = qs.filter(id__lt=int(before_id))
+    batch = list(qs.order_by("-id")[: limit + 1])
+    has_more = len(batch) > limit
+    if has_more:
+        batch = batch[:limit]
+    next_before = int(batch[-1].pk) if has_more and batch else None
 
     return {
         "items": [
@@ -469,11 +492,14 @@ def list_banned(
                 "reason": m.ban_reason,
                 "bannedBy": user_public_username(m.banned_by) if m.banned_by else None,
             }
-            for m in banned
+            for m in batch
         ],
         "total": total,
-        "page": page,
-        "pageSize": page_size,
+        "pagination": {
+            "limit": limit,
+            "hasMore": has_more,
+            "nextBefore": next_before,
+        },
     }
 
 

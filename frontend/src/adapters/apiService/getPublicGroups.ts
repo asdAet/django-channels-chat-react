@@ -5,15 +5,18 @@ import type { GroupListItem } from "../../entities/group/types";
 
 export type PublicGroupsParams = {
   search?: string;
-  page?: number;
-  pageSize?: number;
+  limit?: number;
+  before?: number;
 };
 
 export type PublicGroupsResult = {
   items: GroupListItem[];
   total: number;
-  page: number;
-  pageSize: number;
+  pagination: {
+    limit: number;
+    hasMore: boolean;
+    nextBefore: number | null;
+  };
 };
 
 export async function getPublicGroups(

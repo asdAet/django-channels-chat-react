@@ -237,12 +237,33 @@ class TestKickBanMute(APITestCase):
         data = resp.json()
         assert data["total"] == 2
         assert len(data["items"]) == 2
+        assert data["pagination"]["limit"] == 50
+        assert data["pagination"]["hasMore"] is False
+        assert data["pagination"]["nextBefore"] is None
         assert "nickname" in data["items"][0]
         by_user = {item["userId"]: item for item in data["items"]}
         assert by_user[self.owner.pk]["isSelf"] is True
         assert by_user[self.member.pk]["isSelf"] is False
         if data["items"][0]["profileImage"] is not None:
             _assert_signed_media_url(data["items"][0]["profileImage"])
+
+    def test_list_members_cursor_pagination_by_id(self):
+        self.api_client.force_authenticate(user=self.owner)
+        first = self.api_client.get(f"/api/groups/{self.room_id}/members/?limit=1")
+        assert first.status_code == 200
+        first_payload = first.json()
+        assert first_payload["pagination"]["limit"] == 1
+        assert first_payload["pagination"]["hasMore"] is True
+        assert first_payload["pagination"]["nextBefore"] is not None
+        first_user_id = int(first_payload["items"][0]["userId"])
+
+        second = self.api_client.get(
+            f"/api/groups/{self.room_id}/members/?limit=1&before={first_payload['pagination']['nextBefore']}"
+        )
+        assert second.status_code == 200
+        second_payload = second.json()
+        assert len(second_payload["items"]) == 1
+        assert int(second_payload["items"][0]["userId"]) != first_user_id
 
     def test_list_banned(self):
         self.api_client.force_authenticate(user=self.owner)
@@ -253,7 +274,11 @@ class TestKickBanMute(APITestCase):
         )
         resp = self.api_client.get(f"/api/groups/{self.room_id}/banned/")
         assert resp.status_code == 200
-        items = resp.json()["items"]
+        payload = resp.json()
+        items = payload["items"]
+        assert payload["pagination"]["limit"] == 50
+        assert payload["pagination"]["hasMore"] is False
+        assert payload["pagination"]["nextBefore"] is None
         assert len(items) == 1
         assert items[0]["username"] == user_public_id(self.member)
 

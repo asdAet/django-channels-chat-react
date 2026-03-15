@@ -277,7 +277,7 @@ export function GroupInfoPanel({ slug, currentUsername = null }: Props) {
       const [groupResult, membersResult] = await Promise.all([
         groupController.getGroupDetails(slug),
         groupController
-          .getGroupMembers(slug, { page: 1, pageSize: 200 })
+          .getGroupMembers(slug, { limit: 200 })
           .catch(() => ({ items: [] as GroupMember[], total: 0 })),
       ]);
       setGroup(groupResult);

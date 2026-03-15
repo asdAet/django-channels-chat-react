@@ -188,23 +188,29 @@ export interface IApiService {
   }): Promise<Group>;
   getPublicGroups(params?: {
     search?: string;
-    page?: number;
-    pageSize?: number;
+    limit?: number;
+    before?: number;
   }): Promise<{
     items: GroupListItem[];
     total: number;
-    page: number;
-    pageSize: number;
+    pagination: {
+      limit: number;
+      hasMore: boolean;
+      nextBefore: number | null;
+    };
   }>;
   getMyGroups(params?: {
     search?: string;
-    page?: number;
-    pageSize?: number;
+    limit?: number;
+    before?: number;
   }): Promise<{
     items: GroupListItem[];
     total: number;
-    page: number;
-    pageSize: number;
+    pagination: {
+      limit: number;
+      hasMore: boolean;
+      nextBefore: number | null;
+    };
   }>;
   getGroupDetails(slug: string): Promise<Group>;
   updateGroup(slug: string, data: UpdateGroupInput): Promise<Group>;
@@ -213,8 +219,16 @@ export interface IApiService {
   leaveGroup(slug: string): Promise<void>;
   getGroupMembers(
     slug: string,
-    params?: { page?: number; pageSize?: number },
-  ): Promise<{ items: GroupMember[]; total: number }>;
+    params?: { limit?: number; before?: number },
+  ): Promise<{
+    items: GroupMember[];
+    total: number;
+    pagination: {
+      limit: number;
+      hasMore: boolean;
+      nextBefore: number | null;
+    };
+  }>;
   kickMember(slug: string, userId: number): Promise<void>;
   banMember(slug: string, userId: number, reason?: string): Promise<void>;
   unbanMember(slug: string, userId: number): Promise<void>;
@@ -226,7 +240,16 @@ export interface IApiService {
   unmuteMember(slug: string, userId: number): Promise<void>;
   getBannedMembers(
     slug: string,
-  ): Promise<{ items: BannedMember[]; total: number }>;
+    params?: { limit?: number; before?: number },
+  ): Promise<{
+    items: BannedMember[];
+    total: number;
+    pagination: {
+      limit: number;
+      hasMore: boolean;
+      nextBefore: number | null;
+    };
+  }>;
   createInvite(
     slug: string,
     data?: { maxUses?: number; expiresInHours?: number },

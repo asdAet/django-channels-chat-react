@@ -46,8 +46,7 @@ const groupList = {
     },
   ],
   total: 1,
-  page: 1,
-  pageSize: 20,
+  pagination: { limit: 20, hasMore: false, nextBefore: null },
 };
 
 const invite = {
@@ -440,18 +439,23 @@ describe("ApiService", () => {
 
   it("supports group core and moderation endpoints", async () => {
     let publicGroupsSearch = "";
+    let publicGroupsBefore = "";
     let myGroupsSearch = "";
-    let membersPage = "";
+    let myGroupsLimit = "";
+    let membersBefore = "";
 
     server.use(
       http.post("/api/groups/", () => HttpResponse.json(group)),
       http.get("/api/groups/public/", ({ request }) => {
-        publicGroupsSearch =
-          new URL(request.url).searchParams.get("search") ?? "";
+        const search = new URL(request.url).searchParams;
+        publicGroupsSearch = search.get("search") ?? "";
+        publicGroupsBefore = search.get("before") ?? "";
         return HttpResponse.json(groupList);
       }),
       http.get("/api/groups/my/", ({ request }) => {
-        myGroupsSearch = new URL(request.url).searchParams.get("search") ?? "";
+        const search = new URL(request.url).searchParams;
+        myGroupsSearch = search.get("search") ?? "";
+        myGroupsLimit = search.get("limit") ?? "";
         return HttpResponse.json(groupList);
       }),
       http.get("/api/groups/:slug/", () => HttpResponse.json(group)),
@@ -464,7 +468,7 @@ describe("ApiService", () => {
         HttpResponse.json({ ok: true }),
       ),
       http.get("/api/groups/:slug/members/", ({ request }) => {
-        membersPage = new URL(request.url).searchParams.get("page") ?? "";
+        membersBefore = new URL(request.url).searchParams.get("before") ?? "";
         return HttpResponse.json({
           items: [
             {
@@ -480,6 +484,7 @@ describe("ApiService", () => {
             },
           ],
           total: 1,
+          pagination: { limit: 50, hasMore: false, nextBefore: null },
         });
       }),
       http.delete("/api/groups/:slug/members/:userId/", () =>
@@ -526,13 +531,13 @@ describe("ApiService", () => {
       (
         await apiService.getPublicGroups({
           search: "Group",
-          page: 2,
-          pageSize: 5,
+          before: 321,
+          limit: 5,
         })
       ).items,
     ).toHaveLength(1);
     expect(
-      (await apiService.getMyGroups({ search: "one", page: 3, pageSize: 7 }))
+      (await apiService.getMyGroups({ search: "one", limit: 7 }))
         .items,
     ).toHaveLength(1);
     expect((await apiService.getGroupDetails("101")).name).toBe(
@@ -549,7 +554,7 @@ describe("ApiService", () => {
     await apiService.leaveGroup("101");
 
     expect(
-      (await apiService.getGroupMembers("101", { page: 1, pageSize: 50 }))
+      (await apiService.getGroupMembers("101", { limit: 50, before: 99 }))
         .total,
     ).toBe(1);
 
@@ -562,8 +567,10 @@ describe("ApiService", () => {
     expect((await apiService.getBannedMembers("101")).total).toBe(1);
 
     expect(publicGroupsSearch).toBe("Group");
+    expect(publicGroupsBefore).toBe("321");
     expect(myGroupsSearch).toBe("one");
-    expect(membersPage).toBe("1");
+    expect(myGroupsLimit).toBe("7");
+    expect(membersBefore).toBe("99");
   });
 
   it("supports invite, join-request and pin endpoints", async () => {
